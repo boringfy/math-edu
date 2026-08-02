@@ -137,6 +137,59 @@ export function takeAwayStory(maxStart: number): Question {
   );
 }
 
+/**
+ * Missing-operand story: you know the start and the end, and have to work
+ * out what was taken away. "Joe has 10 apples, gives Paul some, and now has
+ * 4 — how many did he give away?"
+ */
+export function gaveSomeAwayStory(maxStart: number): Question {
+  const [name, friend] = twoNames();
+  const item = pick(ITEMS);
+  const start = randInt(3, maxStart);
+  const left = randInt(1, start - 1);
+  const given = start - left;
+  return makeQuestion(
+    `${name} has ${start} ${item}. ${name} gives some to ${friend}, and now has ${left} ${item} left. How many ${item} did ${name} give away?`,
+    String(given),
+    // Adding the two known numbers, or answering with one of them.
+    numPool(given, [start + left, left, start]),
+    `${start} - ${left} = ${given}`,
+    'integer',
+  );
+}
+
+/** The same shape the other way round: how many were received? */
+export function receivedSomeStory(maxTotal: number): Question {
+  const [name, friend] = twoNames();
+  const item = pick(ITEMS);
+  const total = randInt(3, maxTotal);
+  const start = randInt(1, total - 1);
+  const received = total - start;
+  return makeQuestion(
+    `${name} had ${start} ${item}. ${friend} gave ${name} some more, and now ${name} has ${total}. How many ${item} did ${friend} give?`,
+    String(received),
+    numPool(received, [start + total, start, total]),
+    `${total} - ${start} = ${received}`,
+    'integer',
+  );
+}
+
+/** How many more are needed to reach a target. */
+export function howManyMoreNeeded(maxTarget: number): Question {
+  const name = pick(NAMES);
+  const item = pick(ITEMS);
+  const target = randInt(3, maxTarget);
+  const has = randInt(1, target - 1);
+  const needed = target - has;
+  return makeQuestion(
+    `${name} has ${has} ${item} and wants ${target} altogether. How many more ${item} does ${name} need?`,
+    String(needed),
+    numPool(needed, [has + target, has, target]),
+    `${target} - ${has} = ${needed}`,
+    'integer',
+  );
+}
+
 /** Multiplication story: equal groups in containers. */
 export function packsProblem(maxGroups: number, perGroup: number[]): Question {
   const box = pick(CONTAINERS);
@@ -263,21 +316,6 @@ export function rectangleProblem(kind: 'area' | 'perimeter', maxSide: number): Q
   );
 }
 
-/** Constant-rate travel: distance = speed × time. */
-export function speedProblem(maxSpeed: number, maxHours: number): Question {
-  const vehicle = pick(['train', 'bus', 'ferry', 'cyclist', 'delivery van']);
-  const speed = randInt(2, maxSpeed / 10) * 10;
-  const hours = randInt(2, maxHours);
-  const distance = speed * hours;
-  return makeQuestion(
-    `A ${vehicle} travels ${speed} km every hour. How far does it travel in ${hours} hours?`,
-    String(distance),
-    numPool(distance, [speed + hours, distance + speed, distance - speed]),
-    `${speed} × ${hours} = ${distance} km`,
-    'integer',
-  );
-}
-
 /** What fraction of a set has some property. */
 export function fractionOfSetProblem(): Question {
   const item = pick(['marbles', 'balloons', 'pencils', 'beads', 'socks']);
@@ -371,6 +409,8 @@ export function wordProblemsFor(grade: Grade, tier: Tier): Gen[] {
         () => joinStory(limit),
         () => takeAwayStory(limit),
         () => legsProblem(limit),
+        () => gaveSomeAwayStory(limit),
+        () => receivedSomeStory(limit),
       ];
       if (tier >= 2) gens.push(() => wheelsProblem(limit));
       return gens;
@@ -384,6 +424,8 @@ export function wordProblemsFor(grade: Grade, tier: Tier): Gen[] {
         () => legsProblem(tier === 1 ? 24 : 48),
         () => wheelsProblem(tier === 1 ? 24 : 48),
         () => packsProblem(tier === 1 ? 5 : 10, groupSizes),
+        () => gaveSomeAwayStory(limit),
+        () => howManyMoreNeeded(limit),
       ];
     }
     case 3: {
@@ -394,6 +436,7 @@ export function wordProblemsFor(grade: Grade, tier: Tier): Gen[] {
         () => coinsProblem(tier === 1 ? 9 : 25, maxFactor),
         () => legsProblem(tier === 1 ? 48 : 96),
         () => weekDaysProblem(tier === 1 ? 5 : 12),
+        () => howManyMoreNeeded(tier === 1 ? 50 : 200),
       ];
     }
     case 4: {
@@ -402,7 +445,6 @@ export function wordProblemsFor(grade: Grade, tier: Tier): Gen[] {
         () => changeProblem(tier === 1 ? 5 : 12, tier === 1 ? 4 : 8),
         () => rectangleProblem('area', tier === 1 ? 9 : 20),
         () => rectangleProblem('perimeter', tier === 1 ? 9 : 20),
-        () => speedProblem(tier === 1 ? 60 : 120, tier === 1 ? 5 : 9),
       ];
       if (tier >= 2) gens.push(() => fractionOfSetProblem());
       return gens;
@@ -412,7 +454,6 @@ export function wordProblemsFor(grade: Grade, tier: Tier): Gen[] {
         () => moneyDecimalProblem(),
         () => percentProblem(),
         () => averageProblem(),
-        () => speedProblem(120, 9),
       ];
       if (tier >= 2) gens.push(() => changeProblem(20, 9), () => fractionOfSetProblem());
       return gens;

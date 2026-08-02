@@ -16,6 +16,12 @@ export const shuffle = <T>(arr: T[]): T[] => {
 
 let idCounter = 0;
 
+/** A fresh question id. Exported for question kinds built outside makeQuestion. */
+export function nextId(): string {
+  idCounter++;
+  return `q${idCounter}-${Math.floor(Math.random() * 1e9)}`;
+}
+
 /**
  * Builds a question with 4 unique choices. Distractors are taken from the
  * pool first; if the pool runs dry (duplicates, negatives), numeric
@@ -47,9 +53,8 @@ export function makeQuestion(
     if (!choices.has(candidate)) choices.add(candidate);
     offset++;
   }
-  idCounter++;
   return {
-    id: `q${idCounter}-${Math.floor(Math.random() * 1e9)}`,
+    id: nextId(),
     prompt,
     correctAnswer: correct,
     choices: shuffle([...choices]),

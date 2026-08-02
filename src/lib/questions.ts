@@ -1,5 +1,10 @@
 import { Grade, Question, Tier } from '../types';
+import { cakeCutQuestion } from './drawPuzzles';
 import { Gen, makeQuestion, numPool, pick, randInt, shuffle } from './generator';
+import { geometryFor } from './geometry';
+import { measurementFor } from './measurement';
+import { moneyFor } from './money';
+import { physicsFor } from './physics';
 import { wordProblemsFor } from './wordProblems';
 
 function addition(maxSum: number): Question {
@@ -24,6 +29,87 @@ function subtraction(max: number): Question {
     String(diff),
     numPool(diff, [a + b, b]),
     `${a} - ${b} = ${diff}`,
+    'integer',
+  );
+}
+
+/** "? + 3 = 10" — the sum and one part are known. */
+function missingAddend(maxSum: number): Question {
+  const sum = randInt(3, maxSum);
+  const known = randInt(1, sum - 1);
+  const missing = sum - known;
+  const prompt = Math.random() < 0.5 ? `? + ${known} = ${sum}` : `${known} + ? = ${sum}`;
+  return makeQuestion(
+    prompt,
+    String(missing),
+    // Adding when you should subtract, or echoing a number from the prompt.
+    numPool(missing, [sum + known, sum, known]),
+    `${sum} - ${known} = ${missing}`,
+    'integer',
+  );
+}
+
+/** "10 - ? = 4" and "? - 4 = 6" — subtraction with a hole in it. */
+function missingSubtractionPart(max: number): Question {
+  const total = randInt(3, max);
+  const result = randInt(1, total - 1);
+  if (Math.random() < 0.5) {
+    const missing = total - result;
+    return makeQuestion(
+      `${total} - ? = ${result}`,
+      String(missing),
+      numPool(missing, [total + result, result, total]),
+      `${total} - ${missing} = ${result}, so the missing number is ${total} - ${result} = ${missing}`,
+      'integer',
+    );
+  }
+  // Cap the subtrahend so the missing starting amount stays inside the range.
+  const subtracted = randInt(1, Math.max(1, max - result));
+  const missing = subtracted + result;
+  return makeQuestion(
+    `? - ${subtracted} = ${result}`,
+    String(missing),
+    numPool(missing, [Math.abs(result - subtracted), result, subtracted]),
+    `${missing} - ${subtracted} = ${result}, so the missing number is ${subtracted} + ${result} = ${missing}`,
+    'integer',
+  );
+}
+
+/** "6 × ? = 42" — the product and one factor are known. */
+function missingFactor(maxFactor: number): Question {
+  const known = randInt(2, maxFactor);
+  const missing = randInt(2, maxFactor);
+  const product = known * missing;
+  const prompt = Math.random() < 0.5 ? `? × ${known} = ${product}` : `${known} × ? = ${product}`;
+  return makeQuestion(
+    prompt,
+    String(missing),
+    // Subtracting instead of dividing is the usual wrong move.
+    numPool(missing, [product - known, product, known]),
+    `${product} ÷ ${known} = ${missing}`,
+    'integer',
+  );
+}
+
+/** "? ÷ 3 = 5" and "24 ÷ ? = 6". */
+function missingDivisionPart(divisorMax: number, quotientMax: number): Question {
+  const divisor = randInt(2, divisorMax);
+  const quotient = randInt(2, quotientMax);
+  const dividend = divisor * quotient;
+  if (Math.random() < 0.5) {
+    return makeQuestion(
+      `? ÷ ${divisor} = ${quotient}`,
+      String(dividend),
+      numPool(dividend, [quotient, divisor, quotient + divisor]),
+      `${divisor} × ${quotient} = ${dividend}`,
+      'integer',
+    );
+  }
+  return makeQuestion(
+    `${dividend} ÷ ? = ${quotient}`,
+    String(divisor),
+    numPool(divisor, [dividend, quotient, dividend - quotient]),
+    `${dividend} ÷ ${quotient} = ${divisor}`,
     'integer',
   );
 }
@@ -200,7 +286,12 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
   switch (grade) {
     case 1: {
       const limit = tier === 1 ? 10 : 20;
-      const gens: Gen[] = [() => addition(limit), () => subtraction(limit)];
+      const gens: Gen[] = [
+        () => addition(limit),
+        () => subtraction(limit),
+        () => missingAddend(limit),
+        () => missingSubtractionPart(limit),
+      ];
       if (tier === 3) gens.push(() => tripleAddition(9));
       return gens;
     }
@@ -211,6 +302,8 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
         () => addition(limit),
         () => subtraction(limit),
         () => tableMultiplication(tables, 10),
+        () => missingAddend(limit),
+        () => missingSubtractionPart(limit),
       ];
     }
     case 3: {
@@ -221,6 +314,8 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
         () => division(maxFactor, maxFactor),
         () => addition(limit),
         () => subtraction(limit),
+        () => missingFactor(maxFactor),
+        () => missingSubtractionPart(limit),
       ];
     }
     case 4: {
@@ -230,6 +325,8 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
         () => multiplication(bigFactor, [2, 9]),
         () => division(9, tier === 1 ? 20 : 99),
         () => fractionAddSub(),
+        () => missingFactor(tier === 1 ? 9 : 12),
+        () => missingDivisionPart(9, tier === 1 ? 20 : 50),
       ];
     }
     case 5: {
@@ -246,8 +343,22 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
   }
 }
 
-/** Roughly this share of every quiz is a real-world story problem. */
-const WORD_PROBLEM_SHARE = 0.4;
+/**
+ * How the topics compete for slots in a quiz. Pools that are empty for a
+ * grade (physics before grade 3, say) drop out and their share is spread
+ * across the rest.
+ */
+const TOPIC_WEIGHTS = {
+  arithmetic: 3,
+  word: 2.5,
+  geometry: 1.5,
+  measurement: 1.5,
+  money: 1.5,
+  physics: 1,
+};
+
+/** Quizzes shorter than this skip the drawing puzzle. */
+const MIN_QUESTIONS_FOR_DRAWING = 5;
 
 /**
  * Share of typeable questions asked as typed entry instead of multiple
@@ -256,15 +367,51 @@ const WORD_PROBLEM_SHARE = 0.4;
  */
 export const ENTRY_SHARE: Record<Tier, number> = { 1: 0.25, 2: 0.5, 3: 0.75 };
 
-export function generateQuiz(grade: Grade, tier: Tier, count: number): Question[] {
-  const arithmetic = shuffle(generatorsFor(grade, tier));
-  const words = shuffle(wordProblemsFor(grade, tier));
+/**
+ * Splits `count` slots across the pools in proportion to their weights.
+ * Whole slots go out first, then the leftovers go to whichever pools were
+ * rounded down hardest, so the totals always add up exactly.
+ */
+function allocate(pools: { gens: Gen[]; weight: number }[], count: number): Question[] {
+  const active = pools.filter((p) => p.gens.length > 0);
+  if (active.length === 0 || count <= 0) return [];
 
-  const wordCount = words.length > 0 ? Math.round(count * WORD_PROBLEM_SHARE) : 0;
-  // Rotate through each pool so every quiz covers a spread of question types.
+  const totalWeight = active.reduce((sum, p) => sum + p.weight, 0);
+  const shares = active.map((pool) => {
+    const exact = (count * pool.weight) / totalWeight;
+    const whole = Math.floor(exact);
+    return { pool, whole, remainder: exact - whole };
+  });
+
+  let left = count - shares.reduce((sum, s) => sum + s.whole, 0);
+  for (const share of [...shares].sort((a, b) => b.remainder - a.remainder)) {
+    if (left <= 0) break;
+    share.whole++;
+    left--;
+  }
+
+  // Rotate within each pool so a quiz covers a spread of question types.
+  return shares.flatMap(({ pool, whole }) =>
+    Array.from({ length: whole }, (_, i) => pool.gens[i % pool.gens.length]()),
+  );
+}
+
+export function generateQuiz(grade: Grade, tier: Tier, count: number): Question[] {
+  const drawCount = count >= MIN_QUESTIONS_FOR_DRAWING ? 1 : 0;
+
   const questions = [
-    ...Array.from({ length: count - wordCount }, (_, i) => arithmetic[i % arithmetic.length]()),
-    ...Array.from({ length: wordCount }, (_, i) => words[i % words.length]()),
+    ...allocate(
+      [
+        { gens: shuffle(generatorsFor(grade, tier)), weight: TOPIC_WEIGHTS.arithmetic },
+        { gens: shuffle(wordProblemsFor(grade, tier)), weight: TOPIC_WEIGHTS.word },
+        { gens: shuffle(geometryFor(grade, tier)), weight: TOPIC_WEIGHTS.geometry },
+        { gens: shuffle(measurementFor(grade, tier)), weight: TOPIC_WEIGHTS.measurement },
+        { gens: shuffle(moneyFor(grade, tier)), weight: TOPIC_WEIGHTS.money },
+        { gens: shuffle(physicsFor(grade, tier)), weight: TOPIC_WEIGHTS.physics },
+      ],
+      count - drawCount,
+    ),
+    ...Array.from({ length: drawCount }, () => cakeCutQuestion(tier)),
   ];
 
   const typeable = questions.filter((q) => q.answerFormat !== null);
@@ -308,6 +455,11 @@ export function isAnswerCorrect(question: Question, input: string): boolean {
   const a = parseAnswer(given);
   const b = parseAnswer(question.correctAnswer);
   return a !== null && b !== null && Math.abs(a - b) < 1e-9;
+}
+
+/** Grades a drawing puzzle: did the cuts produce exactly the target pieces? */
+export function isDrawingCorrect(question: Question, pieces: number): boolean {
+  return question.cakeTask !== undefined && pieces === question.cakeTask.pieces;
 }
 
 /**

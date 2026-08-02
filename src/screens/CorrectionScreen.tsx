@@ -1,8 +1,17 @@
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import ChoiceButton from '../components/ChoiceButton';
+import CutBoard from '../components/CutBoard';
 import NumberPad from '../components/NumberPad';
-import { isAnswerCorrect, reshuffleChoices } from '../lib/questions';
+import { Chord } from '../lib/cakeCuts';
+import { isAnswerCorrect, isDrawingCorrect, reshuffleChoices } from '../lib/questions';
 import { colors, promptTextStyle } from '../theme';
 import { Question } from '../types';
 
@@ -35,9 +44,12 @@ export default function CorrectionScreen({ questions, onDone }: Props) {
   const [feedback, setFeedback] = useState<Feedback>('none');
   const [lastAnswer, setLastAnswer] = useState<string | null>(null);
   const [entry, setEntry] = useState('');
+  const [cuts, setCuts] = useState<Chord[]>([]);
   const outcomesRef = useRef<CorrectionOutcome[]>([]);
+  const { width } = useWindowDimensions();
 
   const isEntry = question.mode === 'entry' && question.answerFormat !== null;
+  const isDrawing = question.mode === 'draw' && question.cakeTask !== undefined;
 
   const submit = (answer: string, correct: boolean) => {
     if (feedback === 'fixed' || feedback === 'skipped') return;
@@ -69,6 +81,7 @@ export default function CorrectionScreen({ questions, onDone }: Props) {
     setQuestion(reshuffleChoices(question));
     setLastAnswer(null);
     setEntry('');
+    setCuts([]);
     setFeedback('none');
   };
 
@@ -80,6 +93,7 @@ export default function CorrectionScreen({ questions, onDone }: Props) {
       setAttempts(0);
       setLastAnswer(null);
       setEntry('');
+      setCuts([]);
       setFeedback('none');
     } else {
       onDone(outcomesRef.current);
@@ -101,7 +115,17 @@ export default function CorrectionScreen({ questions, onDone }: Props) {
         <Text style={[styles.prompt, promptTextStyle(question.prompt)]}>{question.prompt}</Text>
       </View>
 
-      {isEntry ? (
+      {isDrawing ? (
+        <CutBoard
+          task={question.cakeTask!}
+          cuts={cuts}
+          size={Math.min(width - 48, 320)}
+          state={feedback === 'none' ? 'idle' : feedback === 'fixed' ? 'correct' : 'wrong'}
+          disabled={feedback !== 'none'}
+          onChange={setCuts}
+          onSubmit={(pieces) => submit(`${pieces} pieces`, isDrawingCorrect(question, pieces))}
+        />
+      ) : isEntry ? (
         <NumberPad
           value={feedback === 'none' ? entry : lastAnswer ?? entry}
           format={question.answerFormat!}

@@ -6,8 +6,19 @@ export type Tier = 1 | 2 | 3;
 /** Which keys the number pad needs to type this question's answer. */
 export type AnswerFormat = 'integer' | 'decimal' | 'fraction';
 
-/** 'choice' = tap one of 4; 'entry' = type the answer on the number pad. */
-export type AnswerMode = 'choice' | 'entry';
+/**
+ * 'choice' = tap one of 4; 'entry' = type the answer on the number pad;
+ * 'draw' = solve it by drawing on the cake.
+ */
+export type AnswerMode = 'choice' | 'entry' | 'draw';
+
+/** Divide a round cake into `pieces` using `cuts` straight cuts. */
+export interface CakeCutTask {
+  cuts: number;
+  pieces: number;
+  /** How the arrangement has to work, revealed as a hint or on giving up. */
+  hint: string;
+}
 
 export interface Question {
   id: string;
@@ -24,6 +35,8 @@ export interface Question {
    */
   answerFormat: AnswerFormat | null;
   mode: AnswerMode;
+  /** Present only when mode is 'draw'. Drawing questions have no choices. */
+  cakeTask?: CakeCutTask;
 }
 
 export interface AnswerRecord {

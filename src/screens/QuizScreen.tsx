@@ -1,11 +1,16 @@
 import { useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import ChoiceButton from '../components/ChoiceButton';
+import CutBoard from '../components/CutBoard';
 import ElapsedTimer from '../components/ElapsedTimer';
 import NumberPad from '../components/NumberPad';
-import { isAnswerCorrect } from '../lib/questions';
+import { Chord } from '../lib/cakeCuts';
+import { isAnswerCorrect, isDrawingCorrect } from '../lib/questions';
 import { colors, promptTextStyle } from '../theme';
 import { AnswerRecord, Question } from '../types';
+
+/** Keeps the cake comfortably inside the screen on phones and tablets alike. */
+const cakeSize = (width: number) => Math.min(width - 48, 320);
 
 interface Props {
   questions: Question[];
@@ -21,16 +26,20 @@ export default function QuizScreen({ questions, onComplete }: Props) {
   const startedAt = useRef(Date.now()).current;
   const [index, setIndex] = useState(0);
   const [entry, setEntry] = useState('');
+  const [cuts, setCuts] = useState<Chord[]>([]);
   const recordsRef = useRef<AnswerRecord[]>([]);
+  const { width } = useWindowDimensions();
 
   const question = questions[index];
   const isEntry = question.mode === 'entry' && question.answerFormat !== null;
+  const isDrawing = question.mode === 'draw' && question.cakeTask !== undefined;
 
   const record = (answer: string, correct: boolean) => {
     recordsRef.current.push({ question, chosen: answer, correct });
     if (index + 1 < questions.length) {
       setIndex(index + 1);
       setEntry('');
+      setCuts([]);
     } else {
       onComplete(recordsRef.current, Date.now() - startedAt);
     }
@@ -55,7 +64,21 @@ export default function QuizScreen({ questions, onComplete }: Props) {
           <Text style={[styles.prompt, promptTextStyle(question.prompt)]}>{question.prompt}</Text>
         </View>
 
+        {isDrawing && (
+          <CutBoard
+            task={question.cakeTask!}
+            cuts={cuts}
+            size={cakeSize(width)}
+            onChange={setCuts}
+            onSubmit={(pieces) =>
+              record(`${pieces} pieces`, isDrawingCorrect(question, pieces))
+            }
+            submitLabel={index + 1 < questions.length ? 'Next question' : 'Finish quiz'}
+          />
+        )}
+
         {!isEntry &&
+          !isDrawing &&
           question.choices.map((choice) => (
             <ChoiceButton
               key={choice}
