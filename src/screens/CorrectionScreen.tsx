@@ -1,0 +1,199 @@
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import ChoiceButton from '../components/ChoiceButton';
+import NumberPad from '../components/NumberPad';
+import { isAnswerCorrect, reshuffleChoices } from '../lib/questions';
+import { colors, promptTextStyle } from '../theme';
+import { Question } from '../types';
+
+export interface CorrectionOutcome {
+  questionId: string;
+  attempts: number;
+  fixed: boolean;
+  skipped: boolean;
+}
+
+interface Props {
+  questions: Question[];
+  onDone: (outcomes: CorrectionOutcome[]) => void;
+}
+
+const MAX_ATTEMPTS = 3;
+
+type Feedback = 'none' | 'tryAgain' | 'fixed' | 'skipped';
+
+/**
+ * Re-asks each missed question with immediate feedback. A wrong answer shows
+ * the explanation and offers another try (with the choices reshuffled, or the
+ * number pad cleared); after MAX_ATTEMPTS wrong tries the question is skipped
+ * and the answer revealed.
+ */
+export default function CorrectionScreen({ questions, onDone }: Props) {
+  const [index, setIndex] = useState(0);
+  const [question, setQuestion] = useState<Question>(() => reshuffleChoices(questions[0]));
+  const [attempts, setAttempts] = useState(0);
+  const [feedback, setFeedback] = useState<Feedback>('none');
+  const [lastAnswer, setLastAnswer] = useState<string | null>(null);
+  const [entry, setEntry] = useState('');
+  const outcomesRef = useRef<CorrectionOutcome[]>([]);
+
+  const isEntry = question.mode === 'entry' && question.answerFormat !== null;
+
+  const submit = (answer: string, correct: boolean) => {
+    if (feedback === 'fixed' || feedback === 'skipped') return;
+    setLastAnswer(answer);
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
+    if (correct) {
+      outcomesRef.current.push({
+        questionId: question.id,
+        attempts: nextAttempts,
+        fixed: true,
+        skipped: false,
+      });
+      setFeedback('fixed');
+    } else if (nextAttempts >= MAX_ATTEMPTS) {
+      outcomesRef.current.push({
+        questionId: question.id,
+        attempts: nextAttempts,
+        fixed: false,
+        skipped: true,
+      });
+      setFeedback('skipped');
+    } else {
+      setFeedback('tryAgain');
+    }
+  };
+
+  const tryAgain = () => {
+    setQuestion(reshuffleChoices(question));
+    setLastAnswer(null);
+    setEntry('');
+    setFeedback('none');
+  };
+
+  const next = () => {
+    if (index + 1 < questions.length) {
+      const nextIndex = index + 1;
+      setIndex(nextIndex);
+      setQuestion(reshuffleChoices(questions[nextIndex]));
+      setAttempts(0);
+      setLastAnswer(null);
+      setEntry('');
+      setFeedback('none');
+    } else {
+      onDone(outcomesRef.current);
+    }
+  };
+
+  const settled = feedback === 'fixed' || feedback === 'skipped';
+  const nextLabel = index + 1 < questions.length ? 'Next mistake' : 'See results';
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.header}>Fix your mistakes</Text>
+      <Text style={styles.progress}>
+        Mistake {index + 1} of {questions.length} · Try{' '}
+        {Math.min(attempts + (settled ? 0 : 1), MAX_ATTEMPTS)} of {MAX_ATTEMPTS}
+      </Text>
+
+      <View style={styles.promptCard}>
+        <Text style={[styles.prompt, promptTextStyle(question.prompt)]}>{question.prompt}</Text>
+      </View>
+
+      {isEntry ? (
+        <NumberPad
+          value={feedback === 'none' ? entry : lastAnswer ?? entry}
+          format={question.answerFormat!}
+          state={feedback === 'none' ? 'idle' : feedback === 'fixed' ? 'correct' : 'wrong'}
+          disabled={feedback !== 'none'}
+          onChange={setEntry}
+          onSubmit={() => submit(entry, isAnswerCorrect(question, entry))}
+        />
+      ) : (
+        question.choices.map((choice) => {
+          let state: 'idle' | 'correct' | 'wrong' = 'idle';
+          if (settled && choice === question.correctAnswer) state = 'correct';
+          else if (feedback !== 'none' && choice === lastAnswer && choice !== question.correctAnswer)
+            state = 'wrong';
+          return (
+            <ChoiceButton
+              key={choice}
+              label={choice}
+              state={state}
+              disabled={feedback !== 'none'}
+              onPress={() => submit(choice, choice === question.correctAnswer)}
+            />
+          );
+        })
+      )}
+
+      {feedback === 'tryAgain' && (
+        <View style={[styles.feedback, styles.feedbackWrong]}>
+          <Text style={styles.feedbackWrongText}>Not quite! Hint: {question.explanation}</Text>
+          <Pressable style={styles.button} onPress={tryAgain}>
+            <Text style={styles.buttonText}>Try again</Text>
+          </Pressable>
+        </View>
+      )}
+      {feedback === 'fixed' && (
+        <View style={[styles.feedback, styles.feedbackCorrect]}>
+          <Text style={styles.feedbackCorrectText}>🎉 Correct! {question.explanation}</Text>
+          <Pressable style={styles.button} onPress={next}>
+            <Text style={styles.buttonText}>{nextLabel}</Text>
+          </Pressable>
+        </View>
+      )}
+      {feedback === 'skipped' && (
+        <View style={[styles.feedback, styles.feedbackSkipped]}>
+          <Text style={styles.feedbackSkippedText}>
+            Let's skip this one for now. The answer is {question.correctAnswer}.{' '}
+            {question.explanation}
+          </Text>
+          <Pressable style={styles.button} onPress={next}>
+            <Text style={styles.buttonText}>{nextLabel}</Text>
+          </Pressable>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 20, paddingTop: 24, paddingBottom: 40 },
+  header: { fontSize: 24, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  progress: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  promptCard: {
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    marginVertical: 22,
+    alignItems: 'center',
+  },
+  prompt: { fontWeight: '800', color: colors.text, textAlign: 'center' },
+  feedback: { borderRadius: 14, padding: 16, marginTop: 16 },
+  feedbackWrong: { backgroundColor: colors.wrongBg },
+  feedbackWrongText: { color: colors.wrong, fontSize: 16, fontWeight: '600' },
+  feedbackCorrect: { backgroundColor: colors.correctBg },
+  feedbackCorrectText: { color: colors.correct, fontSize: 16, fontWeight: '600' },
+  feedbackSkipped: { backgroundColor: colors.warningBg },
+  feedbackSkippedText: { color: colors.warning, fontSize: 16, fontWeight: '600' },
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+});
