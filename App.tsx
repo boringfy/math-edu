@@ -1,37 +1,109 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 // The app draws edge-to-edge on Android, so real insets are needed to keep
 // the number pad clear of the navigation bar.
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import SubjectTabs from './src/components/SubjectTabs';
+import { generateLesson } from './src/lib/lessons';
+import { starsFor } from './src/lib/mapProgress';
+import {
+  applyMetrics,
+  ChallengeDef,
+  correctionAward,
+  dailyForDate,
+  dayKey,
+  emptyMetrics,
+  freshDaily,
+  lessonAward,
+} from './src/lib/progress';
+import { generatePuzzleSet, PuzzleSet } from './src/lib/puzzles';
 import { adjustTier, generateQuiz } from './src/lib/questions';
-import { loadHistory, loadTier, saveResult, saveTier } from './src/lib/storage';
+import {
+  loadCoins,
+  loadDaily,
+  loadHistory,
+  loadProgress,
+  loadTier,
+  saveCoins,
+  saveDaily,
+  saveProgress,
+  saveResult,
+  saveTier,
+} from './src/lib/storage';
+import { passageOf, storyQuestions } from './src/lib/stories';
 import CorrectionScreen, { CorrectionOutcome } from './src/screens/CorrectionScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
 import { colors } from './src/theme';
-import { AnswerRecord, Grade, QuizResult, Tier } from './src/types';
+import {
+  AnswerRecord,
+  CoinAward,
+  DailyState,
+  Grade,
+  Lesson,
+  MapStop,
+  Passage,
+  ProgressMap,
+  Question,
+  QuizResult,
+  Stars,
+  Story,
+  Subject,
+  Tier,
+} from './src/types';
 
 type Phase = 'home' | 'quiz' | 'results' | 'correction';
 
 const GRADES: Grade[] = [1, 2, 3, 4, 5];
 
+/** Coins a session has banked so far, itemised for the results screen. */
+const noAward: CoinAward = {
+  correct: 0,
+  fixed: 0,
+  combo: 0,
+  perfect: 0,
+  firstClear: 0,
+  challenges: 0,
+  total: 0,
+};
+
+const noProgress: Record<Subject, ProgressMap> = { math: {}, reading: {}, logic: {} };
+
 interface Session {
   resultId: string;
+  subject: Subject;
   grade: Grade;
   tier: Tier;
-  questions: ReturnType<typeof generateQuiz>;
+  /** null for free practice, which sits outside the maps. */
+  stop: MapStop | null;
+  /** The story to keep on screen, for a reading round. */
+  passage: Passage | null;
+  questions: Question[];
   records: AnswerRecord[];
   elapsedMs: number;
+  bestCombo: number;
+  stars: Stars | null;
+  award: CoinAward;
+  completedChallenges: ChallengeDef[];
   tierChange: 'up' | 'down' | null;
   afterCorrection: boolean;
 }
 
+/** What opening a session needs; everything else starts empty. */
+type SessionStart = Pick<Session, 'subject' | 'grade' | 'tier' | 'stop' | 'passage' | 'questions'>;
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>('home');
+  const [subject, setSubject] = useState<Subject>('math');
+  // One grade for the whole app: a child is the same age in every subject.
+  const [grade, setGrade] = useState<Grade>(1);
   const [history, setHistory] = useState<QuizResult[]>([]);
   const [tiers, setTiers] = useState<Record<Grade, Tier>>({ 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 });
+  const [coins, setCoins] = useState(0);
+  const [progress, setProgress] = useState<Record<Subject, ProgressMap>>(noProgress);
+  const [daily, setDaily] = useState<DailyState>(() => freshDaily(dayKey(new Date())));
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
@@ -39,22 +111,79 @@ export default function App() {
       setHistory(await loadHistory());
       const loaded = await Promise.all(GRADES.map((g) => loadTier(g)));
       setTiers({ 1: loaded[0], 2: loaded[1], 3: loaded[2], 4: loaded[3], 5: loaded[4] });
+      setCoins(await loadCoins());
+      setProgress({
+        math: await loadProgress('math'),
+        reading: await loadProgress('reading'),
+        logic: await loadProgress('logic'),
+      });
+      // Challenges roll over on the local date, so a stored day that isn't
+      // today is replaced rather than resumed.
+      const today = dailyForDate(await loadDaily(), dayKey(new Date()));
+      setDaily(today);
+      await saveDaily(today);
     })();
   }, []);
 
-  const startQuiz = (grade: Grade, count: number) => {
-    const tier = tiers[grade];
+  const newSession = (start: SessionStart) => {
     setSession({
       resultId: `r${Date.now()}`,
-      grade,
-      tier,
-      questions: generateQuiz(grade, tier, count),
       records: [],
       elapsedMs: 0,
+      bestCombo: 0,
+      stars: null,
+      award: noAward,
+      completedChallenges: [],
       tierChange: null,
       afterCorrection: false,
+      ...start,
     });
     setPhase('quiz');
+  };
+
+  const startLesson = (lesson: Lesson) => {
+    newSession({
+      subject: 'math',
+      grade: lesson.grade,
+      tier: lesson.tier,
+      stop: lesson,
+      passage: null,
+      questions: generateLesson(lesson),
+    });
+  };
+
+  const startStory = (story: Story) => {
+    newSession({
+      subject: 'reading',
+      grade: story.grade,
+      tier: story.tier,
+      stop: story,
+      passage: passageOf(story),
+      questions: storyQuestions(story),
+    });
+  };
+
+  const startPuzzles = (set: PuzzleSet) => {
+    newSession({
+      subject: 'logic',
+      grade: set.grade,
+      tier: set.tier,
+      stop: set,
+      passage: null,
+      questions: generatePuzzleSet(set),
+    });
+  };
+
+  const startPractice = (practiceGrade: Grade, count: number) => {
+    const tier = tiers[practiceGrade];
+    newSession({
+      subject: 'math',
+      grade: practiceGrade,
+      tier,
+      stop: null,
+      passage: null,
+      questions: generateQuiz(practiceGrade, tier, count),
+    });
   };
 
   const resultFromSession = (s: Session): QuizResult => {
@@ -62,6 +191,7 @@ export default function App() {
     return {
       id: s.resultId,
       date: new Date().toISOString(),
+      subject: s.subject,
       grade: s.grade,
       tier: s.tier,
       total: s.records.length,
@@ -69,49 +199,177 @@ export default function App() {
       fixedCount: mistakes.filter((r) => r.fixed).length,
       skippedCount: mistakes.filter((r) => r.skipped).length,
       elapsedMs: s.elapsedMs,
+      stopId: s.stop?.id,
+      stars: s.stars ?? undefined,
+      coins: s.award.total,
     };
   };
 
-  const persist = async (s: Session, newTier: Tier) => {
+  const persistResult = async (s: Session, newTier: Tier) => {
     const result = resultFromSession(s);
     await saveResult(result);
-    setHistory([result, ...history.filter((r) => r.id !== result.id)]);
+    setHistory((prev) => [result, ...prev.filter((r) => r.id !== result.id)]);
     if (newTier !== s.tier) {
       await saveTier(s.grade, newTier);
-      setTiers({ ...tiers, [s.grade]: newTier });
+      setTiers((prev) => ({ ...prev, [s.grade]: newTier }));
     }
   };
 
-  const onQuizComplete = (records: AnswerRecord[], elapsedMs: number) => {
-    if (!session) return;
-    const accuracy = records.filter((r) => r.correct).length / records.length;
-    const newTier = adjustTier(session.tier, accuracy);
-    const tierChange = newTier > session.tier ? 'up' : newTier < session.tier ? 'down' : null;
-    const updated: Session = { ...session, records, elapsedMs, tierChange };
-    setSession(updated);
-    setPhase('results');
-    persist(updated, newTier);
+  /** Records stars against the map the session came from. */
+  const persistStars = async (s: Session, stop: MapStop, stars: Stars, percent: number) => {
+    const next = await saveProgress(s.subject, stop.id, {
+      stars,
+      bestPercent: percent,
+      clearedAt: new Date().toISOString(),
+    });
+    setProgress((prev) => ({ ...prev, [s.subject]: next }));
   };
 
-  const onCorrectionDone = (outcomes: CorrectionOutcome[]) => {
+  /** Banks coins, rolls the day's challenges on, and pays their rewards. */
+  const bank = async (
+    earned: CoinAward,
+    metrics: Parameters<typeof applyMetrics>[1],
+  ): Promise<CoinAward & { completed: ChallengeDef[] }> => {
+    const update = applyMetrics(daily, { ...metrics, coinsEarned: earned.total });
+    setDaily(update.state);
+    await saveDaily(update.state);
+
+    const total = earned.total + update.coins;
+    const next = coins + total;
+    setCoins(next);
+    await saveCoins(next);
+
+    return {
+      ...earned,
+      challenges: update.coins,
+      total,
+      completed: update.completed,
+    };
+  };
+
+  const onQuizComplete = async (
+    records: AnswerRecord[],
+    elapsedMs: number,
+    bestCombo: number,
+  ) => {
+    if (!session) return;
+    const correctCount = records.filter((r) => r.correct).length;
+    const total = records.length;
+
+    // Map stops run at a fixed difficulty; only free practice adapts.
+    const newTier = session.stop ? session.tier : adjustTier(session.tier, correctCount / total);
+    const tierChange = newTier > session.tier ? 'up' : newTier < session.tier ? 'down' : null;
+
+    const stars = session.stop ? starsFor(correctCount, total) : null;
+    const firstClear =
+      session.stop !== null &&
+      stars !== null &&
+      stars > 0 &&
+      (progress[session.subject][session.stop.id]?.stars ?? 0) === 0;
+
+    const earned = await bank(
+      lessonAward({ correctCount, total, bestCombo, firstClear }),
+      {
+        ...emptyMetrics(),
+        lessonsPlayed: 1,
+        lessonsCleared: stars !== null && stars > 0 ? 1 : 0,
+        perfectLessons: stars === 3 ? 1 : 0,
+        correctAnswers: correctCount,
+        bestCombo,
+      },
+    );
+
+    if (session.stop && stars !== null) {
+      await persistStars(session, session.stop, stars, Math.round((correctCount / total) * 100));
+    }
+
+    const updated: Session = {
+      ...session,
+      records,
+      elapsedMs,
+      bestCombo,
+      stars,
+      tierChange,
+      award: earned,
+      completedChallenges: earned.completed,
+    };
+    setSession(updated);
+    setPhase('results');
+    await persistResult(updated, newTier);
+  };
+
+  const onCorrectionDone = async (outcomes: CorrectionOutcome[]) => {
     if (!session) return;
     const byId = new Map(outcomes.map((o) => [o.questionId, o]));
     const records = session.records.map((r) => {
       const o = byId.get(r.question.id);
       return o ? { ...r, attempts: o.attempts, fixed: o.fixed, skipped: o.skipped } : r;
     });
-    const updated: Session = { ...session, records, afterCorrection: true };
+
+    const fixedCount = outcomes.filter((o) => o.fixed).length;
+    const earned = await bank(correctionAward(fixedCount), {
+      ...emptyMetrics(),
+      mistakesFixed: fixedCount,
+    });
+
+    // Practice can rescue a failed stop to a single star — enough to open
+    // the next one — but never to the two or three a clean run earns.
+    let stars = session.stars;
+    if (session.stop && stars === 0) {
+      const correctCount = records.filter((r) => r.correct).length;
+      const rescued = Math.min(1, starsFor(correctCount + fixedCount, records.length)) as Stars;
+      if (rescued > 0) {
+        stars = rescued;
+        await persistStars(
+          session,
+          session.stop,
+          rescued,
+          Math.round((correctCount / records.length) * 100),
+        );
+      }
+    }
+
+    const updated: Session = {
+      ...session,
+      records,
+      stars,
+      afterCorrection: true,
+      award: earned,
+      completedChallenges: earned.completed,
+    };
     setSession(updated);
     setPhase('results');
-    persist(updated, updated.tier);
+    await persistResult(updated, updated.tier);
   };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.root}>
-        {phase === 'home' && <HomeScreen history={history} tiers={tiers} onStart={startQuiz} />}
+        {phase === 'home' && (
+          <View style={styles.home}>
+            <HomeScreen
+              subject={subject}
+              history={history}
+              grade={grade}
+              onGradeChange={setGrade}
+              tiers={tiers}
+              coins={coins}
+              daily={daily}
+              progress={progress[subject]}
+              onStartLesson={startLesson}
+              onStartStory={startStory}
+              onStartPuzzles={startPuzzles}
+              onStartPractice={startPractice}
+            />
+            <SubjectTabs subject={subject} onSelect={setSubject} />
+          </View>
+        )}
         {phase === 'quiz' && session && (
-          <QuizScreen questions={session.questions} onComplete={onQuizComplete} />
+          <QuizScreen
+            questions={session.questions}
+            passage={session.passage ?? undefined}
+            onComplete={onQuizComplete}
+          />
         )}
         {phase === 'results' && session && (
           <ResultsScreen
@@ -119,6 +377,13 @@ export default function App() {
             elapsedMs={session.elapsedMs}
             tierChange={session.tierChange}
             afterCorrection={session.afterCorrection}
+            subject={session.subject}
+            stop={session.stop}
+            stars={session.stars}
+            bestCombo={session.bestCombo}
+            award={session.award}
+            completedChallenges={session.completedChallenges}
+            coinTotal={coins}
             onFixMistakes={() => setPhase('correction')}
             onHome={() => {
               setSession(null);
@@ -129,6 +394,7 @@ export default function App() {
         {phase === 'correction' && session && (
           <CorrectionScreen
             questions={session.records.filter((r) => !r.correct).map((r) => r.question)}
+            passage={session.passage ?? undefined}
             onDone={onCorrectionDone}
           />
         )}
@@ -140,4 +406,5 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  home: { flex: 1 },
 });

@@ -34,6 +34,12 @@ interface Creature {
   where: string;
 }
 
+/**
+ * Same rule as VEHICLES below: every count here has to be one a child can be
+ * sure of — 2 for a bird, 4 for a dog, 6 for an insect, 8 for a spider. These
+ * questions never state the rate, so an animal whose leg count is arguable
+ * would have no single right answer.
+ */
 const CREATURES: Creature[] = [
   { singular: 'bird', plural: 'birds', legs: 2, part: 'feet', where: 'in a tree' },
   { singular: 'duck', plural: 'ducks', legs: 2, part: 'feet', where: 'on the pond' },
@@ -48,12 +54,19 @@ const CREATURES: Creature[] = [
   { singular: 'octopus', plural: 'octopuses', legs: 8, part: 'arms', where: 'in the tank' },
 ];
 
+/**
+ * Only vehicles whose wheel count is fixed by the word itself or is settled
+ * common knowledge. Anything with a variable count — a truck (4, 6, 10 or 18),
+ * a wagon, a van — makes the question unanswerable, because the child is
+ * asked to supply a number the prompt never gives them and there is no single
+ * right one. Keep it that way when adding to this list.
+ */
 const VEHICLES = [
   { singular: 'bicycle', plural: 'bicycles', wheels: 2 },
+  { singular: 'motorbike', plural: 'motorbikes', wheels: 2 },
   { singular: 'tricycle', plural: 'tricycles', wheels: 3 },
   { singular: 'car', plural: 'cars', wheels: 4 },
-  { singular: 'wagon', plural: 'wagons', wheels: 4 },
-  { singular: 'truck', plural: 'trucks', wheels: 6 },
+  { singular: 'taxi', plural: 'taxis', wheels: 4 },
 ];
 
 const CONTAINERS = [

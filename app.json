@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Math Quest",
+    "name": "Boring Quest",
     "slug": "math-edu",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,6 +19,20 @@
       },
       "predictiveBackGestureEnabled": false
     },
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Boring Quest listens while you read a story out loud, so it can light up the words it hears. Everything stays on this device.",
+          "speechRecognitionPermission": "Boring Quest checks which words you read out loud, entirely on this device.",
+          "androidSpeechServicePackages": [
+            "com.google.android.tts",
+            "com.google.android.as",
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

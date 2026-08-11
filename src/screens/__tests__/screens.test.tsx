@@ -1,0 +1,378 @@
+import { act, create, ReactTestRenderer } from 'react-test-renderer';
+import ChoiceButton from '../../components/ChoiceButton';
+import ComboBurst from '../../components/ComboBurst';
+import DailyChallenges from '../../components/DailyChallenges';
+import MapTrail from '../../components/MapTrail';
+import PuzzleTile from '../../components/PuzzleTile';
+import StoryPassage from '../../components/StoryPassage';
+import SubjectTabs from '../../components/SubjectTabs';
+import { generateLesson, LESSONS } from '../../lib/lessons';
+import { freshDaily, lessonAward } from '../../lib/progress';
+import { generatePuzzleSet, PUZZLE_SETS } from '../../lib/puzzles';
+import { passageOf, STORIES, storyQuestions } from '../../lib/stories';
+import { AnswerRecord, Lesson, ProgressMap, Subject } from '../../types';
+import HomeScreen from '../HomeScreen';
+import QuizScreen from '../QuizScreen';
+import ResultsScreen from '../ResultsScreen';
+
+/** Renders a tree and returns it, failing the test on any render error. */
+function render(element: React.ReactElement): ReactTestRenderer {
+  let tree!: ReactTestRenderer;
+  act(() => {
+    tree = create(element);
+  });
+  return tree;
+}
+
+/**
+ * Every string rendered anywhere in the tree, for content assertions.
+ * Children are joined without a separator so that interpolated text such as
+ * `+{total} coins` reads back exactly as it appears on screen.
+ */
+function textOf(tree: ReactTestRenderer): string {
+  const walk = (node: unknown): string => {
+    if (typeof node === 'string') return node;
+    if (Array.isArray(node)) return node.map(walk).join('');
+    if (node && typeof node === 'object' && 'children' in node) {
+      return `${walk((node as { children: unknown }).children)} `;
+    }
+    return '';
+  };
+  return walk(tree.toJSON());
+}
+
+/** Text with all its spacing removed, for comparing across element splits. */
+const squash = (text: string) => text.replace(/\s+/g, '');
+
+/** A lesson's questions, all as multiple choice so a test can tap answers. */
+const tappableQuestions = (lesson: Lesson) =>
+  generateLesson(lesson)
+    .filter((q) => q.mode !== 'draw')
+    .map((q) => ({ ...q, mode: 'choice' as const }));
+
+const daily = freshDaily('2026-08-02');
+const noProgress: ProgressMap = {};
+
+/** The props both home tabs share, so a test only states what it varies. */
+const homeProps = (subject: Subject) => ({
+  subject,
+  history: [],
+  grade: 1 as const,
+  onGradeChange: () => {},
+  tiers: { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 } as const,
+  coins: 137,
+  daily,
+  progress: noProgress,
+  onStartLesson: () => {},
+  onStartStory: () => {},
+  onStartPuzzles: () => {},
+  onStartPractice: () => {},
+});
+
+/** The lesson map's meta lines, which MapTrail leaves to its caller. */
+const lessonMeta = (lesson: Lesson): [string, string] => [
+  lesson.focus.join(' · '),
+  `${lesson.questionCount} questions`,
+];
+
+// The combo burst animates on timers; without this they outlive the test run.
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
+
+describe('HomeScreen', () => {
+  it('renders the map, the coin purse and the day\'s challenges', () => {
+    const text = textOf(render(<HomeScreen {...homeProps('math')} />));
+    expect(text).toContain('137');
+    expect(text).toContain("Today's challenges");
+    // Grade 1 opens on its first lesson.
+    expect(text).toContain(LESSONS[1][0].title);
+    expect(text).toContain('START');
+  });
+
+  it('shows the story map and no free practice on the reading tab', () => {
+    const text = textOf(render(<HomeScreen {...homeProps('reading')} />));
+    expect(text).toContain('📖 Boring Quest');
+    expect(text).toContain(STORIES[1][0].title);
+    expect(text).not.toContain('Free practice');
+    // The purse is one purse, shared by both subjects.
+    expect(text).toContain('137');
+  });
+
+  it('keeps each tab to its own history', () => {
+    const result = {
+      id: 'r1',
+      date: '2026-08-02T00:00:00.000Z',
+      grade: 1 as const,
+      tier: 2 as const,
+      total: 4,
+      correctCount: 4,
+      fixedCount: 0,
+      skippedCount: 0,
+      elapsedMs: 30_000,
+    };
+    const history = [
+      { ...result, subject: 'reading' as const, id: 'r-read', elapsedMs: 31_000 },
+      { ...result, subject: 'math' as const, id: 'r-math', elapsedMs: 62_000 },
+    ];
+
+    /** Opens the folded history section and returns everything on screen. */
+    const openHistory = (subject: Subject, label: string) => {
+      const tree = render(<HomeScreen {...homeProps(subject)} history={history} />);
+      // Folded away until asked for, so the map keeps the screen.
+      expect(textOf(tree)).not.toContain('1:02');
+      expect(textOf(tree)).not.toContain('0:31');
+      const header = tree.root.find(
+        (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === label,
+      );
+      act(() => {
+        header.props.onPress();
+      });
+      return textOf(tree);
+    };
+
+    expect(openHistory('math', 'Past quizzes')).toContain('1:02');
+    expect(openHistory('reading', 'Past reads')).toContain('0:31');
+  });
+
+  it('shows the puzzle map on the logic tab', () => {
+    const text = textOf(render(<HomeScreen {...homeProps('logic')} />));
+    expect(text).toContain('🧩 Boring Quest');
+    expect(text).toContain(PUZZLE_SETS[1][0].title);
+    expect(text).toContain('puzzles get trickier as you go');
+    expect(text).not.toContain('Free practice');
+  });
+});
+
+describe('MapTrail', () => {
+  it('marks cleared stops with stars and leaves later ones locked', () => {
+    const progress: ProgressMap = {
+      'g1-l1': { stars: 2, bestPercent: 85, clearedAt: '2026-08-01T00:00:00.000Z' },
+    };
+    const tree = render(
+      <MapTrail stops={LESSONS[1]} progress={progress} meta={lessonMeta} onStart={() => {}} />,
+    );
+    const text = textOf(tree);
+    expect(text).toContain('★');
+    // Lesson 3 is still shut, so it shows a padlock rather than its icon.
+    expect(text).toContain('🔒');
+  });
+
+  it('starts a stop when its node is pressed', () => {
+    const started: Lesson[] = [];
+    const tree = render(
+      <MapTrail
+        stops={LESSONS[2]}
+        progress={noProgress}
+        meta={lessonMeta}
+        onStart={(l) => started.push(l)}
+      />,
+    );
+    const pressables = tree.root.findAll(
+      (n) => typeof n.type !== 'string' && n.props.onPress !== undefined,
+    );
+    act(() => {
+      pressables[0].props.onPress();
+    });
+    expect(started).toHaveLength(1);
+    expect(started[0].id).toBe('g2-l1');
+  });
+});
+
+describe('SubjectTabs', () => {
+  it('switches to the tab that was tapped', () => {
+    const picked: Subject[] = [];
+    const tree = render(<SubjectTabs subject="math" onSelect={(s) => picked.push(s)} />);
+    const tabs = tree.root.findAll(
+      (n) => typeof n.type !== 'string' && n.props.onPress !== undefined,
+    );
+    act(() => {
+      tabs[1].props.onPress();
+      tabs[2].props.onPress();
+    });
+    expect(picked).toEqual(['reading', 'logic']);
+  });
+});
+
+describe('StoryPassage', () => {
+  it('shows the story by default and folds it away when tapped', () => {
+    const passage = passageOf(STORIES[1][0]);
+    const tree = render(<StoryPassage passage={passage} />);
+    expect(textOf(tree)).toContain(passage.text);
+
+    const header = tree.root.findAll(
+      (n) => typeof n.type !== 'string' && n.props.onPress !== undefined,
+    )[0];
+    act(() => {
+      header.props.onPress();
+    });
+    expect(textOf(tree)).not.toContain(passage.text);
+    expect(textOf(tree)).toContain('Read again');
+  });
+});
+
+describe('DailyChallenges', () => {
+  it('shows progress against each target', () => {
+    const inProgress = { ...daily, progress: { [daily.challengeIds[0]]: 1 } };
+    expect(textOf(render(<DailyChallenges daily={inProgress} />))).toContain('1 /');
+  });
+});
+
+describe('ComboBurst', () => {
+  it('stays out of the way until a streak fires', () => {
+    expect(render(<ComboBurst combo={0} nonce={0} />).toJSON()).toBeNull();
+    expect(textOf(render(<ComboBurst combo={5} nonce={1} />))).toContain('5 in a row!');
+  });
+});
+
+describe('QuizScreen', () => {
+  it('walks through a lesson and reports the best streak', () => {
+    const questions = tappableQuestions(LESSONS[1][0]);
+    let done: { records: AnswerRecord[]; combo: number } | null = null;
+
+    const tree = render(
+      <QuizScreen
+        questions={questions}
+        onComplete={(records, _ms, bestCombo) => {
+          done = { records, combo: bestCombo };
+        }}
+      />,
+    );
+
+    // Answer every question correctly by tapping the right choice.
+    for (const question of questions) {
+      const button = tree.root
+        .findAll((n) => typeof n.type !== 'string' && n.props.label !== undefined)
+        .find((n) => n.props.label === question.correctAnswer);
+      act(() => {
+        button!.props.onPress();
+      });
+    }
+
+    expect(done).not.toBeNull();
+    expect(done!.records).toHaveLength(questions.length);
+    expect(done!.records.every((r) => r.correct)).toBe(true);
+    expect(done!.combo).toBe(questions.length);
+  });
+
+  it('shows a reading story first, then keeps it beside every question', () => {
+    const story = STORIES[2][0];
+    const questions = storyQuestions(story);
+    let done: AnswerRecord[] | null = null;
+
+    const tree = render(
+      <QuizScreen
+        questions={questions}
+        passage={passageOf(story)}
+        onComplete={(records) => {
+          done = records;
+        }}
+      />,
+    );
+
+    // The story comes first, on its own, with no question in sight. It is
+    // drawn one word at a time so reading aloud can highlight them, so the
+    // spacing between the spans is an artefact of textOf rather than the
+    // screen — compare the words alone.
+    expect(squash(textOf(tree))).toContain(squash(story.text));
+    expect(textOf(tree)).not.toContain(questions[0].prompt);
+
+    const start = tree.root.findAll(
+      (n) => typeof n.type !== 'string' && n.props.onPress !== undefined,
+    )[0];
+    act(() => {
+      start.props.onPress();
+    });
+
+    for (const question of questions) {
+      // The story is still there to look back at while answering.
+      expect(textOf(tree)).toContain(story.text);
+      const button = tree.root
+        .findAll((n) => typeof n.type !== 'string' && n.props.label !== undefined)
+        .find((n) => n.props.label === question.correctAnswer);
+      act(() => {
+        button!.props.onPress();
+      });
+    }
+
+    expect(done).not.toBeNull();
+    expect(done!).toHaveLength(questions.length);
+    expect(done!.every((r) => r.correct)).toBe(true);
+  });
+
+  it('draws a logic puzzle and its four answers, and marks the right one', () => {
+    // A set built purely of drawn puzzles, so every question has tiles.
+    const set = PUZZLE_SETS[1][0];
+    const questions = generatePuzzleSet(set);
+    let done: AnswerRecord[] | null = null;
+
+    const tree = render(
+      <QuizScreen
+        questions={questions}
+        onComplete={(records) => {
+          done = records;
+        }}
+      />,
+    );
+
+    for (const question of questions) {
+      expect(question.puzzle).toBeDefined();
+      // Four buttons, each carrying the tile its label stands for.
+      const buttons = tree.root.findAllByType(ChoiceButton);
+      expect(buttons).toHaveLength(4);
+      for (const button of buttons) {
+        expect(button.props.tile).toEqual(question.puzzle!.options[button.props.label]);
+      }
+      // The pattern itself is drawn above, gap included.
+      expect(tree.root.findAllByType(PuzzleTile).length).toBeGreaterThan(4);
+
+      act(() => {
+        buttons.find((b) => b.props.label === question.correctAnswer)!.props.onPress();
+      });
+    }
+
+    expect(done!.every((r) => r.correct)).toBe(true);
+  });
+});
+
+describe('ResultsScreen', () => {
+  it('itemises the coins earned and celebrates three stars', () => {
+    const questions = tappableQuestions(LESSONS[1][0]);
+    const records: AnswerRecord[] = questions.map((question) => ({
+      question,
+      chosen: question.correctAnswer,
+      correct: true,
+    }));
+    const award = lessonAward({
+      correctCount: records.length,
+      total: records.length,
+      bestCombo: records.length,
+      firstClear: true,
+    });
+
+    const text = textOf(
+      render(
+        <ResultsScreen
+          records={records}
+          elapsedMs={62_000}
+          tierChange={null}
+          afterCorrection={false}
+          subject="math"
+          stop={LESSONS[1][0]}
+          stars={3}
+          bestCombo={records.length}
+          award={award}
+          completedChallenges={[]}
+          coinTotal={500}
+          onFixMistakes={() => {}}
+          onHome={() => {}}
+        />,
+      ),
+    );
+
+    expect(text).toContain(`+${award.total} coins`);
+    expect(text).toContain('Perfect lesson');
+    expect(text).toContain('First time cleared');
+    expect(text).toContain('perfect lesson!');
+    expect(text).toContain('500');
+  });
+});

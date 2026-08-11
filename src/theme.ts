@@ -23,3 +23,10 @@ export const promptTextStyle = (prompt: string): { fontSize: number; lineHeight:
     prompt.length > 90 ? 19 : prompt.length > 45 ? 22 : prompt.length > 20 ? 26 : 32;
   return { fontSize, lineHeight: Math.round(fontSize * 1.35) };
 };
+
+/**
+ * A logic puzzle's clue list is several short lines that have to be read one
+ * at a time; centring those leaves the eye hunting for where each begins.
+ */
+export const promptAlign = (prompt: string): 'left' | 'center' =>
+  prompt.split('\n').length > 2 ? 'left' : 'center';

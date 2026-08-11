@@ -205,6 +205,56 @@ describe('topic pools', () => {
   });
 });
 
+/**
+ * Legs-and-wheels problems are the only ones that don't state their rate in
+ * the prompt — "6 birds, how many feet?" expects the child to know a bird has
+ * two. That only works when the count is genuinely fixed. "2 trucks, how many
+ * wheels?" has no answer, because a truck can have 4, 6, 10 or 18.
+ */
+describe('story problems that rely on real-world knowledge', () => {
+  /** Subjects whose leg or wheel count genuinely varies. */
+  const AMBIGUOUS = [
+    'truck', 'lorry', 'van', 'wagon', 'bus', 'train', 'trailer', 'tractor',
+    'centipede', 'millipede', 'caterpillar', 'crab', 'shrimp',
+  ];
+
+  it('never leans on a subject whose count is arguable', () => {
+    for (const [grade, tier] of GRADE_TIERS) {
+      for (const gen of wordProblemsFor(grade, tier)) {
+        for (let i = 0; i < 30; i++) {
+          const prompt = gen().prompt.toLowerCase();
+          // A prompt that spells its rate out is fine whatever it is about:
+          // "each bus holds 20 students" settles the question by itself.
+          if (/each .* (has|holds|costs) \d+/.test(prompt)) continue;
+          for (const subject of AMBIGUOUS) {
+            expect(prompt).not.toContain(subject);
+          }
+        }
+      }
+    }
+  });
+
+  /**
+   * The real guarantee: any question that doesn't state its rate must be
+   * answerable from the subject alone. Catch it by checking that a prompt
+   * asking for a total of legs/feet/wheels either names a subject with a
+   * fixed count or spells the rate out.
+   */
+  it('states the rate whenever the subject alone would not settle it', () => {
+    const FIXED = /bird|duck|chicken|dog|cat|horse|cow|ant|beetle|spider|octopus|bicycle|motorbike|tricycle|car|taxi/;
+    for (const [grade, tier] of GRADE_TIERS) {
+      for (const gen of wordProblemsFor(grade, tier)) {
+        for (let i = 0; i < 30; i++) {
+          const q = gen();
+          if (!/how many (feet|legs|arms|wheels)/i.test(q.prompt)) continue;
+          const statesRate = /each .* has \d+/i.test(q.prompt);
+          expect(statesRate || FIXED.test(q.prompt.toLowerCase())).toBe(true);
+        }
+      }
+    }
+  });
+});
+
 describe('typed-entry mode', () => {
   it.each(GRADE_TIERS)('grade %i tier %i only types answers that can be typed', (grade, tier) => {
     for (const q of generateQuiz(grade, tier, 40)) {

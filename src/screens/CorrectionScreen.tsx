@@ -10,10 +10,12 @@ import {
 import ChoiceButton from '../components/ChoiceButton';
 import CutBoard from '../components/CutBoard';
 import NumberPad from '../components/NumberPad';
+import PuzzleBoard from '../components/PuzzleBoard';
+import StoryPassage from '../components/StoryPassage';
 import { Chord } from '../lib/cakeCuts';
 import { isAnswerCorrect, isDrawingCorrect, reshuffleChoices } from '../lib/questions';
-import { colors, promptTextStyle } from '../theme';
-import { Question } from '../types';
+import { colors, promptAlign, promptTextStyle } from '../theme';
+import { Passage, Question } from '../types';
 
 export interface CorrectionOutcome {
   questionId: string;
@@ -24,6 +26,8 @@ export interface CorrectionOutcome {
 
 interface Props {
   questions: Question[];
+  /** The story these questions came from, if this was a reading round. */
+  passage?: Passage;
   onDone: (outcomes: CorrectionOutcome[]) => void;
 }
 
@@ -37,7 +41,7 @@ type Feedback = 'none' | 'tryAgain' | 'fixed' | 'skipped';
  * number pad cleared); after MAX_ATTEMPTS wrong tries the question is skipped
  * and the answer revealed.
  */
-export default function CorrectionScreen({ questions, onDone }: Props) {
+export default function CorrectionScreen({ questions, passage, onDone }: Props) {
   const [index, setIndex] = useState(0);
   const [question, setQuestion] = useState<Question>(() => reshuffleChoices(questions[0]));
   const [attempts, setAttempts] = useState(0);
@@ -111,8 +115,19 @@ export default function CorrectionScreen({ questions, onDone }: Props) {
         {Math.min(attempts + (settled ? 0 : 1), MAX_ATTEMPTS)} of {MAX_ATTEMPTS}
       </Text>
 
+      {passage && <View style={styles.passage}><StoryPassage passage={passage} /></View>}
+
       <View style={styles.promptCard}>
-        <Text style={[styles.prompt, promptTextStyle(question.prompt)]}>{question.prompt}</Text>
+        <Text
+          style={[
+            styles.prompt,
+            promptTextStyle(question.prompt),
+            { textAlign: promptAlign(question.prompt) },
+          ]}
+        >
+          {question.prompt}
+        </Text>
+        {question.puzzle && <PuzzleBoard puzzle={question.puzzle} />}
       </View>
 
       {isDrawing ? (
@@ -135,21 +150,29 @@ export default function CorrectionScreen({ questions, onDone }: Props) {
           onSubmit={() => submit(entry, isAnswerCorrect(question, entry))}
         />
       ) : (
-        question.choices.map((choice) => {
-          let state: 'idle' | 'correct' | 'wrong' = 'idle';
-          if (settled && choice === question.correctAnswer) state = 'correct';
-          else if (feedback !== 'none' && choice === lastAnswer && choice !== question.correctAnswer)
-            state = 'wrong';
-          return (
-            <ChoiceButton
-              key={choice}
-              label={choice}
-              state={state}
-              disabled={feedback !== 'none'}
-              onPress={() => submit(choice, choice === question.correctAnswer)}
-            />
-          );
-        })
+        <View style={question.puzzle ? styles.optionGrid : undefined}>
+          {question.choices.map((choice) => {
+            let state: 'idle' | 'correct' | 'wrong' = 'idle';
+            if (settled && choice === question.correctAnswer) state = 'correct';
+            else if (
+              feedback !== 'none' &&
+              choice === lastAnswer &&
+              choice !== question.correctAnswer
+            )
+              state = 'wrong';
+            return (
+              <View key={choice} style={question.puzzle ? styles.option : undefined}>
+                <ChoiceButton
+                  label={choice}
+                  tile={question.puzzle?.options[choice]}
+                  state={state}
+                  disabled={feedback !== 'none'}
+                  onPress={() => submit(choice, choice === question.correctAnswer)}
+                />
+              </View>
+            );
+          })}
+        </View>
       )}
 
       {feedback === 'tryAgain' && (
@@ -194,6 +217,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
   },
+  passage: { marginTop: 20 },
   promptCard: {
     backgroundColor: colors.card,
     borderRadius: 18,
@@ -204,7 +228,9 @@ const styles = StyleSheet.create({
     marginVertical: 22,
     alignItems: 'center',
   },
-  prompt: { fontWeight: '800', color: colors.text, textAlign: 'center' },
+  prompt: { fontWeight: '800', color: colors.text },
+  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  option: { width: '48%' },
   feedback: { borderRadius: 14, padding: 16, marginTop: 16 },
   feedbackWrong: { backgroundColor: colors.wrongBg },
   feedbackWrongText: { color: colors.wrong, fontSize: 16, fontWeight: '600' },

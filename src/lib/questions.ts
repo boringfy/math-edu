@@ -1,4 +1,4 @@
-import { Grade, Question, Tier } from '../types';
+import { Grade, Question, Tier, TopicKey } from '../types';
 import { cakeCutQuestion } from './drawPuzzles';
 import { Gen, makeQuestion, numPool, pick, randInt, shuffle } from './generator';
 import { geometryFor } from './geometry';
@@ -344,6 +344,115 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
 }
 
 /**
+ * The same question kinds as `generatorsFor`, but split by topic so a lesson
+ * can be about one thing. Arithmetic is broken into '+ −' and '× ÷' rather
+ * than left as one pool, and grades 4-5 gain the plain multi-digit addition
+ * and subtraction that the mixed quiz leaves out.
+ *
+ * Pools that don't apply to a grade come back empty, and `allocate` drops
+ * them, so a lesson never has to check what its grade supports.
+ */
+export function lessonPools(grade: Grade, tier: Tier): Record<TopicKey, Gen[]> {
+  const empty: Record<TopicKey, Gen[]> = {
+    addSub: [],
+    mulDiv: [],
+    fractions: [],
+    decimals: [],
+    order: [],
+    word: wordProblemsFor(grade, tier),
+    geometry: geometryFor(grade, tier),
+    measurement: measurementFor(grade, tier),
+    money: moneyFor(grade, tier),
+    speed: physicsFor(grade, tier),
+  };
+
+  switch (grade) {
+    case 1: {
+      const limit = tier === 1 ? 10 : 20;
+      empty.addSub = [
+        () => addition(limit),
+        () => subtraction(limit),
+        () => missingAddend(limit),
+        () => missingSubtractionPart(limit),
+      ];
+      if (tier === 3) empty.addSub.push(() => tripleAddition(9));
+      break;
+    }
+    case 2: {
+      const limit = tier === 1 ? 50 : tier === 2 ? 100 : 200;
+      const tables = tier === 1 ? [2, 5, 10] : tier === 2 ? [2, 3, 4, 5, 10] : [2, 3, 4, 5, 6, 10];
+      empty.addSub = [
+        () => addition(limit),
+        () => subtraction(limit),
+        () => missingAddend(limit),
+        () => missingSubtractionPart(limit),
+        () => tripleAddition(tier === 1 ? 9 : 20),
+      ];
+      empty.mulDiv = [() => tableMultiplication(tables, 10)];
+      if (tier >= 2) empty.mulDiv.push(() => missingFactor(5));
+      break;
+    }
+    case 3: {
+      const maxFactor = tier === 1 ? 5 : tier === 2 ? 10 : 12;
+      const limit = tier === 1 ? 300 : 1000;
+      empty.addSub = [
+        () => addition(limit),
+        () => subtraction(limit),
+        () => missingAddend(limit),
+        () => missingSubtractionPart(limit),
+      ];
+      empty.mulDiv = [
+        () => multiplication([2, maxFactor], [2, maxFactor]),
+        () => division(maxFactor, maxFactor),
+        () => missingFactor(maxFactor),
+        () => missingDivisionPart(maxFactor, maxFactor),
+      ];
+      break;
+    }
+    case 4: {
+      const limit = tier === 1 ? 500 : tier === 2 ? 2000 : 9999;
+      const bigFactor: [number, number] =
+        tier === 1 ? [11, 49] : tier === 2 ? [11, 99] : [101, 999];
+      empty.addSub = [
+        () => addition(limit),
+        () => subtraction(limit),
+        () => missingAddend(limit),
+        () => missingSubtractionPart(limit),
+      ];
+      empty.mulDiv = [
+        () => multiplication(bigFactor, [2, 9]),
+        () => division(9, tier === 1 ? 20 : 99),
+        () => missingFactor(tier === 1 ? 9 : 12),
+        () => missingDivisionPart(9, tier === 1 ? 20 : 50),
+      ];
+      empty.fractions = [() => fractionAddSub()];
+      break;
+    }
+    case 5: {
+      const limit = tier === 1 ? 2000 : 9999;
+      const decimals = tier === 1 ? 1 : 2;
+      empty.addSub = [
+        () => addition(limit),
+        () => subtraction(limit),
+        () => missingSubtractionPart(limit),
+      ];
+      empty.mulDiv = [
+        () => multiplication([11, 99], [2, 12]),
+        () => division(12, 99),
+        () => missingFactor(12),
+        () => missingDivisionPart(12, 50),
+      ];
+      empty.fractions = [() => fractionAddSub(), () => largestFraction()];
+      empty.decimals = [() => decimalAddSub(decimals), () => decimalMultiplication()];
+      empty.order = [() => orderOfOperations(false)];
+      if (tier >= 2) empty.order.push(() => orderOfOperations(true));
+      break;
+    }
+  }
+  return empty;
+}
+
+/**
  * How the topics compete for slots in a quiz. Pools that are empty for a
  * grade (physics before grade 3, say) drop out and their share is spread
  * across the rest.
@@ -396,6 +505,15 @@ function allocate(pools: { gens: Gen[]; weight: number }[], count: number): Ques
   );
 }
 
+/** Promotes the tier's share of typeable questions to typed entry, in place. */
+function promoteToEntry(questions: Question[], tier: Tier): void {
+  const typeable = questions.filter((q) => q.answerFormat !== null);
+  const entryCount = Math.round(typeable.length * ENTRY_SHARE[tier]);
+  for (const q of shuffle(typeable).slice(0, entryCount)) {
+    q.mode = 'entry';
+  }
+}
+
 export function generateQuiz(grade: Grade, tier: Tier, count: number): Question[] {
   const drawCount = count >= MIN_QUESTIONS_FOR_DRAWING ? 1 : 0;
 
@@ -414,12 +532,32 @@ export function generateQuiz(grade: Grade, tier: Tier, count: number): Question[
     ...Array.from({ length: drawCount }, () => cakeCutQuestion(tier)),
   ];
 
-  const typeable = questions.filter((q) => q.answerFormat !== null);
-  const entryCount = Math.round(typeable.length * ENTRY_SHARE[tier]);
-  for (const q of shuffle(typeable).slice(0, entryCount)) {
-    q.mode = 'entry';
-  }
+  promoteToEntry(questions, tier);
+  return shuffle(questions);
+}
 
+/**
+ * Builds a lesson's questions from its focus topics, sharing the slots evenly
+ * between them. If none of the focus pools exist for the grade the lesson
+ * falls back to the general mix, so a lesson can never come back empty.
+ */
+export function generateFocusedQuiz(
+  grade: Grade,
+  tier: Tier,
+  count: number,
+  focus: TopicKey[],
+  drawCount: number,
+): Question[] {
+  const pools = lessonPools(grade, tier);
+  const chosen = focus.map((key) => ({ gens: shuffle(pools[key]), weight: 1 }));
+  const questions = [
+    ...(chosen.some((p) => p.gens.length > 0)
+      ? allocate(chosen, count)
+      : allocate([{ gens: shuffle(generatorsFor(grade, tier)), weight: 1 }], count)),
+    ...Array.from({ length: drawCount }, () => cakeCutQuestion(tier)),
+  ];
+
+  promoteToEntry(questions, tier);
   return shuffle(questions);
 }
 
