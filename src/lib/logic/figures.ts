@@ -46,6 +46,9 @@ export const sameTile = (a: Tile, b: Tile): boolean => {
   if (a.type === 'grid' && b.type === 'grid') {
     return a.size === b.size && a.cells.every((c, i) => c === b.cells[i]);
   }
+  if (a.type === 'clock' && b.type === 'clock') {
+    return a.hour === b.hour && a.minute === b.minute;
+  }
   if (a.type === 'shapes' && b.type === 'shapes') {
     return (
       a.shapes.length === b.shapes.length &&

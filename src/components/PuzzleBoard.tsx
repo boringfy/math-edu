@@ -4,6 +4,7 @@ import { VisualPuzzle } from '../types';
 
 const GAP = 10;
 const MAX_TILE = 84;
+const SOLO_TILE = 150;
 
 interface Props {
   puzzle: VisualPuzzle;
@@ -19,8 +20,12 @@ export default function PuzzleBoard({ puzzle }: Props) {
   if (puzzle.stimulus.length === 0) return null;
 
   const columns = Math.max(1, puzzle.columns);
+  // A puzzle that draws a single picture — a clock face, a figure to turn —
+  // has the room to be looked at properly, and needs it more than a row of
+  // tiles being compared does.
+  const max = puzzle.stimulus.length === 1 ? SOLO_TILE : MAX_TILE;
   // 40 for the screen's own padding, then whatever the gaps between tiles take.
-  const size = Math.min(MAX_TILE, Math.floor((width - 40 - (columns - 1) * GAP) / columns));
+  const size = Math.min(max, Math.floor((width - 40 - (columns - 1) * GAP) / columns));
 
   const rows = Array.from({ length: Math.ceil(puzzle.stimulus.length / columns) }, (_, r) =>
     puzzle.stimulus.slice(r * columns, r * columns + columns),

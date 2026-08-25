@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   DailyState,
+  DEFAULT_SETTINGS,
   Grade,
   ProgressMap,
   QuizResult,
+  Settings,
   StopProgress,
   Subject,
   Tier,
@@ -15,6 +17,7 @@ const HISTORY_KEY = 'mathquiz:history';
 const tierKey = (grade: Grade) => `mathquiz:tier:${grade}`;
 const COINS_KEY = 'mathquiz:coins';
 const DAILY_KEY = 'mathquiz:daily';
+const SETTINGS_KEY = 'mathquiz:settings';
 const progressKey: Record<Subject, string> = {
   math: 'mathquiz:lessons',
   reading: 'mathquiz:stories',
@@ -112,4 +115,19 @@ export async function loadDaily(): Promise<DailyState | null> {
 
 export async function saveDaily(state: DailyState): Promise<void> {
   await AsyncStorage.setItem(DAILY_KEY, JSON.stringify(state));
+}
+
+/** Anything a stored settings blob is missing falls back to the default. */
+export async function loadSettings(): Promise<Settings> {
+  try {
+    const raw = await AsyncStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }

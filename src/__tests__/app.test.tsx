@@ -49,6 +49,17 @@ function textOf(tree: ReactTestRenderer): string {
 const nodeWithProp = (tree: ReactTestRenderer, prop: string) =>
   tree.root.findAll((n) => typeof n.type !== 'string' && n.props[prop] !== undefined)[0];
 
+/** Taps the button a child would find by that name on screen. */
+const press = async (tree: ReactTestRenderer, label: string) => {
+  const button = tree.root.find(
+    (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === label,
+  );
+  await act(async () => {
+    button.props.onPress();
+  });
+  await flush();
+};
+
 /** Taps a lesson node on the map. */
 const openLesson = async (tree: ReactTestRenderer, index: number) => {
   const map = nodeWithProp(tree, 'onStart');
@@ -74,8 +85,16 @@ const openStory = async (tree: ReactTestRenderer, index: number) => {
     map.props.onStart(STORIES[1][index]);
   });
   await flush();
+  // Past the story itself, on to its questions. The quit button also sits on
+  // this screen, so the read button is found by name rather than by order.
+  const read = tree.root.findAll(
+    (n) =>
+      typeof n.type !== 'string' &&
+      n.props.onPress !== undefined &&
+      n.props.accessibilityLabel === undefined,
+  )[0];
   await act(async () => {
-    nodeWithProp(tree, 'onPress').props.onPress();
+    read.props.onPress();
   });
   await flush();
 };
@@ -186,6 +205,27 @@ describe('playing a lesson end to end', () => {
     });
     await flush();
     expect(textOf(tree)).toContain(LESSONS[1][1].title);
+  });
+
+  it('gives up a lesson without saving anything, back to the map', async () => {
+    const tree = await launch();
+    await openLesson(tree, 0);
+
+    // A couple of answers in, the child has had enough.
+    const questions = nodeWithProp(tree, 'questions').props.questions as Question[];
+    await answerAllCorrectly(tree, questions.slice(0, 1));
+
+    await press(tree, 'Quit quiz');
+    await press(tree, 'Give up');
+
+    // Back on the map, with the lesson still waiting to be played...
+    const home = textOf(tree);
+    expect(home).toContain(LESSONS[1][0].title);
+    expect(home).toContain('START');
+    // ...and nothing banked: no stars, no result in the history, no coins.
+    expect(await AsyncStorage.getItem('mathquiz:lessons')).toBeNull();
+    expect(await AsyncStorage.getItem('mathquiz:history')).toBeNull();
+    expect(await AsyncStorage.getItem('mathquiz:coins')).toBeNull();
   });
 
   it('leaves a failed lesson shut, then lets practice rescue it to one star', async () => {

@@ -35,14 +35,16 @@ export interface PuzzleShape {
 }
 
 /**
- * One drawn square in a logic puzzle. 'shapes' holds up to four shapes side
- * by side, which is what count/shape/fill rules are built from; 'grid' is a
+ * One drawn square in a question. 'shapes' holds up to four shapes side by
+ * side, which is what count/shape/fill rules are built from; 'grid' is a
  * lopsided figure on a cell grid, which is what can be turned and mirrored
- * without the change being invisible.
+ * without the change being invisible; 'clock' is a face with hands on it.
  */
 export type Tile =
   | { type: 'shapes'; shapes: PuzzleShape[] }
-  | { type: 'grid'; size: number; /** Row-major; true is a filled cell. */ cells: boolean[] };
+  | { type: 'grid'; size: number; /** Row-major; true is a filled cell. */ cells: boolean[] }
+  /** A clock face with hands, for the time questions. Hour is 1-12. */
+  | { type: 'clock'; hour: number; minute: number };
 
 /** A puzzle whose question and answers are drawn rather than written. */
 export interface VisualPuzzle {
@@ -121,7 +123,11 @@ export type TopicKey =
   | 'geometry'
   | 'measurement'
   | 'money'
-  | 'speed';
+  | 'speed'
+  /** Clocks and elapsed time. */
+  | 'time'
+  /** Place value, comparing, skip counting, odd and even. */
+  | 'place';
 
 /**
  * A fixed stop on a grade's map. Both subjects lay their content out this
@@ -231,3 +237,17 @@ export const TIER_LABELS: Record<Tier, string> = {
   2: 'Normal',
   3: 'Hard',
 };
+
+/** What a grown-up can turn on and off for this device. */
+export interface Settings {
+  /** Whether maths questions come with a sheet of scrap paper. */
+  scratchPaper: boolean;
+  /**
+   * Whether that paper takes a stylus only. A hand resting on the screen
+   * draws as readily as a fingertip does, so a child writing with a pen
+   * needs everything but the pen turned away.
+   */
+  penOnly: boolean;
+}
+
+export const DEFAULT_SETTINGS: Settings = { scratchPaper: true, penOnly: true };

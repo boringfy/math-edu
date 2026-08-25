@@ -31,7 +31,8 @@
             "com.google.android.googlequicksearchbox"
           ]
         }
-      ]
+      ],
+      "./plugins/withPointerEvents"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

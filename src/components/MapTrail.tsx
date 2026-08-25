@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRef } from 'react';
+import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import { currentStop, isUnlocked, starsOn } from '../lib/mapProgress';
 import { colors } from '../theme';
 import { MapStop, ProgressMap } from '../types';
@@ -16,14 +17,43 @@ interface Props<T extends MapStop> {
   /** The two small lines under each title, e.g. topics and question count. */
   meta: (stop: T) => [string, string];
   onStart: (stop: T) => void;
+  /**
+   * Where the current stop sits, measured from the top of the trail's own
+   * parent, so the screen around it can scroll straight to it.
+   */
+  onCurrentOffset?: (y: number) => void;
 }
 
 /** A grade's map as a trail: cleared stops, then the current one, then locked. */
-export default function MapTrail<T extends MapStop>({ stops, progress, meta, onStart }: Props<T>) {
+export default function MapTrail<T extends MapStop>({
+  stops,
+  progress,
+  meta,
+  onStart,
+  onCurrentOffset,
+}: Props<T>) {
   const current = currentStop(stops, progress);
 
+  // The trail's own offset and the current stop's offset within it arrive in
+  // separate layout events, so both are kept until the pair can be added up.
+  const trailY = useRef<number | null>(null);
+  const stopY = useRef<number | null>(null);
+  const report = () => {
+    if (onCurrentOffset && trailY.current !== null && stopY.current !== null) {
+      onCurrentOffset(trailY.current + stopY.current);
+    }
+  };
+  const onTrailLayout = (e: LayoutChangeEvent) => {
+    trailY.current = e.nativeEvent.layout.y;
+    report();
+  };
+  const onStopLayout = (e: LayoutChangeEvent) => {
+    stopY.current = e.nativeEvent.layout.y;
+    report();
+  };
+
   return (
-    <View style={styles.map}>
+    <View style={styles.map} onLayout={onTrailLayout}>
       {stops.map((stop, i) => {
         const unlocked = isUnlocked(stops, stop, progress);
         const stars = starsOn(stop.id, progress);
@@ -32,7 +62,7 @@ export default function MapTrail<T extends MapStop>({ stops, progress, meta, onS
         const [topLine, bottomLine] = meta(stop);
 
         return (
-          <View key={stop.id}>
+          <View key={stop.id} onLayout={isCurrent ? onStopLayout : undefined}>
             {i > 0 && (
               <View
                 style={[

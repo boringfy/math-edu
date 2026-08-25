@@ -4,7 +4,9 @@ import { Gen, makeQuestion, numPool, pick, randInt, shuffle } from './generator'
 import { geometryFor } from './geometry';
 import { measurementFor } from './measurement';
 import { moneyFor } from './money';
+import { numberSenseFor } from './numberSense';
 import { physicsFor } from './physics';
+import { timeFor } from './time';
 import { wordProblemsFor } from './wordProblems';
 
 function addition(maxSum: number): Question {
@@ -172,6 +174,86 @@ function division(divisorMax: number, quotientMax: number): Question {
   );
 }
 
+/** Division kept inside the tables the grade has actually met. */
+function tableDivision(tables: number[], maxQuotient: number): Question {
+  const divisor = pick(tables);
+  const quotient = randInt(2, maxQuotient);
+  const dividend = divisor * quotient;
+  return makeQuestion(
+    `${dividend} ÷ ${divisor} = ?`,
+    String(quotient),
+    // Subtracting instead of dividing, and answering with a number that was
+    // in the question.
+    numPool(quotient, [dividend - divisor, dividend, divisor]),
+    `${divisor} × ${quotient} = ${dividend}, so ${dividend} ÷ ${divisor} = ${quotient}`,
+    'integer',
+  );
+}
+
+/** Doubling and halving — the first × 2 and ÷ 2 done in the head. */
+function doubleOrHalf(max: number): Question {
+  if (Math.random() < 0.5) {
+    const n = randInt(5, max);
+    return makeQuestion(
+      `Double ${n} = ?`,
+      String(n * 2),
+      // Halving instead of doubling, and adding ten rather than another n.
+      numPool(n * 2, [n, Math.floor(n / 2), n + 10]),
+      `${n} + ${n} = ${n * 2}`,
+      'integer',
+    );
+  }
+  const half = randInt(3, max);
+  const n = half * 2;
+  return makeQuestion(
+    `Half of ${n} = ?`,
+    String(half),
+    numPool(half, [n, n * 2, half + 10]),
+    `${half} + ${half} = ${n}, so half of ${n} is ${half}`,
+    'integer',
+  );
+}
+
+/**
+ * The same amount added over and over, written as a multiplication with the
+ * count missing. It is the one question that says out loud what × means,
+ * which is what makes the tables worth learning rather than reciting.
+ */
+function repeatedAddition(tables: number[], maxTimes: number): Question {
+  const value = pick(tables);
+  const times = randInt(2, maxTimes);
+  return makeQuestion(
+    `${Array.from({ length: times }, () => value).join(' + ')} = ? × ${value}`,
+    String(times),
+    // Answering with the total, or with the number being added.
+    numPool(times, [value * times, value]),
+    `${value} is added ${times} times, so it is ${times} × ${value} = ${value * times}`,
+    'integer',
+  );
+}
+
+/**
+ * An array of dots. The point is that the answer can be counted one by one
+ * if it has to be, so a child who hasn't learnt the table yet still gets
+ * there — and sees why the rows-times-columns shortcut works.
+ */
+function dotArray(maxRows: number, maxColumns: number): Question {
+  const rows = randInt(2, maxRows);
+  const columns = randInt(2, maxColumns);
+  const total = rows * columns;
+  const picture = Array.from({ length: rows }, () =>
+    Array.from({ length: columns }, () => '●').join(' '),
+  ).join('\n');
+  return makeQuestion(
+    `${picture}\nHow many dots altogether?`,
+    String(total),
+    // Adding the sides instead of multiplying, and losing a row or a column.
+    numPool(total, [rows + columns, total - rows, total - columns]),
+    `${rows} rows of ${columns} is ${rows} × ${columns} = ${total}`,
+    'integer',
+  );
+}
+
 function fractionAddSub(): Question {
   const d = randInt(4, 12);
   const isAdd = Math.random() < 0.5;
@@ -302,6 +384,8 @@ function generatorsFor(grade: Grade, tier: Tier): Gen[] {
         () => addition(limit),
         () => subtraction(limit),
         () => tableMultiplication(tables, 10),
+        () => tableDivision(tables, tier === 1 ? 5 : 10),
+        () => doubleOrHalf(tier === 1 ? 20 : 50),
         () => missingAddend(limit),
         () => missingSubtractionPart(limit),
       ];
@@ -364,6 +448,8 @@ export function lessonPools(grade: Grade, tier: Tier): Record<TopicKey, Gen[]> {
     measurement: measurementFor(grade, tier),
     money: moneyFor(grade, tier),
     speed: physicsFor(grade, tier),
+    time: timeFor(grade, tier),
+    place: numberSenseFor(grade, tier),
   };
 
   switch (grade) {
@@ -388,7 +474,13 @@ export function lessonPools(grade: Grade, tier: Tier): Record<TopicKey, Gen[]> {
         () => missingSubtractionPart(limit),
         () => tripleAddition(tier === 1 ? 9 : 20),
       ];
-      empty.mulDiv = [() => tableMultiplication(tables, 10)];
+      empty.mulDiv = [
+        () => tableMultiplication(tables, 10),
+        () => tableDivision(tables, tier === 1 ? 5 : 10),
+        () => doubleOrHalf(tier === 1 ? 20 : 50),
+        () => dotArray(tier === 1 ? 4 : 5, tier === 1 ? 5 : 6),
+        () => repeatedAddition(tables, tier === 1 ? 3 : 5),
+      ];
       if (tier >= 2) empty.mulDiv.push(() => missingFactor(5));
       break;
     }
@@ -464,6 +556,8 @@ const TOPIC_WEIGHTS = {
   measurement: 1.5,
   money: 1.5,
   physics: 1,
+  numberSense: 1.5,
+  time: 1,
 };
 
 /** Quizzes shorter than this skip the drawing puzzle. */
@@ -526,6 +620,8 @@ export function generateQuiz(grade: Grade, tier: Tier, count: number): Question[
         { gens: shuffle(measurementFor(grade, tier)), weight: TOPIC_WEIGHTS.measurement },
         { gens: shuffle(moneyFor(grade, tier)), weight: TOPIC_WEIGHTS.money },
         { gens: shuffle(physicsFor(grade, tier)), weight: TOPIC_WEIGHTS.physics },
+        { gens: shuffle(numberSenseFor(grade, tier)), weight: TOPIC_WEIGHTS.numberSense },
+        { gens: shuffle(timeFor(grade, tier)), weight: TOPIC_WEIGHTS.time },
       ],
       count - drawCount,
     ),

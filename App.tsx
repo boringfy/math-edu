@@ -24,11 +24,13 @@ import {
   loadDaily,
   loadHistory,
   loadProgress,
+  loadSettings,
   loadTier,
   saveCoins,
   saveDaily,
   saveProgress,
   saveResult,
+  saveSettings,
   saveTier,
 } from './src/lib/storage';
 import { passageOf, storyQuestions } from './src/lib/stories';
@@ -36,11 +38,13 @@ import CorrectionScreen, { CorrectionOutcome } from './src/screens/CorrectionScr
 import HomeScreen from './src/screens/HomeScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { colors } from './src/theme';
 import {
   AnswerRecord,
   CoinAward,
   DailyState,
+  DEFAULT_SETTINGS,
   Grade,
   Lesson,
   MapStop,
@@ -48,13 +52,14 @@ import {
   ProgressMap,
   Question,
   QuizResult,
+  Settings,
   Stars,
   Story,
   Subject,
   Tier,
 } from './src/types';
 
-type Phase = 'home' | 'quiz' | 'results' | 'correction';
+type Phase = 'home' | 'quiz' | 'results' | 'correction' | 'settings';
 
 const GRADES: Grade[] = [1, 2, 3, 4, 5];
 
@@ -105,10 +110,12 @@ export default function App() {
   const [progress, setProgress] = useState<Record<Subject, ProgressMap>>(noProgress);
   const [daily, setDaily] = useState<DailyState>(() => freshDaily(dayKey(new Date())));
   const [session, setSession] = useState<Session | null>(null);
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     (async () => {
       setHistory(await loadHistory());
+      setSettings(await loadSettings());
       const loaded = await Promise.all(GRADES.map((g) => loadTier(g)));
       setTiers({ 1: loaded[0], 2: loaded[1], 3: loaded[2], 4: loaded[3], 5: loaded[4] });
       setCoins(await loadCoins());
@@ -124,6 +131,12 @@ export default function App() {
       await saveDaily(today);
     })();
   }, []);
+
+  /** Drops whatever round is open and shows the maps again. */
+  const goHome = () => {
+    setSession(null);
+    setPhase('home');
+  };
 
   const newSession = (start: SessionStart) => {
     setSession({
@@ -360,15 +373,30 @@ export default function App() {
               onStartStory={startStory}
               onStartPuzzles={startPuzzles}
               onStartPractice={startPractice}
+              onOpenSettings={() => setPhase('settings')}
             />
             <SubjectTabs subject={subject} onSelect={setSubject} />
           </View>
         )}
+        {phase === 'settings' && (
+          <SettingsScreen
+            settings={settings}
+            onChange={(next) => {
+              setSettings(next);
+              void saveSettings(next);
+            }}
+            onBack={() => setPhase('home')}
+          />
+        )}
         {phase === 'quiz' && session && (
           <QuizScreen
+            subject={session.subject}
+            scratchPaper={settings.scratchPaper}
+            penOnly={settings.penOnly}
             questions={session.questions}
             passage={session.passage ?? undefined}
             onComplete={onQuizComplete}
+            onQuit={goHome}
           />
         )}
         {phase === 'results' && session && (
@@ -385,14 +413,14 @@ export default function App() {
             completedChallenges={session.completedChallenges}
             coinTotal={coins}
             onFixMistakes={() => setPhase('correction')}
-            onHome={() => {
-              setSession(null);
-              setPhase('home');
-            }}
+            onHome={goHome}
           />
         )}
         {phase === 'correction' && session && (
           <CorrectionScreen
+            subject={session.subject}
+            scratchPaper={settings.scratchPaper}
+            penOnly={settings.penOnly}
             questions={session.records.filter((r) => !r.correct).map((r) => r.question)}
             passage={session.passage ?? undefined}
             onDone={onCorrectionDone}

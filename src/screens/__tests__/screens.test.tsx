@@ -1,19 +1,23 @@
-import { act, create, ReactTestRenderer } from 'react-test-renderer';
+import { ScrollView } from 'react-native';
+import { act, create, ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import ChoiceButton from '../../components/ChoiceButton';
 import ComboBurst from '../../components/ComboBurst';
 import DailyChallenges from '../../components/DailyChallenges';
 import MapTrail from '../../components/MapTrail';
 import PuzzleTile from '../../components/PuzzleTile';
+import ScratchPad from '../../components/ScratchPad';
 import StoryPassage from '../../components/StoryPassage';
 import SubjectTabs from '../../components/SubjectTabs';
 import { generateLesson, LESSONS } from '../../lib/lessons';
 import { freshDaily, lessonAward } from '../../lib/progress';
 import { generatePuzzleSet, PUZZLE_SETS } from '../../lib/puzzles';
 import { passageOf, STORIES, storyQuestions } from '../../lib/stories';
-import { AnswerRecord, Lesson, ProgressMap, Subject } from '../../types';
+import { AnswerRecord, DEFAULT_SETTINGS, Lesson, ProgressMap, Subject } from '../../types';
+import CorrectionScreen from '../CorrectionScreen';
 import HomeScreen from '../HomeScreen';
 import QuizScreen from '../QuizScreen';
 import ResultsScreen from '../ResultsScreen';
+import SettingsScreen from '../SettingsScreen';
 
 /** Renders a tree and returns it, failing the test on any render error. */
 function render(element: React.ReactElement): ReactTestRenderer {
@@ -67,6 +71,7 @@ const homeProps = (subject: Subject) => ({
   onStartStory: () => {},
   onStartPuzzles: () => {},
   onStartPractice: () => {},
+  onOpenSettings: () => {},
 });
 
 /** The lesson map's meta lines, which MapTrail leaves to its caller. */
@@ -87,6 +92,26 @@ describe('HomeScreen', () => {
     // Grade 1 opens on its first lesson.
     expect(text).toContain(LESSONS[1][0].title);
     expect(text).toContain('START');
+  });
+
+  it('opens the map at the stop the child is on, not back at the top', () => {
+    const cleared = { stars: 3 as const, bestPercent: 100, clearedAt: '2026-08-01T00:00:00.000Z' };
+    const progress: ProgressMap = { 'g1-l1': cleared, 'g1-l2': cleared, 'g1-l3': cleared };
+    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
+
+    const tree = render(<HomeScreen {...homeProps('math')} progress={progress} />);
+    const measured = measuredViews(tree);
+    layoutAt(measured[0], 300);
+    layoutAt(measured[1], 620);
+
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(scrollTo.mock.calls[0][0]).toEqual({ y: 790, animated: false });
+
+    // A later measurement of the same map must not yank the screen about
+    // while the child is reading further down it.
+    layoutAt(measured[1], 640);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    scrollTo.mockRestore();
   });
 
   it('shows the story map and no free practice on the reading tab', () => {
@@ -143,6 +168,36 @@ describe('HomeScreen', () => {
   });
 });
 
+/**
+ * Every tappable in a tree, in order, minus the quiz's quit button — which
+ * sits first on screen but is never the thing a test means to tap.
+ */
+const buttons = (tree: ReactTestRenderer) =>
+  tree.root.findAll(
+    (n) =>
+      typeof n.type !== 'string' &&
+      n.props.onPress !== undefined &&
+      n.props.accessibilityLabel !== 'Quit quiz',
+  );
+
+/** Taps the button a child would find by that name on screen. */
+const press = (tree: ReactTestRenderer, label: string) =>
+  act(() => {
+    tree.root
+      .find((n) => typeof n.type !== 'string' && n.props.accessibilityLabel === label)
+      .props.onPress();
+  });
+
+/** Every layout callback in a tree, in the order the views appear. */
+const measuredViews = (tree: ReactTestRenderer) =>
+  tree.root.findAll((n) => typeof n.type === 'string' && typeof n.props.onLayout === 'function');
+
+/** Feeds a view its measurements, as the layout pass would on a device. */
+const layoutAt = (node: ReactTestInstance, y: number) =>
+  act(() => {
+    node.props.onLayout({ nativeEvent: { layout: { x: 0, y, width: 300, height: 0 } } });
+  });
+
 describe('MapTrail', () => {
   it('marks cleared stops with stars and leaves later ones locked', () => {
     const progress: ProgressMap = {
@@ -175,6 +230,34 @@ describe('MapTrail', () => {
     });
     expect(started).toHaveLength(1);
     expect(started[0].id).toBe('g2-l1');
+  });
+
+  it('reports where the current stop sits once it has been laid out', () => {
+    const cleared = { stars: 3 as const, bestPercent: 100, clearedAt: '2026-08-01T00:00:00.000Z' };
+    const progress: ProgressMap = {
+      'g1-l1': cleared,
+      'g1-l2': cleared,
+      'g1-l3': cleared,
+    };
+    const offsets: number[] = [];
+    const tree = render(
+      <MapTrail
+        stops={LESSONS[1]}
+        progress={progress}
+        meta={lessonMeta}
+        onStart={() => {}}
+        onCurrentOffset={(y) => offsets.push(y)}
+      />,
+    );
+
+    // Only the trail itself and the current stop measure themselves.
+    const measured = measuredViews(tree);
+    expect(measured).toHaveLength(2);
+
+    // Neither measurement is enough on its own; together they place stop 4.
+    layoutAt(measured[0], 40);
+    layoutAt(measured[1], 620);
+    expect(offsets).toEqual([660]);
   });
 });
 
@@ -231,10 +314,14 @@ describe('QuizScreen', () => {
 
     const tree = render(
       <QuizScreen
+        scratchPaper
+        penOnly={false}
+        subject="math"
         questions={questions}
         onComplete={(records, _ms, bestCombo) => {
           done = { records, combo: bestCombo };
         }}
+        onQuit={() => {}}
       />,
     );
 
@@ -261,11 +348,15 @@ describe('QuizScreen', () => {
 
     const tree = render(
       <QuizScreen
+        scratchPaper
+        penOnly={false}
+        subject="reading"
         questions={questions}
         passage={passageOf(story)}
         onComplete={(records) => {
           done = records;
         }}
+        onQuit={() => {}}
       />,
     );
 
@@ -276,12 +367,12 @@ describe('QuizScreen', () => {
     expect(squash(textOf(tree))).toContain(squash(story.text));
     expect(textOf(tree)).not.toContain(questions[0].prompt);
 
-    const start = tree.root.findAll(
-      (n) => typeof n.type !== 'string' && n.props.onPress !== undefined,
-    )[0];
+    const start = buttons(tree)[0];
     act(() => {
       start.props.onPress();
     });
+
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
 
     for (const question of questions) {
       // The story is still there to look back at while answering.
@@ -307,12 +398,19 @@ describe('QuizScreen', () => {
 
     const tree = render(
       <QuizScreen
+        scratchPaper
+        penOnly={false}
+        subject="logic"
         questions={questions}
         onComplete={(records) => {
           done = records;
         }}
+        onQuit={() => {}}
       />,
     );
+
+    // A pattern is spotted, not worked out: no scrap paper on this tab.
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
 
     for (const question of questions) {
       expect(question.puzzle).toBeDefined();
@@ -331,6 +429,154 @@ describe('QuizScreen', () => {
     }
 
     expect(done!.every((r) => r.correct)).toBe(true);
+  });
+
+  it('lays scratch paper out from the start of a maths round, and puts it away on request', () => {
+    const questions = tappableQuestions(LESSONS[1][0]);
+    const tree = render(
+      <QuizScreen scratchPaper penOnly={false} subject="math" questions={questions} onComplete={() => {}} onQuit={() => {}} />,
+    );
+
+    // Out on the desk without being asked for.
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(1);
+
+    press(tree, 'Scratch paper');
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+
+    press(tree, 'Scratch paper');
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(1);
+  });
+
+  it('offers no paper at all when it is switched off in settings', () => {
+    const questions = tappableQuestions(LESSONS[1][0]);
+    const tree = render(
+      <QuizScreen
+        scratchPaper={false}
+        penOnly
+        subject="math"
+        questions={questions}
+        onComplete={() => {}}
+        onQuit={() => {}}
+      />,
+    );
+
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+    // And no pencil in the header offering to fetch it.
+    expect(
+      tree.root.findAll(
+        (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === 'Scratch paper',
+      ),
+    ).toHaveLength(0);
+  });
+
+  it('asks before giving up, and only then leaves the round', () => {
+    const questions = tappableQuestions(LESSONS[1][0]);
+    let quit = 0;
+    let completed = 0;
+    const tree = render(
+      <QuizScreen
+        scratchPaper
+        penOnly={false}
+        subject="math"
+        questions={questions}
+        onComplete={() => (completed += 1)}
+        onQuit={() => (quit += 1)}
+      />,
+    );
+
+    // Tapping the ✕ only asks, so a mistaken tap costs nothing.
+    press(tree, 'Quit quiz');
+    expect(textOf(tree)).toContain('Give up this round?');
+
+    press(tree, 'Keep going');
+    expect(textOf(tree)).not.toContain('Give up this round?');
+    expect(quit).toBe(0);
+
+    press(tree, 'Quit quiz');
+    press(tree, 'Give up');
+    expect(quit).toBe(1);
+    // Giving up is not finishing: no answers are ever handed back.
+    expect(completed).toBe(0);
+  });
+});
+
+describe('CorrectionScreen', () => {
+  const missed = () => tappableQuestions(LESSONS[1][0]).slice(0, 2);
+
+  const correction = (props: Partial<React.ComponentProps<typeof CorrectionScreen>> = {}) =>
+    render(
+      <CorrectionScreen
+        subject="math"
+        scratchPaper
+        penOnly={false}
+        questions={missed()}
+        onDone={() => {}}
+        {...props}
+      />,
+    );
+
+  it('brings the scratch paper to a second go at a sum', () => {
+    const tree = correction();
+    expect(textOf(tree)).toContain('Fix your mistakes');
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(1);
+
+    press(tree, 'Scratch paper');
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+  });
+
+  it('leaves it out of a reading round and out of a switched-off one', () => {
+    expect(correction({ subject: 'reading' }).root.findAllByType(ScratchPad)).toHaveLength(0);
+    expect(correction({ scratchPaper: false }).root.findAllByType(ScratchPad)).toHaveLength(0);
+  });
+});
+
+describe('SettingsScreen', () => {
+  /** The switch a grown-up would reach for by that name. */
+  const toggle = (tree: ReactTestRenderer, label: string) =>
+    tree.root.find(
+      (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === label,
+    );
+
+  it('starts with scratch paper on and the pen required', () => {
+    expect(DEFAULT_SETTINGS).toEqual({ scratchPaper: true, penOnly: true });
+  });
+
+  it('saves each switch as it is flipped', () => {
+    let saved = DEFAULT_SETTINGS;
+    const tree = render(
+      <SettingsScreen settings={saved} onChange={(next) => (saved = next)} onBack={() => {}} />,
+    );
+
+    act(() => {
+      toggle(tree, 'Pen only').props.onValueChange(false);
+    });
+    expect(saved).toEqual({ scratchPaper: true, penOnly: false });
+
+    act(() => {
+      toggle(tree, 'Scratch paper').props.onValueChange(false);
+    });
+    expect(saved.scratchPaper).toBe(false);
+  });
+
+  it('greys out the pen switch when there is no paper to draw on', () => {
+    const tree = render(
+      <SettingsScreen
+        settings={{ scratchPaper: false, penOnly: true }}
+        onChange={() => {}}
+        onBack={() => {}}
+      />,
+    );
+    expect(toggle(tree, 'Pen only').props.disabled).toBe(true);
+    expect(toggle(tree, 'Scratch paper').props.disabled).toBeUndefined();
+  });
+
+  it('goes back when asked', () => {
+    let back = 0;
+    const tree = render(
+      <SettingsScreen settings={DEFAULT_SETTINGS} onChange={() => {}} onBack={() => (back += 1)} />,
+    );
+    press(tree, 'Back');
+    expect(back).toBe(1);
   });
 });
 

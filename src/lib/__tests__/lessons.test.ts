@@ -1,4 +1,4 @@
-import { Grade, ProgressMap, Stars } from '../../types';
+import { Grade, ProgressMap, Stars, TopicKey } from '../../types';
 import {
   currentLesson,
   generateLesson,
@@ -53,6 +53,39 @@ describe('the lesson map', () => {
       const topics = new Set(LESSONS[grade].flatMap((l) => l.focus));
       expect(topics.size).toBeGreaterThanOrEqual(3);
     }
+  });
+
+  /**
+   * Grade 2 spends its first 35 stops on arithmetic and then turns to
+   * clocks and place value. A child part-way along the map keeps the stops
+   * they have already played, so the opening has to stay exactly as it was.
+   */
+  describe('grade 2 late topics', () => {
+    const EARLY: TopicKey[] = ['addSub', 'mulDiv', 'money', 'measurement', 'word', 'geometry'];
+    const LATE: TopicKey[] = ['time', 'place'];
+
+    it('keeps the first 35 stops off them', () => {
+      for (const lesson of LESSONS[2].slice(0, 35)) {
+        for (const topic of lesson.focus) expect(EARLY).toContain(topic);
+      }
+    });
+
+    it('asks every one of them somewhere after stop 35', () => {
+      const later = LESSONS[2].slice(35).flatMap((l) => l.focus);
+      for (const topic of LATE) expect(later).toContain(topic);
+    });
+
+    it('leaves the other grades alone', () => {
+      for (const grade of [1, 3, 4, 5] as const) {
+        const topics = LESSONS[grade].flatMap((l) => l.focus);
+        for (const topic of LATE) expect(topics).not.toContain(topic);
+      }
+    });
+
+    it('still mixes the old topics in alongside them', () => {
+      const later = LESSONS[2].slice(35).flatMap((l) => l.focus);
+      for (const topic of EARLY) expect(later).toContain(topic);
+    });
   });
 
   it('only points a lesson at pools its grade actually has', () => {

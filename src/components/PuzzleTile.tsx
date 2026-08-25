@@ -1,3 +1,4 @@
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme';
 import { ShapeKind, Tile } from '../types';
@@ -45,6 +46,59 @@ export default function PuzzleTile({ tile, size }: Props) {
     );
   }
 
+  if (tile.type === 'clock') {
+    const face = size - 10;
+    const centre = face / 2;
+    // Each hand and tick is drawn in the top half of a full-size box that is
+    // then turned about its own centre, which is the clock's centre too. It
+    // saves setting a transform origin, and a hand that pivots anywhere but
+    // the middle of the face is a wrong clock.
+    const arm = (child: React.ReactNode, angle: number, key?: string) => (
+      <View
+        key={key}
+        style={[styles.arm, { width: face, height: face, transform: [{ rotate: `${angle}deg` }] }]}
+      >
+        {child}
+      </View>
+    );
+    const hand = (length: number, width: number, color: string) => (
+      <View
+        style={{
+          width,
+          height: length,
+          marginTop: centre - length,
+          borderRadius: width / 2,
+          backgroundColor: color,
+        }}
+      />
+    );
+
+    return (
+      <View style={box}>
+        <View style={[styles.face, { width: face, height: face, borderRadius: centre }]}>
+          {Array.from({ length: 12 }, (_, i) =>
+            // The quarters are marked heavier: they are what a child counts
+            // the five-minute steps from.
+            arm(
+              <View
+                style={[
+                  styles.tick,
+                  { marginTop: 3, height: i % 3 === 0 ? face * 0.1 : face * 0.06 },
+                  i % 3 === 0 && styles.tickQuarter,
+                ]}
+              />,
+              i * 30,
+              `t${i}`,
+            ),
+          )}
+          {arm(hand(face * 0.27, Math.max(4, face * 0.06), colors.text), (tile.hour % 12) * 30 + tile.minute * 0.5)}
+          {arm(hand(face * 0.39, Math.max(2, face * 0.035), colors.primary), tile.minute * 6)}
+          <View style={[styles.pin, { left: centre - 4, top: centre - 4 }]} />
+        </View>
+      </View>
+    );
+  }
+
   const cell = (size - 12) / tile.size;
   return (
     <View style={[box, styles.grid]}>
@@ -79,6 +133,11 @@ const styles = StyleSheet.create({
   question: { fontWeight: '800', color: colors.primary },
   shapes: { color: colors.text, textAlign: 'center' },
   grid: { padding: 6 },
+  face: { borderWidth: 2, borderColor: colors.border, backgroundColor: colors.card },
+  arm: { position: 'absolute', left: 0, top: 0, alignItems: 'center' },
+  tick: { width: 2, borderRadius: 1, backgroundColor: colors.border },
+  tickQuarter: { width: 3, backgroundColor: colors.textMuted },
+  pin: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: colors.text },
   gridRow: { flexDirection: 'row' },
   // Empty cells stay visible but faint: without them the figure would float
   // free and there would be no way to see how far it had been turned.

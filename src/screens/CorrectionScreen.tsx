@@ -11,11 +11,12 @@ import ChoiceButton from '../components/ChoiceButton';
 import CutBoard from '../components/CutBoard';
 import NumberPad from '../components/NumberPad';
 import PuzzleBoard from '../components/PuzzleBoard';
+import ScratchPad from '../components/ScratchPad';
 import StoryPassage from '../components/StoryPassage';
 import { Chord } from '../lib/cakeCuts';
 import { isAnswerCorrect, isDrawingCorrect, reshuffleChoices } from '../lib/questions';
 import { colors, promptAlign, promptTextStyle } from '../theme';
-import { Passage, Question } from '../types';
+import { Passage, Question, Subject } from '../types';
 
 export interface CorrectionOutcome {
   questionId: string;
@@ -25,6 +26,11 @@ export interface CorrectionOutcome {
 }
 
 interface Props {
+  /** Only maths gets scrap paper; a story or a puzzle is nothing to work out. */
+  subject: Subject;
+  /** Whether scrap paper is offered at all, and what may draw on it. */
+  scratchPaper: boolean;
+  penOnly: boolean;
   questions: Question[];
   /** The story these questions came from, if this was a reading round. */
   passage?: Passage;
@@ -41,7 +47,14 @@ type Feedback = 'none' | 'tryAgain' | 'fixed' | 'skipped';
  * number pad cleared); after MAX_ATTEMPTS wrong tries the question is skipped
  * and the answer revealed.
  */
-export default function CorrectionScreen({ questions, passage, onDone }: Props) {
+export default function CorrectionScreen({
+  subject,
+  scratchPaper,
+  penOnly,
+  questions,
+  passage,
+  onDone,
+}: Props) {
   const [index, setIndex] = useState(0);
   const [question, setQuestion] = useState<Question>(() => reshuffleChoices(questions[0]));
   const [attempts, setAttempts] = useState(0);
@@ -49,6 +62,10 @@ export default function CorrectionScreen({ questions, passage, onDone }: Props) 
   const [lastAnswer, setLastAnswer] = useState<string | null>(null);
   const [entry, setEntry] = useState('');
   const [cuts, setCuts] = useState<Chord[]>([]);
+  // A second go at a sum is exactly where working it out by hand helps most,
+  // so the paper is here too, out from the start and put away by the pencil.
+  const scratchable = scratchPaper && subject === 'math';
+  const [scratching, setScratching] = useState(true);
   const outcomesRef = useRef<CorrectionOutcome[]>([]);
   const { width } = useWindowDimensions();
 
@@ -109,13 +126,29 @@ export default function CorrectionScreen({ questions, passage, onDone }: Props) 
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Fix your mistakes</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.header}>Fix your mistakes</Text>
+        {scratchable && (
+          <Pressable
+            style={[styles.scratchToggle, scratching && styles.scratchToggleOn]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: scratching }}
+            accessibilityLabel="Scratch paper"
+            onPress={() => setScratching((open) => !open)}
+          >
+            <Text style={styles.scratchToggleIcon}>✏️</Text>
+          </Pressable>
+        )}
+      </View>
       <Text style={styles.progress}>
         Mistake {index + 1} of {questions.length} · Try{' '}
         {Math.min(attempts + (settled ? 0 : 1), MAX_ATTEMPTS)} of {MAX_ATTEMPTS}
       </Text>
 
       {passage && <View style={styles.passage}><StoryPassage passage={passage} /></View>}
+
+      {/* Keyed by mistake: a fresh sheet each time, last one's working gone. */}
+      {scratchable && scratching && <ScratchPad key={index} penOnly={penOnly} />}
 
       <View style={styles.promptCard}>
         <Text
@@ -208,8 +241,24 @@ export default function CorrectionScreen({ questions, passage, onDone }: Props) 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 20, paddingTop: 24, paddingBottom: 40 },
+  // flexGrow, so the scratch paper has room going spare to stretch into.
+  content: { flexGrow: 1, padding: 20, paddingTop: 24, paddingBottom: 40 },
+  headerRow: { justifyContent: 'center' },
   header: { fontSize: 24, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  scratchToggle: {
+    position: 'absolute',
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scratchToggleOn: { backgroundColor: '#fff5d6', borderColor: '#f5b700' },
+  scratchToggleIcon: { fontSize: 15 },
   progress: {
     fontSize: 15,
     fontWeight: '600',

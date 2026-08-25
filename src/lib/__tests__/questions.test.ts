@@ -3,11 +3,14 @@ import { Gen } from '../generator';
 import { geometryFor } from '../geometry';
 import { measurementFor } from '../measurement';
 import { moneyFor } from '../money';
+import { numberSenseFor } from '../numberSense';
 import { physicsFor } from '../physics';
+import { timeFor } from '../time';
 import {
   adjustTier,
   ENTRY_SHARE,
   generateQuiz,
+  lessonPools,
   isAnswerCorrect,
   isDrawingCorrect,
   reshuffleChoices,
@@ -196,6 +199,18 @@ describe('topic pools', () => {
     expectPoolIsSound(physicsFor(grade, tier));
   });
 
+  it.each(GRADE_TIERS)('grade %i tier %i number sense is sound', (grade, tier) => {
+    expectPoolIsSound(numberSenseFor(grade, tier));
+  });
+
+  it.each(GRADE_TIERS)('grade %i tier %i clock questions are well formed', (grade, tier) => {
+    // Times and clock labels aren't numbers, so these are checked for shape
+    // rather than for value; time.test.ts checks the clocks themselves.
+    for (const gen of timeFor(grade, tier)) {
+      for (let i = 0; i < 25; i++) expectWellFormed(gen());
+    }
+  });
+
   it('keeps grade 1 story problems inside the grade 1 range', () => {
     for (const gen of wordProblemsFor(1, 1)) {
       for (let i = 0; i < 50; i++) {
@@ -252,6 +267,85 @@ describe('story problems that rely on real-world knowledge', () => {
         }
       }
     }
+  });
+});
+
+/**
+ * Grade 2's "× ÷" pool used to be one times-table generator, which made the
+ * back half of its map the same question over and over. These are what fill
+ * it out, and each one has a different way of going wrong.
+ */
+describe('grade 2 multiplication and division', () => {
+  const poolAt = (tier: Tier) => lessonPools(2, tier).mulDiv;
+
+  const promptsFrom = (tier: Tier, runs = 60): Question[] =>
+    Array.from({ length: runs }, () => poolAt(tier).map((gen) => gen())).flat();
+
+  it('offers more than one kind of question at every tier', () => {
+    for (const tier of TIERS) expect(poolAt(tier).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('divides exactly, inside the tables the grade has met', () => {
+    for (const tier of TIERS) {
+      const tables = tier === 1 ? [2, 5, 10] : tier === 2 ? [2, 3, 4, 5, 10] : [2, 3, 4, 5, 6, 10];
+      for (const q of promptsFrom(tier)) {
+        const division = q.prompt.match(/^(\d+) ÷ (\d+) = \?$/);
+        if (!division) continue;
+        const [, dividend, divisor] = division.map(Number);
+        expect(tables).toContain(divisor);
+        expect(dividend % divisor).toBe(0);
+        expect(Number(q.correctAnswer)).toBe(dividend / divisor);
+      }
+    }
+  });
+
+  it('doubles and halves to whole numbers', () => {
+    let seen = 0;
+    for (const q of promptsFrom(2)) {
+      const double = q.prompt.match(/^Double (\d+) = \?$/);
+      const half = q.prompt.match(/^Half of (\d+) = \?$/);
+      if (double) expect(Number(q.correctAnswer)).toBe(Number(double[1]) * 2);
+      if (half) {
+        expect(Number(half[1]) % 2).toBe(0);
+        expect(Number(q.correctAnswer)).toBe(Number(half[1]) / 2);
+      }
+      if (double || half) seen++;
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('draws exactly as many dots as the array is worth', () => {
+    let seen = 0;
+    for (const tier of TIERS) {
+      for (const q of promptsFrom(tier, 20)) {
+        if (!q.prompt.includes('●')) continue;
+        const rows = q.prompt.split('\n').filter((line) => line.includes('●'));
+        const widths = new Set(rows.map((row) => row.split(' ').length));
+        // A ragged array would make the shortcut a lie.
+        expect(widths.size).toBe(1);
+        const dots = (q.prompt.match(/●/g) ?? []).length;
+        expect(dots).toBe(Number(q.correctAnswer));
+        expect(rows.length * [...widths][0]).toBe(dots);
+        seen++;
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('asks for the number of times a repeated addition repeats', () => {
+    let seen = 0;
+    for (const tier of TIERS) {
+      for (const q of promptsFrom(tier, 20)) {
+        const repeated = q.prompt.match(/^([\d +]+) = \? × (\d+)$/);
+        if (!repeated) continue;
+        const terms = repeated[1].split(' + ').map(Number);
+        expect(new Set(terms).size).toBe(1);
+        expect(terms[0]).toBe(Number(repeated[2]));
+        expect(Number(q.correctAnswer)).toBe(terms.length);
+        seen++;
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
 });
 

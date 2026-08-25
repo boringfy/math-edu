@@ -129,6 +129,23 @@ const TOPICS: Record<Grade, TopicKey[]> = {
   ],
 };
 
+/**
+ * Topics that only open up in the back half of a grade's map, and the stop
+ * they open at.
+ *
+ * By stop 36 a grade-2 child can add and take away without ever having been
+ * asked what the 3 in 435 is worth or what the little hand means, so the
+ * tail of the map turns to the things arithmetic practice keeps skipping
+ * rather than to bigger numbers. Adding them here rather than to TOPICS
+ * leaves the first 35 stops exactly as they were, which matters because a
+ * child part-way through the map keeps the lessons they have already played.
+ */
+const LATE_TOPICS: Partial<Record<Grade, TopicKey[]>> = {
+  2: [...TOPICS[2], 'time', 'place'],
+};
+
+const LATE_TOPICS_FROM = 35;
+
 /** Names a drill can take, cycled so a grade doesn't repeat itself. */
 const TITLES: Record<TopicKey, string[]> = {
   addSub: ['Sums Practice', 'Adding On', 'Taking Away', 'Number Bonds', 'Quick Sums', 'Missing Numbers'],
@@ -141,6 +158,8 @@ const TITLES: Record<TopicKey, string[]> = {
   measurement: ['Measuring Up', 'Length & Litres', 'Units Practice', 'Weights & Measures'],
   money: ['Money Maths', 'Shopping Trip', 'Coins & Change', 'Budget Practice'],
   speed: ['Speed & Distance', 'Journey Maths', 'Time & Travel', 'How Far, How Fast'],
+  time: ['Clock Work', 'Telling the Time', 'Hands & Hours', 'Minutes Practice'],
+  place: ['Place Value', 'Tens & Ones', 'Number Sense', 'Hundreds & Tens'],
 };
 
 const ICONS: Record<TopicKey, string> = {
@@ -154,6 +173,8 @@ const ICONS: Record<TopicKey, string> = {
   measurement: '📏',
   money: '🪙',
   speed: '🚗',
+  time: '🕒',
+  place: '🔢',
 };
 
 /** Short labels, for naming a lesson that covers more than one topic. */
@@ -168,6 +189,8 @@ const SHORT: Record<TopicKey, string> = {
   measurement: 'Measures',
   money: 'Money',
   speed: 'Speed',
+  time: 'Clocks',
+  place: 'Place Value',
 };
 
 const ROMAN = ['', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII'];
@@ -188,7 +211,9 @@ const listTitle = (parts: string[]): string =>
  * that mix three subjects and cannot be passed by remembering one method.
  */
 function fillOut(grade: Grade, openers: LessonSpec[]): LessonSpec[] {
-  const topics = TOPICS[grade];
+  const late = LATE_TOPICS[grade];
+  const topicsAt = (i: number): TopicKey[] =>
+    late !== undefined && i >= LATE_TOPICS_FROM ? late : TOPICS[grade];
   const lessons: LessonSpec[] = [];
   const used = new Map<string, number>();
 
@@ -203,6 +228,7 @@ function fillOut(grade: Grade, openers: LessonSpec[]): LessonSpec[] {
 
   for (let i = openers.length; i < LESSONS_PER_GRADE_TARGET - 1; i++) {
     const share = i / LESSONS_PER_GRADE_TARGET;
+    const topics = topicsAt(i);
     const first = topics[i % topics.length];
 
     // Two topics from the halfway mark, three from three-quarters on.
@@ -233,7 +259,9 @@ function fillOut(grade: Grade, openers: LessonSpec[]): LessonSpec[] {
   lessons.push({
     title: `Grade ${grade} Master`,
     icon: '👑',
-    focus: topics.slice(0, 5),
+    // The finale spans the whole map, so on a grade with late topics it ends
+    // on the two that only turned up in the back half.
+    focus: late ? [...late.slice(0, 3), ...late.slice(-2)] : TOPICS[grade].slice(0, 5),
     questionCount: 10,
   });
   return lessons;

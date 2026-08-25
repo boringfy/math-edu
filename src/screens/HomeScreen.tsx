@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import DailyChallenges from '../components/DailyChallenges';
 import MapTrail from '../components/MapTrail';
@@ -24,6 +24,13 @@ import {
 const GRADES: Grade[] = [1, 2, 3, 4, 5];
 const COUNTS = [5, 10, 15];
 
+/**
+ * How much of the trail to leave above the current stop when jumping to it,
+ * so the stops already cleared stay in sight and the jump reads as a place on
+ * a map rather than a new screen.
+ */
+const HEADROOM = 130;
+
 const TOPIC_LABEL: Record<string, string> = {
   addSub: '+ −',
   mulDiv: '× ÷',
@@ -35,6 +42,8 @@ const TOPIC_LABEL: Record<string, string> = {
   measurement: 'measuring',
   money: 'money',
   speed: 'speed',
+  time: 'clocks',
+  place: 'place value',
 };
 
 const TIER_NAME = ['Easy', 'Normal', 'Hard'];
@@ -74,6 +83,7 @@ interface Props {
   onGradeChange: (grade: Grade) => void;
   tiers: Record<Grade, Tier>;
   coins: number;
+  onOpenSettings: () => void;
   daily: DailyState;
   /** Map progress for this subject only. */
   progress: ProgressMap;
@@ -96,6 +106,7 @@ export default function HomeScreen({
   onGradeChange,
   tiers,
   coins,
+  onOpenSettings,
   daily,
   progress,
   onStartLesson,
@@ -105,6 +116,11 @@ export default function HomeScreen({
 }: Props) {
   const [count, setCount] = useState(10);
   const [showPractice, setShowPractice] = useState(false);
+  const scroller = useRef<ScrollView>(null);
+  // The map that has been jumped to already. Coming back from a lesson
+  // remounts this screen, so a fresh mount always jumps; changing tab or
+  // grade swaps the map under it, which counts as a new one to aim at.
+  const aimedAt = useRef('');
 
   const ui = SUBJECT_UI[subject];
   const stops =
@@ -117,13 +133,36 @@ export default function HomeScreen({
   const mine = history.filter((r) => r.subject === subject);
   const [showHistory, setShowHistory] = useState(false);
 
+  const mapKey = `${subject}-${grade}`;
+  /** Opens each map where the child left off rather than back at stop one. */
+  const jumpToCurrent = (y: number) => {
+    if (aimedAt.current === mapKey) return;
+    aimedAt.current = mapKey;
+    scroller.current?.scrollTo({ y: Math.max(0, y - HEADROOM), animated: false });
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      ref={scroller}
+      style={styles.container}
+      contentContainerStyle={styles.content}
+    >
       <View style={styles.titleRow}>
         {/* One app name on every tab; the icon and the tab bar say which part. */}
         <Text style={styles.title}>{ui.title}</Text>
-        <View style={styles.coinPill}>
-          <Text style={styles.coinText}>🪙 {coins}</Text>
+        <View style={styles.titleRight}>
+          <View style={styles.coinPill}>
+            <Text style={styles.coinText}>🪙 {coins}</Text>
+          </View>
+          {/* Quiet and out of the way: this page is for a grown-up. */}
+          <Pressable
+            style={styles.settings}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            onPress={onOpenSettings}
+          >
+            <Text style={styles.settingsIcon}>⚙️</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -154,6 +193,7 @@ export default function HomeScreen({
             `${story.questions.length} questions · ${TIER_NAME[story.tier - 1]}`,
           ]}
           onStart={onStartStory}
+          onCurrentOffset={jumpToCurrent}
         />
       )}
       {subject === 'logic' && (
@@ -165,6 +205,7 @@ export default function HomeScreen({
             `${set.questionCount} puzzles · ${TIER_NAME[set.tier - 1]}`,
           ]}
           onStart={onStartPuzzles}
+          onCurrentOffset={jumpToCurrent}
         />
       )}
       {subject === 'math' && (
@@ -176,6 +217,7 @@ export default function HomeScreen({
             `${lessonLength(lesson)} questions · ${TIER_NAME[lesson.tier - 1]}`,
           ]}
           onStart={onStartLesson}
+          onCurrentOffset={jumpToCurrent}
         />
       )}
 
@@ -262,6 +304,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, paddingTop: 24, paddingBottom: 40 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  titleRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  settings: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsIcon: { fontSize: 16 },
   title: { fontSize: 30, fontWeight: '800', color: colors.text },
   coinPill: {
     backgroundColor: '#fff5d6',
