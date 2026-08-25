@@ -158,3 +158,158 @@ describe('scoreReading', () => {
     }
   });
 });
+
+/**
+ * A misheard word used to be able to end a read.
+ *
+ * The cursor only ever moves forward, so anything that moved it too far left
+ * every word the child said afterwards behind it, unreachable. One word that
+ * happened to appear once, late in the story, was enough to do it — and the
+ * child then read the rest of the page to a recogniser that had already
+ * decided they were at the end.
+ */
+describe('scoreReading does not lose the read', () => {
+  const NUMBERS =
+    'one two three four five six seven eight nine ten ' +
+    'eleven twelve thirteen fourteen fifteen penguin sixteen seventeen eighteen nineteen';
+
+  it('ignores a single stray word that appears far ahead', () => {
+    // The child reads on normally; the recogniser slips in one wrong word.
+    const result = score(NUMBERS, 'one two penguin three four five six');
+
+    // Everything genuinely read is credited...
+    expect(result.heard.slice(0, 6).every(Boolean)).toBe(true);
+    // ...and the stray word moved nothing.
+    expect(result.heard[15]).toBe(false);
+    expect(result.heardCount).toBe(6);
+  });
+
+  it('keeps crediting words after a stray one, not just before it', () => {
+    const before = score(NUMBERS, 'one two');
+    const after = score(NUMBERS, 'one two penguin three four five six seven eight');
+    expect(after.heardCount).toBeGreaterThan(before.heardCount);
+  });
+
+  it('still finds its place when the child really has jumped ahead', () => {
+    // Three words in a row agree, which no coincidence produces.
+    const result = score(NUMBERS, 'one two penguin sixteen seventeen');
+    expect(result.heardCount).toBe(5);
+    expect(result.heard[15]).toBe(true);
+    expect(result.heard[16]).toBe(true);
+    expect(result.heard[17]).toBe(true);
+  });
+
+  it('needs the whole run before it moves, not part of one', () => {
+    // Two agreeing words is not enough on its own.
+    const two = score(NUMBERS, 'one two penguin sixteen');
+    expect(two.heard[15]).toBe(false);
+
+    // The third commits it, and credits the run retrospectively.
+    const three = score(NUMBERS, 'one two penguin sixteen seventeen');
+    expect(three.heard[15]).toBe(true);
+  });
+
+  it('recovers if the cursor runs ahead of the child', () => {
+    // "mat" pulls the cursor to the end of the line; the child then carries
+    // on reading the words it skipped over.
+    const passage = 'the cat sat on the mat';
+    const result = score(passage, 'the mat cat sat on');
+    expect(result.heardCount).toBe(5);
+  });
+
+  it('never lets one wrong word cost more than itself, across every story', () => {
+    for (const story of ALL_STORIES.slice(0, 40)) {
+      const spoken = passageWords(story.text);
+      if (spoken.length < 12) continue;
+
+      // Read the whole story, but with one nonsense word dropped in early.
+      // The story's own last word is the cruellest choice: it is real, and it
+      // is as far ahead as a word can be.
+      const sabotaged = [...spoken];
+      sabotaged.splice(2, 0, spoken[spoken.length - 1]);
+
+      const clean = score(story.text, spoken.join(' '));
+      const messy = score(story.text, sabotaged.join(' '));
+
+      // A single bad word may cost a word or two. It must never cost the read.
+      expect(messy.heardCount).toBeGreaterThanOrEqual(clean.heardCount - 2);
+      expect(messy.passed).toBe(true);
+    }
+  });
+
+  it('survives a recogniser that repeats and stutters', () => {
+    const passage = 'the dog ran to the park where the children played';
+    const result = score(passage, 'the the dog dog ran to the park where the children played');
+    expect(result.percent).toBe(100);
+  });
+});
+
+/**
+ * The real test of a matcher is a real recogniser, which drops words and
+ * invents them. This stands one in for it and reads all 300 stories through
+ * it, because the failure this guards against — a child reading the whole
+ * page and being told they read almost none of it — only shows up over a
+ * whole story, never on a phrase.
+ */
+describe('scoreReading against a recogniser that makes mistakes', () => {
+  /** Deterministic, so a bad run can be reproduced rather than reported once. */
+  function rng(seed: number): () => number {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /**
+   * A child reading the whole story aloud, heard imperfectly: roughly one
+   * word in twelve dropped, and one in twenty hallucinated. The invented word
+   * is taken from the story's own vocabulary, since the recogniser is biased
+   * towards those words and they are what it reaches for.
+   */
+  function transcribe(words: string[], random: () => number): string {
+    const out: string[] = [];
+    for (const word of words) {
+      if (random() < 0.08) continue;
+      if (random() < 0.05) out.push(words[Math.floor(random() * words.length)]);
+      out.push(word);
+    }
+    return out.join(' ');
+  }
+
+  it('passes a child who read the whole story, every time', () => {
+    const failures: string[] = [];
+    let worst = 100;
+
+    for (const [s, story] of ALL_STORIES.entries()) {
+      const words = passageWords(story.text);
+      for (let trial = 0; trial < 3; trial++) {
+        const said = transcribe(words, rng(s * 31 + trial));
+        const { percent, passed } = score(story.text, said);
+        worst = Math.min(worst, percent);
+        // Named, so a regression says which story and which run to look at.
+        if (!passed) failures.push(`${story.id} trial ${trial}: ${percent}%`);
+      }
+    }
+
+    expect(failures).toEqual([]);
+    // Well clear of the 60% pass mark, rather than scraping it.
+    expect(worst).toBeGreaterThan(70);
+  });
+
+  it('is not thrown by a burst of invented words in one place', () => {
+    for (const story of ALL_STORIES.slice(0, 30)) {
+      const words = passageWords(story.text);
+      if (words.length < 20) continue;
+
+      // Five words from the end of the story, dropped in near the start —
+      // the worst thing a recogniser can do to a forward-only cursor.
+      const noise = words.slice(-5);
+      const said = [...words.slice(0, 3), ...noise, ...words.slice(3)].join(' ');
+
+      expect(score(story.text, said).passed).toBe(true);
+    }
+  });
+});
