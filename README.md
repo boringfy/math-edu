@@ -24,9 +24,41 @@ Work along a map, one grade at a time. On the maths side each stop is a short qu
 - **Correction round** — every mistake is re-asked with a hint and up to three tries
 - **Results and history** — score, time taken, a per-question breakdown, and your last 50 quizzes
 
+## How it is put together
+
+The project is two workspaces:
+
+```
+math-edu/
+├── frontend/   the Expo app — Android now, iOS later
+└── backend/    bakes the content into packs and serves them
+```
+
+**The app ships with no questions in it.** Every question, story and puzzle
+is baked by the backend into versioned packs, which the app downloads once,
+caches on the device, and then plays entirely offline. New content — and new
+kinds of content — reach a child without them installing an app update.
+
+A launch never waits on the network:
+
+1. Whatever finished downloading last time is promoted (a one-line file write).
+2. The app opens from its own cache and is immediately usable.
+3. Some time later, in the background and at most once every six hours, it
+   asks the server whether anything moved. Usually the answer is a 304.
+4. Anything new is verified against its SHA-256 and staged. It takes effect
+   **at the next restart** — so content can never change under a child
+   part-way through a lesson.
+
+With no network, or on a fresh install that has never reached the server, the
+app plays the copy of the content bundled into the binary. See
+[`backend/README.md`](backend/README.md) for the pack format, the publishing
+and rollback story, and the rule that stops a content edit from resetting
+anyone's saved progress.
+
 ## Getting started
 
-**Requirements:** Node.js 18+, and JDK 17+ plus the Android SDK (or Xcode for iOS) if you want to build the native app.
+**Requirements:** Node.js 18+, and JDK 17+ plus the Android SDK (or Xcode for
+iOS) if you want to build the native app.
 
 ```bash
 npm install
@@ -44,9 +76,27 @@ npm start
 npm run android   # or: npm run ios
 ```
 
-`npm run android` generates the native project, compiles it and installs it, so the first run takes a few minutes. Subsequent runs are incremental, and JavaScript changes hot-reload without rebuilding.
+`npm run android` generates the native project, compiles it and installs it,
+so the first run takes a few minutes. Subsequent runs are incremental, and
+JavaScript changes hot-reload without rebuilding.
+
+### Running against a content server
+
+The app plays its bundled content unless it is told where to look:
+
+```bash
+npm run bake     # build the packs
+npm run serve    # serve them on :8787
+
+EXPO_PUBLIC_CONTENT_URL=http://10.0.2.2:8787 npm start
+```
+
+`10.0.2.2` is how the Android emulator reaches the host. With the variable
+unset — which is how the tests run — the app never touches the network.
 
 ### Scripts
+
+Run from the repository root:
 
 | Command | What it does |
 | --- | --- |
@@ -54,7 +104,9 @@ npm run android   # or: npm run ios
 | `npm run android` | Build and run the native Android app |
 | `npm run ios` | Build and run the native iOS app |
 | `npm run web` | Run in the browser |
-| `npm test` | Run the test suite |
+| `npm run bake` | Bake the content packs |
+| `npm run serve` | Serve the baked packs |
+| `npm test` | Run both suites, app and backend |
 
 ## The lesson map
 
