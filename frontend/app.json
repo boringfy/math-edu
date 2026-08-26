@@ -32,7 +32,8 @@
           ]
         }
       ],
-      "./plugins/withPointerEvents"
+      "./plugins/withPointerEvents",
+      "./plugins/withContentCleartext"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
