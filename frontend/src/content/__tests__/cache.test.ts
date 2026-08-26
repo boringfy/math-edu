@@ -17,6 +17,7 @@ import {
   readPack,
   stagingSlot,
   stagePack,
+  updateWaiting,
   writeIndex,
 } from '../cache';
 import { CacheIndex, PackDescriptor } from '../contract';
@@ -232,5 +233,35 @@ describe('readIndex', () => {
     const written = index({ manifestVersion: 7, etag: '"abc"' });
     writeIndex('a', written);
     expect(readIndex('a')).toEqual(written);
+  });
+});
+
+describe('after a promotion', () => {
+  it('drops the superseded slot instead of leaving it looking like an update', async () => {
+    const before = descriptor('math.g1', 1);
+    await stagePack('a', before, body('math.g1', 1));
+    writeIndex('a', index({ manifestVersion: 1, packs: { 'math.g1': before } }));
+
+    const changed = { ...descriptor('math.g1', 2), sha256: sha(body('math.g1', 2)) };
+    await stagePack('b', changed, body('math.g1', 2));
+    writeIndex('b', index({ manifestVersion: 2, packs: { 'math.g1': changed } }));
+
+    expect(promoteIfReady().promoted).toBe(true);
+    expect(activeSlot()).toBe('b');
+
+    // The old slot is gone, so it cannot masquerade as a pending update...
+    expect(hasPack('a', 'math.g1')).toBe(false);
+    expect(readIndex('a')).toBeNull();
+    expect(updateWaiting()).toBe(false);
+
+    // ...and a second launch has nothing left to do.
+    expect(promoteIfReady()).toEqual({ promoted: false, slot: 'b' });
+  });
+
+  it('does not report an update waiting when there is none', async () => {
+    const only = descriptor('math.g1', 1);
+    await stagePack('a', only, body('math.g1', 1));
+    writeIndex('a', index({ packs: { 'math.g1': only } }));
+    expect(updateWaiting()).toBe(false);
   });
 });

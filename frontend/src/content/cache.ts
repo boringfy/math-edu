@@ -186,6 +186,13 @@ export function promoteIfReady(): { promoted: boolean; slot: Slot } {
   if (missing.length > 0) return { promoted: false, slot: live };
 
   setActive(staged);
+
+  // The slot just superseded is now scratch space. Dropping it stops the
+  // device holding two full copies of the content for ever, and stops the
+  // old set looking like an update waiting to be applied — the next update
+  // refills this slot from the live one anyway.
+  slotDir(live).delete();
+
   return { promoted: true, slot: staged };
 }
 

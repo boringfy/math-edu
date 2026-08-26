@@ -33,6 +33,11 @@ export type { UpdateOutcome } from './updater';
  */
 export const CONTENT_URL = process.env.EXPO_PUBLIC_CONTENT_URL ?? '';
 
+/** Remembered from boot, so the settings page can show what went wrong. */
+let lastBootError: string | null = null;
+let lastBootSlot = '?';
+let lastBootPromoted = false;
+
 const APP_VERSION = process.env.EXPO_PUBLIC_APP_VERSION ?? '1.0.0';
 
 export const updaterConfig = (): UpdaterConfig => ({
@@ -46,6 +51,14 @@ export interface Boot {
   slot: Slot;
   /** True when a staged update was activated by this launch. */
   promoted: boolean;
+  /**
+   * Why promotion failed, if it did.
+   *
+   * Swallowing this was a mistake once already: an update downloaded, staged
+   * and verified, then silently failed to activate, and from the outside that
+   * was indistinguishable from no update existing.
+   */
+  error: string | null;
 }
 
 /**
@@ -54,14 +67,17 @@ export interface Boot {
  */
 export function boot(): Boot {
   let promoted = false;
+  let error: string | null = null;
   let slot: Slot;
   try {
     const result = promoteIfReady();
     promoted = result.promoted;
     slot = result.slot;
-  } catch {
-    // A damaged cache must not stop the app booting on bundled content.
+  } catch (caught) {
+    // A damaged cache must not stop the app booting on bundled content — but
+    // it must not do so quietly either.
     promoted = false;
+    error = String(caught);
     slot = activeSlot();
   }
 
@@ -74,7 +90,10 @@ export function boot(): Boot {
   };
   const fromBinary = (id: PackId): unknown | null => SEED_PACKS[id] ?? null;
 
-  return { library: new Library(fromDisk, fromBinary), slot, promoted };
+  lastBootError = error;
+  lastBootSlot = slot;
+  lastBootPromoted = promoted;
+  return { library: new Library(fromDisk, fromBinary), slot, promoted, error };
 }
 
 /** What the app can say about the content it is running on. */
@@ -88,6 +107,11 @@ export interface ContentStatus {
   checkedAt: string | null;
   /** An update is downloaded and complete, waiting for the next launch. */
   updateWaiting: boolean;
+  /** Set when the last launch failed to activate a staged update. */
+  error: string | null;
+  /** Which slot is live, and whether this launch activated an update. */
+  slot: string;
+  promotedThisLaunch: boolean;
 }
 
 /**
@@ -99,7 +123,7 @@ export interface ContentStatus {
  * working — otherwise a server that has been unreachable for a month looks
  * exactly like one with nothing new to say.
  */
-export function contentStatus(): ContentStatus {
+export function contentStatus(bootError: string | null = lastBootError): ContentStatus {
   const live = readIndex(activeSlot());
 
   return {
@@ -108,6 +132,9 @@ export function contentStatus(): ContentStatus {
     packs: live ? Object.keys(live.packs ?? {}).length : 0,
     checkedAt: live?.checkedAt ?? null,
     updateWaiting: updateWaiting(),
+    error: bootError,
+    slot: lastBootSlot,
+    promotedThisLaunch: lastBootPromoted,
   };
 }
 

@@ -159,9 +159,16 @@ export default function SettingsScreen({ settings, onChange, onBack }: Props) {
           />
           <Fact label="Last checked" value={ago(status.checkedAt)} />
           <Fact
+            label="Store"
+            value={`slot ${status.slot}${status.promotedThisLaunch ? ' · updated on open' : ''}`}
+          />
+          <Fact
             label="Comes from"
             value={status.source ? status.source.replace(/^https?:\/\//, '') : 'nowhere — this build is offline'}
           />
+          {status.error !== null && (
+            <Text style={styles.problem}>Could not apply the last update: {status.error}</Text>
+          )}
           {status.updateWaiting && (
             <Text style={styles.pending}>
               New content is downloaded and ready. Close and reopen the app to start
@@ -254,6 +261,7 @@ const styles = StyleSheet.create({
   factLabel: { fontSize: 15, color: colors.textMuted },
   factValue: { fontSize: 15, fontWeight: '700', color: colors.text, flexShrink: 1, textAlign: 'right' },
   pending: { fontSize: 14, color: colors.text, lineHeight: 20, marginTop: 10 },
+  problem: { fontSize: 13, color: colors.wrong, lineHeight: 19, marginTop: 10 },
   button: {
     marginTop: 14,
     backgroundColor: colors.primary,
