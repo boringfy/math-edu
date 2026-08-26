@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import { PackId } from './contract';
-import { Slot, activeSlot, promoteIfReady, readIndex, readPack, stagingSlot } from './cache';
+import { Slot, activeSlot, promoteIfReady, readIndex, readPack, updateWaiting } from './cache';
 import { Library } from './library';
 import { SEED_PACKS } from './seed';
 import { UpdateOutcome, UpdaterConfig, checkForUpdate } from './updater';
@@ -86,8 +86,8 @@ export interface ContentStatus {
   packs: number;
   /** ISO 8601 of the last successful check, or null if there has not been one. */
   checkedAt: string | null;
-  /** Version of an update already downloaded and waiting for a restart. */
-  pendingVersion: number | null;
+  /** An update is downloaded and complete, waiting for the next launch. */
+  updateWaiting: boolean;
 }
 
 /**
@@ -101,18 +101,13 @@ export interface ContentStatus {
  */
 export function contentStatus(): ContentStatus {
   const live = readIndex(activeSlot());
-  const staged = readIndex(stagingSlot());
-  const pending =
-    staged && staged.manifestVersion > (live?.manifestVersion ?? 0)
-      ? staged.manifestVersion
-      : null;
 
   return {
     source: CONTENT_URL,
     manifestVersion: live?.manifestVersion ?? 0,
     packs: live ? Object.keys(live.packs ?? {}).length : 0,
     checkedAt: live?.checkedAt ?? null,
-    pendingVersion: pending,
+    updateWaiting: updateWaiting(),
   };
 }
 

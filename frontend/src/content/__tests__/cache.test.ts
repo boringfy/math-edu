@@ -114,11 +114,63 @@ describe('promoteIfReady', () => {
     expect(activeSlot()).toBe('a');
   });
 
-  it('refuses to promote content older than what is already live', async () => {
-    writeIndex('a', index({ manifestVersion: 9 }));
-    const d = descriptor('math.g1', 1);
-    await stagePack('b', d, body('math.g1', 1));
-    writeIndex('b', index({ manifestVersion: 4, packs: { 'math.g1': d } }));
+  /**
+   * Rolling back is publishing an earlier manifest, so a client that only
+   * ever moved forwards could never follow one. What decides a promotion is
+   * whether the bytes differ, not what the manifest is numbered.
+   */
+  it('follows a rollback to earlier content', async () => {
+    const live = descriptor('math.g1', 9);
+    await stagePack('a', live, body('math.g1', 9));
+    writeIndex('a', index({ manifestVersion: 9, packs: { 'math.g1': live } }));
+
+    const rolledBack = descriptor('math.g1', 1);
+    await stagePack('b', rolledBack, body('math.g1', 1));
+    writeIndex('b', index({ manifestVersion: 4, packs: { 'math.g1': rolledBack } }));
+
+    expect(promoteIfReady().promoted).toBe(true);
+    expect(readPack(activeSlot(), 'math.g1')).toEqual({
+      kind: 'math',
+      id: 'math.g1',
+      version: 1,
+    });
+  });
+
+  /**
+   * A content server rebuilt from a clean checkout has no memory of the
+   * versions it published before, so it starts again at 1. That must not
+   * make genuinely new content look like content already seen.
+   */
+  it('promotes changed content even when the manifest version has not moved', async () => {
+    const before = descriptor('math.g1', 1);
+    await stagePack('a', before, body('math.g1', 1));
+    writeIndex('a', index({ manifestVersion: 1, packs: { 'math.g1': before } }));
+
+    const after = descriptor('math.g1', 1);
+    // Same id, same version number — different bytes.
+    const changed = JSON.stringify({ kind: 'math', id: 'math.g1', version: 1, extra: true });
+    const descriptorForChanged = { ...after, sha256: sha(changed) };
+    await stagePack('b', descriptorForChanged, changed);
+    writeIndex('b', index({ manifestVersion: 1, packs: { 'math.g1': descriptorForChanged } }));
+
+    expect(promoteIfReady().promoted).toBe(true);
+  });
+
+  it('does not promote a staged set identical to the live one', async () => {
+    const same = descriptor('math.g1', 2);
+    await stagePack('a', same, body('math.g1', 2));
+    writeIndex('a', index({ manifestVersion: 5, packs: { 'math.g1': same } }));
+    await stagePack('b', same, body('math.g1', 2));
+    writeIndex('b', index({ manifestVersion: 6, packs: { 'math.g1': same } }));
+
+    expect(promoteIfReady().promoted).toBe(false);
+  });
+
+  it('does not let an empty staged slot wipe the live content', async () => {
+    const live = descriptor('math.g1', 2);
+    await stagePack('a', live, body('math.g1', 2));
+    writeIndex('a', index({ manifestVersion: 5, packs: { 'math.g1': live } }));
+    writeIndex('b', index({ manifestVersion: 6, packs: {} }));
 
     expect(promoteIfReady().promoted).toBe(false);
     expect(activeSlot()).toBe('a');

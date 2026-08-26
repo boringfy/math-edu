@@ -43,7 +43,7 @@ describe('contentStatus', () => {
     expect(status.manifestVersion).toBe(0);
     expect(status.packs).toBe(0);
     expect(status.checkedAt).toBeNull();
-    expect(status.pendingVersion).toBeNull();
+    expect(status.updateWaiting).toBe(false);
   });
 
   it('reports the live manifest once content has been downloaded', () => {
@@ -64,7 +64,7 @@ describe('contentStatus', () => {
     await stagePack('b', descriptor('math.g1', 4), body('math.g1'));
     writeIndex('b', index({ manifestVersion: 8, packs: { 'math.g1': descriptor('math.g1', 4) } }));
 
-    expect(contentStatus().pendingVersion).toBe(8);
+    expect(contentStatus().updateWaiting).toBe(true);
   });
 
   it('stops announcing it once the restart has happened', async () => {
@@ -75,13 +75,21 @@ describe('contentStatus', () => {
     expect(promoteIfReady().promoted).toBe(true);
     const status = contentStatus();
     expect(status.manifestVersion).toBe(8);
-    expect(status.pendingVersion).toBeNull();
+    expect(status.updateWaiting).toBe(false);
   });
 
-  it('does not mistake stale staged content for a pending update', () => {
-    // A slot left over from before an update that has already been activated.
-    writeIndex('a', index({ manifestVersion: 9 }));
-    writeIndex('b', index({ manifestVersion: 4 }));
-    expect(contentStatus().pendingVersion).toBeNull();
+  it('does not mistake an empty staged slot for a pending update', () => {
+    // A failed attempt is not an instruction to wipe what the app is running.
+    writeIndex('a', index({ manifestVersion: 9, packs: { 'math.g1': descriptor('math.g1', 1) } }));
+    writeIndex('b', index({ manifestVersion: 4, packs: {} }));
+    expect(contentStatus().updateWaiting).toBe(false);
+  });
+
+  it('does not announce staged content identical to what is live', async () => {
+    const same = descriptor('math.g1', 3);
+    writeIndex('a', index({ manifestVersion: 9, packs: { 'math.g1': same } }));
+    await stagePack('b', same, body('math.g1'));
+    writeIndex('b', index({ manifestVersion: 10, packs: { 'math.g1': same } }));
+    expect(contentStatus().updateWaiting).toBe(false);
   });
 });

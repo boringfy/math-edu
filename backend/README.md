@@ -27,6 +27,12 @@ Publishing is writing a new manifest. **Rolling back is putting the old one
 back** — no rebuild, no restart, since the manifest is read from disk per
 request.
 
+Clients decide what to activate by comparing pack hashes, not the manifest
+version. That is deliberate: a server rebuilt from a clean checkout has no
+memory of what it published before and starts numbering again at 1, and a
+rollback publishes a *lower* version on purpose. Neither must be mistaken for
+"nothing new".
+
 ### 16 packs
 
 | Pack | Holds |
@@ -93,6 +99,41 @@ src/
 `src/contract/` is owned here and copied into
 `frontend/src/content/contract/`. Never edit the copy — `npm test` fails if
 it has drifted.
+
+## Running it
+
+The image bakes the content during the build, so a container either starts
+with a complete, verified set or fails to build. Nothing is generated on a
+running server.
+
+```bash
+docker build -f backend/Dockerfile -t math-edu-content .      # from the repo root
+docker run -d --name math-edu-content --restart unless-stopped \
+  -p 8788:8787 math-edu-content
+curl localhost:8788/healthz
+```
+
+`--restart unless-stopped` brings it back after a reboot. The container
+listens on 8787 inside; map it to whatever is free outside.
+
+To publish new content, rebuild the image and replace the container. Devices
+pick it up on their next check and play it after their next restart.
+
+### Pointing the app at it
+
+The app is built against a fixed URL, so this is a build-time decision:
+
+```bash
+EXPO_PUBLIC_CONTENT_URL=http://192.168.0.113:8788 npm run android
+```
+
+Over plain HTTP, `plugins/withContentCleartext.js` permits cleartext for that
+one host — Android blocks it by default in release builds, and without the
+exemption every update check fails silently. Built with no URL, the app runs
+on its bundled content and never touches the network.
+
+Settings ▸ Content in the app shows which version is live, when it last
+checked, and has a "Check now" button that skips the six-hour throttle.
 
 ## Adding content
 

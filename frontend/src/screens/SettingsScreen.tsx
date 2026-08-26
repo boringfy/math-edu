@@ -162,10 +162,10 @@ export default function SettingsScreen({ settings, onChange, onBack }: Props) {
             label="Comes from"
             value={status.source ? status.source.replace(/^https?:\/\//, '') : 'nowhere — this build is offline'}
           />
-          {status.pendingVersion !== null && (
+          {status.updateWaiting && (
             <Text style={styles.pending}>
-              Version {status.pendingVersion} is downloaded and ready. Close and reopen the
-              app to start using it.
+              New content is downloaded and ready. Close and reopen the app to start
+              using it.
             </Text>
           )}
 

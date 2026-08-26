@@ -98,7 +98,10 @@ class FakeServer {
       };
     });
     this.manifest = { ...this.manifest, manifestVersion, packs: descriptors };
-    this.etag = `"v${manifestVersion}"`;
+    // Derived from the body, exactly as the real server does — two different
+    // manifests must never share an ETag, or a client is told "unchanged"
+    // about content it has never seen.
+    this.etag = `"${sha(JSON.stringify(this.manifest)).slice(0, 16)}"`;
   }
 
   fetch = async (url: string, init?: RequestInit): Promise<Response> => {
@@ -318,5 +321,52 @@ describe('an app that has not been updated', () => {
     // The pack it could not render was never downloaded.
     expect(library.lessons(2)).toEqual([]);
     expect(readIndex(activeSlot())?.packs['math.g2']).toBeUndefined();
+  });
+});
+
+/**
+ * The content server is rebuilt from a clean checkout on every deploy, so it
+ * has no memory of the versions it published before and starts again at 1.
+ * Content the app has never seen must still reach it.
+ */
+describe('a server that does not remember its version numbers', () => {
+  it('still delivers changed content when the version has not moved', async () => {
+    server.publish([{ id: 'math.g1', body: mathBody(1, 1, ['before']) }], 1);
+    await checkForUpdate(config());
+    promoteIfReady();
+    expect(liveLibrary().lessonQuestions(lesson(1) as never, {}, Math.random).questions[0].prompt)
+      .toBe('before');
+
+    // A fresh deploy: different content, but the counter has reset.
+    const reset = new FakeServer();
+    reset.publish([{ id: 'math.g1', body: mathBody(1, 1, ['after']) }], 1);
+    globalThis.fetch = reset.fetch as unknown as typeof fetch;
+
+    expect((await checkForUpdate(config(), { force: true })).status).toBe('staged');
+    expect(promoteIfReady().promoted).toBe(true);
+    expect(liveLibrary().lessonQuestions(lesson(1) as never, {}, Math.random).questions[0].prompt)
+      .toBe('after');
+  });
+
+  it('follows a rollback to content it has already seen', async () => {
+    server.publish([{ id: 'math.g1', body: mathBody(1, 1, ['good']) }], 1);
+    await checkForUpdate(config());
+    promoteIfReady();
+
+    server.publish([{ id: 'math.g1', body: mathBody(1, 2, ['a bad release']) }], 2);
+    await checkForUpdate(config(), { force: true });
+    promoteIfReady();
+    expect(liveLibrary().lessonQuestions(lesson(1) as never, {}, Math.random).questions[0].prompt)
+      .toBe('a bad release');
+
+    // Put the earlier manifest back, which is how a bad release is undone.
+    const rolledBack = new FakeServer();
+    rolledBack.publish([{ id: 'math.g1', body: mathBody(1, 1, ['good']) }], 1);
+    globalThis.fetch = rolledBack.fetch as unknown as typeof fetch;
+
+    expect((await checkForUpdate(config(), { force: true })).status).toBe('staged');
+    expect(promoteIfReady().promoted).toBe(true);
+    expect(liveLibrary().lessonQuestions(lesson(1) as never, {}, Math.random).questions[0].prompt)
+      .toBe('good');
   });
 });

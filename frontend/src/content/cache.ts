@@ -140,8 +140,28 @@ export function carryOver(from: Slot, to: Slot, wanted: PackDescriptor[]): void 
 }
 
 /**
- * Flips to the staged slot if it holds a complete, newer set. Cold start
- * only. Returns the slot now live.
+ * What the content in a slot actually is, independent of what it is numbered.
+ *
+ * Deliberately not the manifest version. That is a counter the server keeps,
+ * and a server does not always have one to keep — rebuild the content image
+ * from a clean checkout and it starts again at 1, which would make genuinely
+ * new content look like content already seen. It also has to be possible to
+ * go *backwards*: publishing an earlier manifest is how a bad release is
+ * rolled back, and a client that only ever moved forwards could never follow.
+ *
+ * What matters is whether the bytes differ, so that is what is compared.
+ */
+function signature(index: CacheIndex | null): string {
+  if (!index) return '';
+  return Object.values(index.packs ?? {})
+    .map((d) => `${d.id}:${d.sha256}`)
+    .sort()
+    .join('|');
+}
+
+/**
+ * Flips to the staged slot if it holds a complete set that differs from the
+ * live one. Cold start only. Returns the slot now live.
  *
  * Most launches have nothing waiting and this is a couple of stat calls.
  */
@@ -152,17 +172,31 @@ export function promoteIfReady(): { promoted: boolean; slot: Slot } {
   const pending = readIndex(staged);
   if (!pending) return { promoted: false, slot: live };
 
-  const current = readIndex(live);
-  if (current && pending.manifestVersion <= current.manifestVersion) {
+  // An empty staging slot is a failed attempt, not an instruction to wipe
+  // the content the app is running on.
+  const wanted = Object.values(pending.packs ?? {});
+  if (wanted.length === 0) return { promoted: false, slot: live };
+
+  if (signature(pending) === signature(readIndex(live))) {
     return { promoted: false, slot: live };
   }
 
   // Refuse to activate a set with a hole in it.
-  const missing = Object.values(pending.packs ?? {}).filter((d) => !hasPack(staged, d.id));
+  const missing = wanted.filter((d) => !hasPack(staged, d.id));
   if (missing.length > 0) return { promoted: false, slot: live };
 
   setActive(staged);
   return { promoted: true, slot: staged };
+}
+
+/** Whether a complete update is staged and waiting for the next cold start. */
+export function updateWaiting(): boolean {
+  const staged = readIndex(stagingSlot());
+  if (!staged) return false;
+  const wanted = Object.values(staged.packs ?? {});
+  if (wanted.length === 0) return false;
+  if (signature(staged) === signature(readIndex(activeSlot()))) return false;
+  return wanted.every((d) => hasPack(stagingSlot(), d.id));
 }
 
 /** Throws away a partial staging slot, e.g. after a failed update. */
