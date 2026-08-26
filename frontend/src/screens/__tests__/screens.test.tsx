@@ -628,3 +628,30 @@ describe('ResultsScreen', () => {
     expect(text).toContain('500');
   });
 });
+
+describe('SettingsScreen content panel', () => {
+  it('tells a grown-up where the questions come from and when they were checked', () => {
+    const text = textOf(
+      render(
+        <SettingsScreen settings={DEFAULT_SETTINGS} onChange={() => {}} onBack={() => {}} />,
+      ),
+    );
+
+    expect(text).toContain('Content');
+    expect(text).toContain('Last checked');
+    expect(text).toContain('Check now');
+  });
+
+  it('says so plainly when the app is running on the copy it shipped with', () => {
+    // No content has been downloaded in the test environment, which is also
+    // what a fresh install looks like.
+    const text = textOf(
+      render(
+        <SettingsScreen settings={DEFAULT_SETTINGS} onChange={() => {}} onBack={() => {}} />,
+      ),
+    );
+    expect(text).toContain('the copy that came with the app');
+    expect(text).toContain('never');
+  });
+});
+

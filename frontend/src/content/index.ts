@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import { PackId } from './contract';
-import { Slot, activeSlot, promoteIfReady, readPack } from './cache';
+import { Slot, activeSlot, promoteIfReady, readIndex, readPack, stagingSlot } from './cache';
 import { Library } from './library';
 import { SEED_PACKS } from './seed';
 import { UpdateOutcome, UpdaterConfig, checkForUpdate } from './updater';
@@ -76,6 +76,49 @@ export function boot(): Boot {
 
   return { library: new Library(fromDisk, fromBinary), slot, promoted };
 }
+
+/** What the app can say about the content it is running on. */
+export interface ContentStatus {
+  /** The content server, or '' when the app runs on its bundled copy alone. */
+  source: string;
+  /** 0 means nothing has ever been downloaded. */
+  manifestVersion: number;
+  packs: number;
+  /** ISO 8601 of the last successful check, or null if there has not been one. */
+  checkedAt: string | null;
+  /** Version of an update already downloaded and waiting for a restart. */
+  pendingVersion: number | null;
+}
+
+/**
+ * What is on disk right now.
+ *
+ * Read fresh rather than remembered, so the settings page shows the state
+ * after a check rather than the state at launch. An app that updates itself
+ * silently needs somewhere a grown-up can see whether it is actually
+ * working — otherwise a server that has been unreachable for a month looks
+ * exactly like one with nothing new to say.
+ */
+export function contentStatus(): ContentStatus {
+  const live = readIndex(activeSlot());
+  const staged = readIndex(stagingSlot());
+  const pending =
+    staged && staged.manifestVersion > (live?.manifestVersion ?? 0)
+      ? staged.manifestVersion
+      : null;
+
+  return {
+    source: CONTENT_URL,
+    manifestVersion: live?.manifestVersion ?? 0,
+    packs: live ? Object.keys(live.packs ?? {}).length : 0,
+    checkedAt: live?.checkedAt ?? null,
+    pendingVersion: pending,
+  };
+}
+
+/** Checks now, ignoring the throttle. For the button on the settings page. */
+export const checkNow = (): Promise<UpdateOutcome> =>
+  checkForUpdate(updaterConfig(), { force: true });
 
 /**
  * The content library for this launch, plus a background update check.
