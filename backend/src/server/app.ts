@@ -19,6 +19,7 @@ import { join } from 'node:path';
 
 import { Hono } from 'hono';
 import { compress } from 'hono/compress';
+import { logger } from 'hono/logger';
 
 import type { Manifest } from '../contract';
 import { DIST_DIR } from '../bake/config';
@@ -42,6 +43,13 @@ function loadManifest(): { manifest: Manifest; body: string; etag: string } | nu
 }
 
 const app = new Hono();
+
+/**
+ * Who asked for what. Without this there is no way to tell a device that is
+ * quietly failing to update from one that simply has nothing new to fetch —
+ * both look like silence.
+ */
+app.use('*', logger());
 
 // Packs are verbose JSON that gzips about 16:1, so this is the difference
 // between a 2MB download and a 90KB one.
