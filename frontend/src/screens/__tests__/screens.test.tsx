@@ -674,10 +674,36 @@ describe('the grade in the header', () => {
     }
   });
 
-  it('sticks to the top, so scrolling the map cannot hide it', () => {
+  /**
+   * Fixed by being outside the ScrollView rather than a sticky header inside
+   * it. A sticky header is held in place with a transform, and on Android a
+   * view translated out of its parent's bounds stops receiving touches — the
+   * settings gear was visible but dead.
+   */
+  it('sits outside the scrolling area, so it cannot scroll away', () => {
     const tree = render(<HomeScreen {...homeProps('math')} />);
     const scroll = tree.root.findAllByType(ScrollView)[0];
-    expect(scroll.props.stickyHeaderIndices).toEqual([0]);
+    const insideScroll = scroll.findAll(
+      (n) =>
+        typeof n.type !== 'string' &&
+        String(n.props.accessibilityLabel).startsWith('Grade '),
+    );
+    expect(insideScroll).toEqual([]);
+  });
+
+  it('keeps the settings gear tappable, header and all', () => {
+    let opened = 0;
+    const tree = render(
+      <HomeScreen {...homeProps('math')} onOpenSettings={() => (opened += 1)} />,
+    );
+    const scroll = tree.root.findAllByType(ScrollView)[0];
+    const gear = tree.root.find(
+      (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === 'Settings',
+    );
+    // Outside the scroller, so nothing can translate it out of reach.
+    expect(scroll.findAll((n) => n === gear)).toEqual([]);
+    act(() => gear.props.onPress());
+    expect(opened).toBe(1);
   });
 
   it('no longer offers the picker on the map itself', () => {

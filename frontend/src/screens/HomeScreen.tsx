@@ -136,14 +136,14 @@ export default function HomeScreen({
   };
 
   return (
-    <ScrollView
-      ref={scroller}
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      // The header carries the grade, and the grade is the thing that is
-      // easiest to lose track of once the map has been scrolled away from.
-      stickyHeaderIndices={[0]}
-    >
+    <View style={styles.container}>
+      {/*
+        Outside the ScrollView rather than a sticky header inside it. A sticky
+        header is held in place with a transform, and on Android a view
+        translated out of its parent's bounds stops receiving touches — the
+        settings gear was there but dead. Making it a sibling keeps it
+        genuinely fixed, and genuinely tappable.
+      */}
       <View style={styles.titleRow}>
         {/* One app name on every tab; the icon and the tab bar say which part. */}
         <Text style={styles.title} numberOfLines={1}>
@@ -174,7 +174,12 @@ export default function HomeScreen({
         </View>
       </View>
 
-      <DailyChallenges daily={daily} />
+      <ScrollView
+        ref={scroller}
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+      >
+        <DailyChallenges daily={daily} />
 
       <Text style={styles.mapSummary}>
         ★ {stars} of {stops.length * 3} · {ui.tail}
@@ -292,26 +297,26 @@ export default function HomeScreen({
             </View>
           ))
         ))}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 20, paddingTop: 24, paddingBottom: 40 },
+  scroll: { flex: 1 },
+  content: { padding: 20, paddingTop: 16, paddingBottom: 40 },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    // A sticky header is drawn over whatever scrolls past it, so it has to
-    // paint its own background rather than let the map show through.
     backgroundColor: colors.background,
+    paddingHorizontal: 20,
+    paddingTop: 24,
     paddingBottom: 10,
-    marginBottom: 2,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  titleRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  titleRight: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   settings: {
     width: 34,
     height: 34,
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   settingsIcon: { fontSize: 16 },
-  title: { fontSize: 30, fontWeight: '800', color: colors.text },
+  title: { flex: 1, fontSize: 30, fontWeight: '800', color: colors.text },
   // Reads as a label rather than a button, because the grade is a fact about
   // where the child is, not a control they should be fiddling with.
   gradePill: {
