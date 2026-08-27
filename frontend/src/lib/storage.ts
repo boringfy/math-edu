@@ -20,6 +20,7 @@ const COINS_KEY = 'mathquiz:coins';
 const DAILY_KEY = 'mathquiz:daily';
 const SETTINGS_KEY = 'mathquiz:settings';
 const CURSORS_KEY = 'mathquiz:cursors';
+const GRADES_KEY = 'mathquiz:grades';
 const progressKey: Record<Subject, string> = {
   math: 'mathquiz:lessons',
   reading: 'mathquiz:stories',
@@ -156,4 +157,36 @@ export async function saveCursors(state: CursorState): Promise<void> {
   } catch {
     // Losing the cursor costs a little repetition, never a broken quiz.
   }
+}
+
+/**
+ * Which grade each subject is on.
+ *
+ * Kept per subject rather than one for the whole app: a child who reads
+ * ahead of their arithmetic, or the other way round, should not have to
+ * choose which of the two to get wrong.
+ *
+ * Saved, because a picker that forgets is worse than no picker — every
+ * launch would drop the child back into grade 1 and leave them to notice.
+ */
+export async function loadGrades(): Promise<Record<Subject, Grade>> {
+  const fallback: Record<Subject, Grade> = { math: 1, reading: 1, logic: 1 };
+  try {
+    const raw = await AsyncStorage.getItem(GRADES_KEY);
+    if (!raw) return fallback;
+    const stored = JSON.parse(raw) as Partial<Record<Subject, unknown>>;
+    const valid = (value: unknown): value is Grade =>
+      value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
+    return {
+      math: valid(stored.math) ? stored.math : fallback.math,
+      reading: valid(stored.reading) ? stored.reading : fallback.reading,
+      logic: valid(stored.logic) ? stored.logic : fallback.logic,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export async function saveGrades(grades: Record<Subject, Grade>): Promise<void> {
+  await AsyncStorage.setItem(GRADES_KEY, JSON.stringify(grades));
 }

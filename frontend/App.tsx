@@ -22,6 +22,7 @@ import {
 import {
   loadCoins,
   loadCursors,
+  loadGrades,
   loadDaily,
   loadHistory,
   loadProgress,
@@ -30,6 +31,7 @@ import {
   saveCoins,
   saveCursors,
   saveDaily,
+  saveGrades,
   saveProgress,
   saveResult,
   saveSettings,
@@ -104,8 +106,16 @@ type SessionStart = Pick<Session, 'subject' | 'grade' | 'tier' | 'stop' | 'passa
 export default function App() {
   const [phase, setPhase] = useState<Phase>('home');
   const [subject, setSubject] = useState<Subject>('math');
-  // One grade for the whole app: a child is the same age in every subject.
-  const [grade, setGrade] = useState<Grade>(1);
+  /**
+   * One grade per subject. A child who reads ahead of their arithmetic — or
+   * the other way round — should not have to pick which of the two to get
+   * wrong.
+   */
+  const [grades, setGrades] = useState<Record<Subject, Grade>>({
+    math: 1,
+    reading: 1,
+    logic: 1,
+  });
   const [history, setHistory] = useState<QuizResult[]>([]);
   const [tiers, setTiers] = useState<Record<Grade, Tier>>({ 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 });
   const [coins, setCoins] = useState(0);
@@ -126,6 +136,7 @@ export default function App() {
       setTiers({ 1: loaded[0], 2: loaded[1], 3: loaded[2], 4: loaded[3], 5: loaded[4] });
       setCoins(await loadCoins());
       setCursors(library.pruneCursors(await loadCursors()));
+      setGrades(await loadGrades());
       setProgress({
         math: await loadProgress('math'),
         reading: await loadProgress('reading'),
@@ -138,6 +149,16 @@ export default function App() {
       await saveDaily(today);
     })();
   }, []);
+
+  const grade = grades[subject];
+
+  const changeGrade = (forSubject: Subject, next: Grade) => {
+    setGrades((current) => {
+      const updated = { ...current, [forSubject]: next };
+      void saveGrades(updated);
+      return updated;
+    });
+  };
 
   /** Drops whatever round is open and shows the maps again. */
   const goHome = () => {
@@ -402,7 +423,6 @@ export default function App() {
               library={library}
               history={history}
               grade={grade}
-              onGradeChange={setGrade}
               tiers={tiers}
               coins={coins}
               daily={daily}
@@ -423,6 +443,8 @@ export default function App() {
               setSettings(next);
               void saveSettings(next);
             }}
+            grades={grades}
+            onGradeChange={changeGrade}
             onBack={() => setPhase('home')}
           />
         )}

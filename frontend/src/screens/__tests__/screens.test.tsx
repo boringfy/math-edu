@@ -536,6 +536,15 @@ describe('CorrectionScreen', () => {
   });
 });
 
+/** Everything SettingsScreen needs, with the grades a fresh install has. */
+const settingsProps = () => ({
+  settings: DEFAULT_SETTINGS,
+  onChange: () => {},
+  grades: { math: 1 as const, reading: 1 as const, logic: 1 as const },
+  onGradeChange: () => {},
+  onBack: () => {},
+});
+
 describe('SettingsScreen', () => {
   /** The switch a grown-up would reach for by that name. */
   const toggle = (tree: ReactTestRenderer, label: string) =>
@@ -550,7 +559,7 @@ describe('SettingsScreen', () => {
   it('saves each switch as it is flipped', () => {
     let saved = DEFAULT_SETTINGS;
     const tree = render(
-      <SettingsScreen settings={saved} onChange={(next) => (saved = next)} onBack={() => {}} />,
+      <SettingsScreen {...settingsProps()} settings={saved} onChange={(next) => (saved = next)} />,
     );
 
     act(() => {
@@ -566,11 +575,7 @@ describe('SettingsScreen', () => {
 
   it('greys out the pen switch when there is no paper to draw on', () => {
     const tree = render(
-      <SettingsScreen
-        settings={{ scratchPaper: false, penOnly: true }}
-        onChange={() => {}}
-        onBack={() => {}}
-      />,
+      <SettingsScreen {...settingsProps()} settings={{ scratchPaper: false, penOnly: true }} />,
     );
     expect(toggle(tree, 'Pen only').props.disabled).toBe(true);
     expect(toggle(tree, 'Scratch paper').props.disabled).toBeUndefined();
@@ -579,7 +584,7 @@ describe('SettingsScreen', () => {
   it('goes back when asked', () => {
     let back = 0;
     const tree = render(
-      <SettingsScreen settings={DEFAULT_SETTINGS} onChange={() => {}} onBack={() => (back += 1)} />,
+      <SettingsScreen {...settingsProps()} onBack={() => (back += 1)} />,
     );
     press(tree, 'Back');
     expect(back).toBe(1);
@@ -633,7 +638,7 @@ describe('SettingsScreen content panel', () => {
   it('tells a grown-up where the questions come from and when they were checked', () => {
     const text = textOf(
       render(
-        <SettingsScreen settings={DEFAULT_SETTINGS} onChange={() => {}} onBack={() => {}} />,
+        <SettingsScreen {...settingsProps()} />,
       ),
     );
 
@@ -647,11 +652,122 @@ describe('SettingsScreen content panel', () => {
     // what a fresh install looks like.
     const text = textOf(
       render(
-        <SettingsScreen settings={DEFAULT_SETTINGS} onChange={() => {}} onBack={() => {}} />,
+        <SettingsScreen {...settingsProps()} />,
       ),
     );
     expect(text).toContain('the copy that came with the app');
     expect(text).toContain('never');
+  });
+});
+
+/**
+ * The grade used to be a row of pills half way down the home screen, which
+ * scrolled away the moment the map was touched. Nothing then said which
+ * grade was showing, and a grade-4 map full of grade-1 sums just looks like
+ * an easy day.
+ */
+describe('the grade in the header', () => {
+  it('says which grade the map is, on every subject', () => {
+    for (const subject of ['math', 'reading', 'logic'] as const) {
+      const text = textOf(render(<HomeScreen {...homeProps(subject)} grade={4} />));
+      expect(text).toContain('Grade 4');
+    }
+  });
+
+  it('sticks to the top, so scrolling the map cannot hide it', () => {
+    const tree = render(<HomeScreen {...homeProps('math')} />);
+    const scroll = tree.root.findAllByType(ScrollView)[0];
+    expect(scroll.props.stickyHeaderIndices).toEqual([0]);
+  });
+
+  it('no longer offers the picker on the map itself', () => {
+    // It lives in settings now; the map is the child's, not a grown-up's.
+    const tree = render(<HomeScreen {...homeProps('math')} />);
+    const pickers = tree.root.findAll(
+      (n) => typeof n.type !== 'string' && /^Grade \d+$/.test(String(n.props.accessibilityLabel)),
+    );
+    expect(pickers).toEqual([]);
+  });
+
+  it('leads to where the grade is actually set', () => {
+    let opened = 0;
+    const tree = render(
+      <HomeScreen {...homeProps('math')} onOpenSettings={() => (opened += 1)} />,
+    );
+    act(() =>
+      tree.root
+        .find(
+          (n) =>
+            typeof n.type !== 'string' &&
+            String(n.props.accessibilityLabel).startsWith('Grade 1.'),
+        )
+        .props.onPress(),
+    );
+    expect(opened).toBe(1);
+  });
+});
+
+describe('the grade picker in settings', () => {
+  it('offers each subject its own grade', () => {
+    const tree = render(
+      <SettingsScreen
+        {...settingsProps()}
+        grades={{ math: 2, reading: 5, logic: 1 }}
+      />,
+    );
+    const text = textOf(tree);
+    expect(text).toContain('Maths');
+    expect(text).toContain('Reading');
+    expect(text).toContain('Logic');
+
+    // Each row shows its own subject's grade as the chosen one.
+    const chosen = (label: string) =>
+      tree.root.find(
+        (n) =>
+          typeof n.type !== 'string' &&
+          n.props.accessibilityLabel === label &&
+          n.props.accessibilityState?.selected === true,
+      );
+    expect(chosen('Maths grade 2')).toBeTruthy();
+    expect(chosen('Reading grade 5')).toBeTruthy();
+    expect(chosen('Logic grade 1')).toBeTruthy();
+  });
+
+  it('reports which subject was changed, not just the number', () => {
+    const changes: [string, number][] = [];
+    const tree = render(
+      <SettingsScreen
+        {...settingsProps()}
+        onGradeChange={(subject, grade) => changes.push([subject, grade])}
+      />,
+    );
+    act(() =>
+      tree.root
+        .find(
+          (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === 'Reading grade 3',
+        )
+        .props.onPress(),
+    );
+    expect(changes).toEqual([['reading', 3]]);
+  });
+
+  it('changing one subject leaves the others alone', () => {
+    // The reducer lives in App, so this pins the contract the screen offers:
+    // it names the subject, and says nothing about the rest.
+    const changes: [string, number][] = [];
+    const tree = render(
+      <SettingsScreen
+        {...settingsProps()}
+        grades={{ math: 2, reading: 5, logic: 1 }}
+        onGradeChange={(subject, grade) => changes.push([subject, grade])}
+      />,
+    );
+    act(() =>
+      tree.root
+        .find((n) => typeof n.type !== 'string' && n.props.accessibilityLabel === 'Logic grade 4')
+        .props.onPress(),
+    );
+    expect(changes).toEqual([['logic', 4]]);
   });
 });
 

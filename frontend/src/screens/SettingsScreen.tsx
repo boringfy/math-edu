@@ -10,13 +10,25 @@ import {
 } from 'react-native';
 import { ContentStatus, UpdateOutcome, checkNow, contentStatus } from '../content';
 import { colors } from '../theme';
-import { Settings } from '../types';
+import { Grade, Settings, Subject } from '../types';
 
 interface Props {
   settings: Settings;
   onChange: (settings: Settings) => void;
+  /** One grade per subject, so reading and arithmetic can differ. */
+  grades: Record<Subject, Grade>;
+  onGradeChange: (subject: Subject, grade: Grade) => void;
   onBack: () => void;
 }
+
+const GRADES: Grade[] = [1, 2, 3, 4, 5];
+
+/** The subjects in the order the tab bar shows them. */
+const SUBJECT_ROWS: { subject: Subject; label: string; icon: string }[] = [
+  { subject: 'math', label: 'Maths', icon: '🧮' },
+  { subject: 'reading', label: 'Reading', icon: '📖' },
+  { subject: 'logic', label: 'Logic', icon: '🧩' },
+];
 
 interface RowProps {
   label: string;
@@ -78,6 +90,49 @@ function outcomeMessage(outcome: UpdateOutcome): string {
   }
 }
 
+/**
+ * One subject's grade.
+ *
+ * Each subject gets its own row rather than one grade for the app, because a
+ * child who reads a year ahead of their arithmetic would otherwise have to
+ * pick which of the two to get wrong.
+ */
+function GradeRow({
+  label,
+  icon,
+  grade,
+  onPick,
+}: {
+  label: string;
+  icon: string;
+  grade: Grade;
+  onPick: (grade: Grade) => void;
+}) {
+  return (
+    <View style={styles.gradeRow}>
+      <Text style={styles.gradeLabel}>
+        {icon} {label}
+      </Text>
+      <View style={styles.gradePills}>
+        {GRADES.map((g) => (
+          <Pressable
+            key={g}
+            style={[styles.gradePill, grade === g && styles.gradePillOn]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: grade === g }}
+            accessibilityLabel={`${label} grade ${g}`}
+            onPress={() => onPick(g)}
+          >
+            <Text style={[styles.gradePillText, grade === g && styles.gradePillTextOn]}>
+              {g}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 /** One line of read-only fact about the content. */
 function Fact({ label, value }: { label: string; value: string }) {
   return (
@@ -93,7 +148,13 @@ function Fact({ label, value }: { label: string; value: string }) {
  * offers, rather than anything about how well it is going. Every change is
  * saved as it is made, so there is nothing to confirm on the way out.
  */
-export default function SettingsScreen({ settings, onChange, onBack }: Props) {
+export default function SettingsScreen({
+  settings,
+  onChange,
+  grades,
+  onGradeChange,
+  onBack,
+}: Props) {
   const [status, setStatus] = useState<ContentStatus>(contentStatus);
   const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -129,7 +190,24 @@ export default function SettingsScreen({ settings, onChange, onBack }: Props) {
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <Text style={styles.section}>Scratch paper</Text>
+        <Text style={styles.section}>Grade</Text>
+        <View style={styles.panel}>
+          {SUBJECT_ROWS.map(({ subject, label, icon }) => (
+            <GradeRow
+              key={subject}
+              label={label}
+              icon={icon}
+              grade={grades[subject]}
+              onPick={(grade) => onGradeChange(subject, grade)}
+            />
+          ))}
+        </View>
+        <Text style={styles.note}>
+          Each subject has its own grade, so a child who reads ahead of their sums does
+          not have to choose. The grade showing is on every map, at the top.
+        </Text>
+
+        <Text style={[styles.section, styles.sectionSpaced]}>Scratch paper</Text>
         <Row
           label="Scratch paper"
           detail="A sheet of scrap paper above maths questions, for working an answer out by hand."
@@ -243,6 +321,28 @@ const styles = StyleSheet.create({
   rowDetail: { fontSize: 14, color: colors.textMuted, marginTop: 4, lineHeight: 20 },
   note: { fontSize: 13, color: colors.textMuted, lineHeight: 19, paddingHorizontal: 4 },
   sectionSpaced: { marginTop: 28 },
+  gradeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 6,
+  },
+  gradeLabel: { fontSize: 17, fontWeight: '700', color: colors.text },
+  gradePills: { flexDirection: 'row', gap: 8 },
+  gradePill: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gradePillOn: { borderColor: colors.primary, backgroundColor: colors.primary },
+  gradePillText: { fontSize: 17, fontWeight: '800', color: colors.textMuted },
+  gradePillTextOn: { color: colors.card },
   panel: {
     backgroundColor: colors.card,
     borderRadius: 16,

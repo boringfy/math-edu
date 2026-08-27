@@ -20,7 +20,6 @@ import {
   TIER_LABELS,
 } from '../types';
 
-const GRADES: Grade[] = [1, 2, 3, 4, 5];
 const COUNTS = [5, 10, 15];
 
 /**
@@ -78,7 +77,6 @@ interface Props {
   library: Library;
   history: QuizResult[];
   grade: Grade;
-  onGradeChange: (grade: Grade) => void;
   tiers: Record<Grade, Tier>;
   coins: number;
   onOpenSettings: () => void;
@@ -102,7 +100,6 @@ export default function HomeScreen({
   library,
   history,
   grade,
-  onGradeChange,
   tiers,
   coins,
   onOpenSettings,
@@ -143,11 +140,25 @@ export default function HomeScreen({
       ref={scroller}
       style={styles.container}
       contentContainerStyle={styles.content}
+      // The header carries the grade, and the grade is the thing that is
+      // easiest to lose track of once the map has been scrolled away from.
+      stickyHeaderIndices={[0]}
     >
       <View style={styles.titleRow}>
         {/* One app name on every tab; the icon and the tab bar say which part. */}
-        <Text style={styles.title}>{ui.title}</Text>
+        <Text style={styles.title} numberOfLines={1}>
+          {ui.title}
+        </Text>
         <View style={styles.titleRight}>
+          {/* Which grade this subject is on. Tapping it goes where it is set. */}
+          <Pressable
+            style={styles.gradePill}
+            accessibilityRole="button"
+            accessibilityLabel={`Grade ${grade}. Change it in settings`}
+            onPress={onOpenSettings}
+          >
+            <Text style={styles.gradeText}>Grade {grade}</Text>
+          </Pressable>
           <View style={styles.coinPill}>
             <Text style={styles.coinText}>🪙 {coins}</Text>
           </View>
@@ -165,18 +176,6 @@ export default function HomeScreen({
 
       <DailyChallenges daily={daily} />
 
-      <Text style={styles.sectionLabel}>Grade</Text>
-      <View style={styles.row}>
-        {GRADES.map((g) => (
-          <Pressable
-            key={g}
-            onPress={() => onGradeChange(g)}
-            style={[styles.pill, grade === g && styles.pillActive]}
-          >
-            <Text style={[styles.pillText, grade === g && styles.pillTextActive]}>{g}</Text>
-          </Pressable>
-        ))}
-      </View>
       <Text style={styles.mapSummary}>
         ★ {stars} of {stops.length * 3} · {ui.tail}
       </Text>
@@ -300,7 +299,18 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, paddingTop: 24, paddingBottom: 40 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    // A sticky header is drawn over whatever scrolls past it, so it has to
+    // paint its own background rather than let the map show through.
+    backgroundColor: colors.background,
+    paddingBottom: 10,
+    marginBottom: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   titleRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   settings: {
     width: 34,
@@ -314,6 +324,17 @@ const styles = StyleSheet.create({
   },
   settingsIcon: { fontSize: 16 },
   title: { fontSize: 30, fontWeight: '800', color: colors.text },
+  // Reads as a label rather than a button, because the grade is a fact about
+  // where the child is, not a control they should be fiddling with.
+  gradePill: {
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  gradeText: { fontSize: 17, fontWeight: '800', color: colors.primary },
   coinPill: {
     backgroundColor: '#fff5d6',
     borderWidth: 2,
