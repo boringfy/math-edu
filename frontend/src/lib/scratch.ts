@@ -22,6 +22,42 @@ export const MIN_SAMPLE_DISTANCE = 1.5;
 /** How close to the eraser a point has to be to be rubbed out. */
 export const ERASER_RADIUS = 14;
 
+/**
+ * The pen's side button, as it arrives from Android.
+ *
+ * React Native hands a stylus the raw `MotionEvent.getButtonState()` rather
+ * than translating it to the W3C bitmask — `PointerEventHelper.getButtons`
+ * only rewrites the value for touch — so these are Android's constants, not
+ * the web's.
+ *
+ * All four bits, because Android reports a pen's side button twice over: it
+ * raises BUTTON_STYLUS_PRIMARY and, for backwards compatibility, also
+ * BUTTON_SECONDARY — and likewise BUTTON_STYLUS_SECONDARY alongside
+ * BUTTON_TERTIARY for the second button on a two-button pen. Which of them a
+ * given tablet actually sends is not worth finding out one device at a time;
+ * a child pressing the button expects it to rub out either way.
+ *
+ * BUTTON_PRIMARY is deliberately absent: that is the tip touching the paper,
+ * which is writing, not rubbing out.
+ */
+const BUTTON_SECONDARY = 0x2;
+const BUTTON_TERTIARY = 0x4;
+const BUTTON_STYLUS_PRIMARY = 0x20;
+const BUTTON_STYLUS_SECONDARY = 0x40;
+
+export const ERASER_BUTTONS =
+  BUTTON_SECONDARY | BUTTON_TERTIARY | BUTTON_STYLUS_PRIMARY | BUTTON_STYLUS_SECONDARY;
+
+/**
+ * Whether the pen's side button is being held.
+ *
+ * Deliberately reads the button out of each event rather than remembering it:
+ * the button can go down and come up in the middle of a stroke, and a child
+ * holding it expects the very next mark to rub out, not the one after.
+ */
+export const eraserButtonHeld = (buttons: number | null | undefined): boolean =>
+  ((buttons ?? 0) & ERASER_BUTTONS) !== 0;
+
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 
 /** One decimal is finer than a pixel, and keeps the path strings short. */

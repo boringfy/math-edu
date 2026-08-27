@@ -1,9 +1,10 @@
 import {
-  appendPoint,
-  eraseAround,
   ERASER_RADIUS,
   MIN_SAMPLE_DISTANCE,
   Stroke,
+  appendPoint,
+  eraseAround,
+  eraserButtonHeld,
   strokePath,
 } from '../scratch';
 
@@ -67,5 +68,37 @@ describe('eraseAround', () => {
   it('returns the very same strokes when it touched nothing', () => {
     const strokes = [line(5)];
     expect(eraseAround(strokes, { x: 500, y: 500 })).toBe(strokes);
+  });
+});
+
+/**
+ * Android hands a stylus the raw MotionEvent button state rather than the
+ * W3C bitmask, and reports a side button under more than one bit depending
+ * on the tablet. Getting this wrong means the button quietly does nothing,
+ * which is indistinguishable from the pen not having one.
+ */
+describe('eraserButtonHeld', () => {
+  it('is not held when the pen is only touching the paper', () => {
+    expect(eraserButtonHeld(0)).toBe(false);
+    // BUTTON_PRIMARY is the tip, which writes.
+    expect(eraserButtonHeld(0x1)).toBe(false);
+  });
+
+  it('is held for every bit Android reports a side button under', () => {
+    expect(eraserButtonHeld(0x2)).toBe(true); // BUTTON_SECONDARY (compat)
+    expect(eraserButtonHeld(0x4)).toBe(true); // BUTTON_TERTIARY (compat)
+    expect(eraserButtonHeld(0x20)).toBe(true); // BUTTON_STYLUS_PRIMARY
+    expect(eraserButtonHeld(0x40)).toBe(true); // BUTTON_STYLUS_SECONDARY
+  });
+
+  it('is held when the tip and the button are reported together', () => {
+    // Which is the normal case: the pen is down and the button is pressed.
+    expect(eraserButtonHeld(0x1 | 0x20)).toBe(true);
+    expect(eraserButtonHeld(0x1 | 0x2 | 0x20)).toBe(true);
+  });
+
+  it('survives an event that carries no button field at all', () => {
+    expect(eraserButtonHeld(undefined)).toBe(false);
+    expect(eraserButtonHeld(null)).toBe(false);
   });
 });
