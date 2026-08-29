@@ -1,0 +1,11 @@
+# The image builds from the repo root, so this file is the one that counts —
+# backend/.dockerignore only applies when the context is backend/ itself.
+#
+# The .env exclusion is the load-bearing line: it holds the tutor's API key,
+# which belongs in `docker run --env-file`, never in an image layer.
+**/.env
+**/node_modules
+**/dist
+.git
+frontend/android
+frontend/ios
