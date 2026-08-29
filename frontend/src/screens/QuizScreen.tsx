@@ -17,11 +17,13 @@ import PuzzleBoard from '../components/PuzzleBoard';
 import ReadAloud from '../components/ReadAloud';
 import ScratchPad from '../components/ScratchPad';
 import StoryPassage from '../components/StoryPassage';
+import TutorLesson from '../components/TutorLesson';
 import { Chord } from '../lib/cakeCuts';
 import { isComboMilestone } from '../lib/progress';
 import { isAnswerCorrect, isDrawingCorrect } from '../lib/grading';
+import { tutorAvailable } from '../lib/tutor';
 import { colors, promptAlign, promptTextStyle } from '../theme';
-import { AnswerRecord, Passage, Question, Subject } from '../types';
+import { AnswerRecord, Grade, Passage, Question, Subject } from '../types';
 
 /** Keeps the cake comfortably inside the screen on phones and tablets alike. */
 const cakeSize = (width: number) => Math.min(width - 48, 320);
@@ -29,6 +31,8 @@ const cakeSize = (width: number) => Math.min(width - 48, 320);
 interface Props {
   /** Only maths gets scrap paper; a story or a puzzle is nothing to work out. */
   subject: Subject;
+  /** The AI tutor pitches its explanation at this grade. */
+  grade: Grade;
   /** Whether scrap paper is offered at all, and what may draw on it. */
   scratchPaper: boolean;
   penOnly: boolean;
@@ -51,6 +55,7 @@ interface Props {
  */
 export default function QuizScreen({
   subject,
+  grade,
   scratchPaper,
   penOnly,
   questions,
@@ -79,6 +84,10 @@ export default function QuizScreen({
   // the pencil in the header puts it away when the question needs the room.
   const scratchable = scratchPaper && subject === 'math';
   const [scratching, setScratching] = useState(true);
+  // The AI tutor, teaching maths only for now: the per-topic lessons are
+  // written for sums, and a reading answer is in the story, not a method.
+  const tutorable = subject === 'math' && tutorAvailable();
+  const [helping, setHelping] = useState(false);
   const recordsRef = useRef<AnswerRecord[]>([]);
   const bestComboRef = useRef(0);
   const { width } = useWindowDimensions();
@@ -150,6 +159,7 @@ export default function QuizScreen({
       setIndex(index + 1);
       setEntry('');
       setCuts([]);
+      setHelping(false);
     } else {
       onComplete(recordsRef.current, Date.now() - startedAt, bestComboRef.current);
     }
@@ -230,6 +240,16 @@ export default function QuizScreen({
             {question.prompt}
           </Text>
           {question.puzzle && <PuzzleBoard puzzle={question.puzzle} />}
+          {tutorable && (
+            <Pressable
+              style={styles.tutorButton}
+              accessibilityRole="button"
+              accessibilityLabel="Explain it to me"
+              onPress={() => setHelping(true)}
+            >
+              <Text style={styles.tutorButtonIcon}>🦉</Text>
+            </Pressable>
+          )}
         </View>
 
         {isDrawing && (
@@ -275,6 +295,9 @@ export default function QuizScreen({
       )}
 
       <ComboBurst combo={burst.combo} nonce={burst.nonce} />
+      {helping && (
+        <TutorLesson question={question} grade={grade} onClose={() => setHelping(false)} />
+      )}
       {quitDialog}
     </View>
   );
@@ -374,6 +397,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   prompt: { fontWeight: '800', color: colors.text },
+  // Perched on the question card's corner: help belongs to the question, but
+  // must not sit among the answers where a tap means choosing one.
+  tutorButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tutorButtonIcon: { fontSize: 18 },
   optionGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   option: { width: '48%' },
   readContent: { flexGrow: 1, justifyContent: 'center', paddingVertical: 12 },

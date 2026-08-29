@@ -320,6 +320,7 @@ describe('QuizScreen', () => {
 
     const tree = render(
       <QuizScreen
+        grade={1}
         scratchPaper
         penOnly={false}
         subject="math"
@@ -354,6 +355,7 @@ describe('QuizScreen', () => {
 
     const tree = render(
       <QuizScreen
+        grade={1}
         scratchPaper
         penOnly={false}
         subject="reading"
@@ -404,6 +406,7 @@ describe('QuizScreen', () => {
 
     const tree = render(
       <QuizScreen
+        grade={1}
         scratchPaper
         penOnly={false}
         subject="logic"
@@ -440,7 +443,7 @@ describe('QuizScreen', () => {
   it('lays scratch paper out from the start of a maths round, and puts it away on request', () => {
     const questions = tappableQuestions(LIB.lessons(1)[0]);
     const tree = render(
-      <QuizScreen scratchPaper penOnly={false} subject="math" questions={questions} onComplete={() => {}} onQuit={() => {}} />,
+      <QuizScreen grade={1} scratchPaper penOnly={false} subject="math" questions={questions} onComplete={() => {}} onQuit={() => {}} />,
     );
 
     // Out on the desk without being asked for.
@@ -457,6 +460,7 @@ describe('QuizScreen', () => {
     const questions = tappableQuestions(LIB.lessons(1)[0]);
     const tree = render(
       <QuizScreen
+        grade={1}
         scratchPaper={false}
         penOnly
         subject="math"
@@ -481,6 +485,7 @@ describe('QuizScreen', () => {
     let completed = 0;
     const tree = render(
       <QuizScreen
+        grade={1}
         scratchPaper
         penOnly={false}
         subject="math"
@@ -513,6 +518,7 @@ describe('CorrectionScreen', () => {
     render(
       <CorrectionScreen
         subject="math"
+        grade={1}
         scratchPaper
         penOnly={false}
         questions={missed()}

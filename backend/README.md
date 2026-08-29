@@ -45,6 +45,39 @@ rollback publishes a *lower* version on purpose. Neither must be mistaken for
 About 15.5MB in total, but roughly **1MB over the wire** — it is repetitive
 JSON and gzips about 16:1. A child downloads only the grade they play.
 
+## The AI tutor
+
+The one route that is not baked content: `POST /v1/explain` takes a maths
+question a child is stuck on and returns a lesson as short spoken-word steps,
+minted by a language model on demand.
+
+```
+POST /v1/explain
+{ questionId, grade, prompt, correctAnswer, choices }
+→ { steps: ["Imagine a pizza cut into two equal pieces. …", …] }
+```
+
+The server, not the app, holds the key and talks to the model — an APK on a
+child's tablet must never carry a billable credential. Any OpenAI-compatible
+chat-completions provider works; the whole vendor decision lives in
+environment variables, read from `backend/.env` (gitignored — copy
+`.env.example` and fill in the key):
+
+| Variable | What it is |
+| --- | --- |
+| `TUTOR_LLM_URL` | full chat-completions URL |
+| `TUTOR_LLM_KEY` | the provider's API key |
+| `TUTOR_LLM_MODEL` | model name |
+| `TUTOR_LLM_NO_THINK` | optional, `1` on Qwen models: halves the wait by shrinking hidden reasoning |
+
+With any of the first three unset the route answers 503 and the app hides its
+help button; content serving is unaffected. Each question's topic (parsed
+from its id) selects a teaching angle in the prompt — fractions arrive as
+pizza slices, division as sharing between friends — and answers are cached in
+memory per question id, so a repeated ask costs nothing. Swapping providers
+is editing `.env` and restarting; for Docker, pass the same variables with
+`-e` or `--env-file`.
+
 ### Determinism
 
 Baking twice must produce byte-identical packs, or every bake would look like
@@ -131,6 +164,10 @@ Over plain HTTP, `plugins/withContentCleartext.js` permits cleartext for that
 one host — Android blocks it by default in release builds, and without the
 exemption every update check fails silently. Built with no URL, the app runs
 on its bundled content and never touches the network.
+
+The AI tutor asks the same host by default; set `EXPO_PUBLIC_TUTOR_URL` to
+split it onto its own server. With neither URL set the help button never
+appears.
 
 Settings ▸ Content in the app shows which version is live, when it last
 checked, and has a "Check now" button that skips the six-hour throttle.

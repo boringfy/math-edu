@@ -451,6 +451,7 @@ export default function App() {
         {phase === 'quiz' && session && (
           <QuizScreen
             subject={session.subject}
+            grade={session.grade}
             scratchPaper={settings.scratchPaper}
             penOnly={settings.penOnly}
             questions={session.questions}
@@ -479,6 +480,7 @@ export default function App() {
         {phase === 'correction' && session && (
           <CorrectionScreen
             subject={session.subject}
+            grade={session.grade}
             scratchPaper={settings.scratchPaper}
             penOnly={settings.penOnly}
             questions={session.records.filter((r) => !r.correct).map((r) => r.question)}

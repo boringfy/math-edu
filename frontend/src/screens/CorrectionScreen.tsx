@@ -13,10 +13,12 @@ import NumberPad from '../components/NumberPad';
 import PuzzleBoard from '../components/PuzzleBoard';
 import ScratchPad from '../components/ScratchPad';
 import StoryPassage from '../components/StoryPassage';
+import TutorLesson from '../components/TutorLesson';
 import { Chord } from '../lib/cakeCuts';
 import { isAnswerCorrect, isDrawingCorrect, reshuffleChoices } from '../lib/grading';
+import { tutorAvailable } from '../lib/tutor';
 import { colors, promptAlign, promptTextStyle } from '../theme';
-import { Passage, Question, Subject } from '../types';
+import { Grade, Passage, Question, Subject } from '../types';
 
 export interface CorrectionOutcome {
   questionId: string;
@@ -28,6 +30,8 @@ export interface CorrectionOutcome {
 interface Props {
   /** Only maths gets scrap paper; a story or a puzzle is nothing to work out. */
   subject: Subject;
+  /** The AI tutor pitches its explanation at this grade. */
+  grade: Grade;
   /** Whether scrap paper is offered at all, and what may draw on it. */
   scratchPaper: boolean;
   penOnly: boolean;
@@ -49,6 +53,7 @@ type Feedback = 'none' | 'tryAgain' | 'fixed' | 'skipped';
  */
 export default function CorrectionScreen({
   subject,
+  grade,
   scratchPaper,
   penOnly,
   questions,
@@ -66,6 +71,9 @@ export default function CorrectionScreen({
   // so the paper is here too, out from the start and put away by the pencil.
   const scratchable = scratchPaper && subject === 'math';
   const [scratching, setScratching] = useState(true);
+  // The AI tutor. A mistake being corrected is exactly the child it is for.
+  const tutorable = subject === 'math' && tutorAvailable();
+  const [helping, setHelping] = useState(false);
   const outcomesRef = useRef<CorrectionOutcome[]>([]);
   const { width } = useWindowDimensions();
 
@@ -116,6 +124,7 @@ export default function CorrectionScreen({
       setEntry('');
       setCuts([]);
       setFeedback('none');
+      setHelping(false);
     } else {
       onDone(outcomesRef.current);
     }
@@ -161,6 +170,16 @@ export default function CorrectionScreen({
           {question.prompt}
         </Text>
         {question.puzzle && <PuzzleBoard puzzle={question.puzzle} />}
+        {tutorable && (
+          <Pressable
+            style={styles.tutorButton}
+            accessibilityRole="button"
+            accessibilityLabel="Explain it to me"
+            onPress={() => setHelping(true)}
+          >
+            <Text style={styles.tutorButtonIcon}>🦉</Text>
+          </Pressable>
+        )}
       </View>
 
       {isDrawing ? (
@@ -235,6 +254,9 @@ export default function CorrectionScreen({
           </Pressable>
         </View>
       )}
+      {helping && (
+        <TutorLesson question={question} grade={grade} onClose={() => setHelping(false)} />
+      )}
     </ScrollView>
   );
 }
@@ -278,6 +300,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   prompt: { fontWeight: '800', color: colors.text },
+  // Perched on the question card's corner: help belongs to the question, but
+  // must not sit among the answers where a tap means choosing one.
+  tutorButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tutorButtonIcon: { fontSize: 18 },
   optionGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   option: { width: '48%' },
   feedback: { borderRadius: 14, padding: 16, marginTop: 16 },

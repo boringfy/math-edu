@@ -16,6 +16,8 @@ export type {
   AnswerFormat,
   AnswerMode,
   CakeCutTask,
+  ExplainRequest,
+  ExplainResponse,
   Grade,
   Lesson,
   MapStop,
@@ -33,10 +35,11 @@ export type {
   Tier,
   Tile,
   TopicKey,
+  TutorTopic,
   VisualPuzzle,
 } from './content/contract';
 
-export { SUBJECTS } from './content/contract';
+export { SUBJECTS, tutorTopicOf } from './content/contract';
 
 import type { Grade, Question, Subject, Tier } from './content/contract';
 

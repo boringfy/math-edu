@@ -13,3 +13,4 @@ export * from './content';
 export * from './manifest';
 export * from './packs';
 export * from './rules';
+export * from './tutor';

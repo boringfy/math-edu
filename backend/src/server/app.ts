@@ -19,10 +19,12 @@ import { join } from 'node:path';
 
 import { Hono } from 'hono';
 import { compress } from 'hono/compress';
+import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
-import type { Manifest } from '../contract';
+import type { ExplainRequest, Grade, Manifest } from '../contract';
 import { DIST_DIR } from '../bake/config';
+import { TutorError, explain, tutorConfig } from './tutor';
 
 /**
  * The manifest is read from disk per request rather than cached in memory,
@@ -114,6 +116,57 @@ app.get('/packs/:file', (c) => {
   c.header('Content-Type', 'application/json; charset=utf-8');
   c.header('ETag', `"${name}"`);
   return c.body(body);
+});
+
+/** A well-formed ExplainRequest, or null — never a half-checked one. */
+function asExplainRequest(body: unknown): ExplainRequest | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const b = body as Record<string, unknown>;
+  if (typeof b.questionId !== 'string' || b.questionId === '') return null;
+  if (typeof b.prompt !== 'string' || b.prompt === '') return null;
+  if (typeof b.correctAnswer !== 'string') return null;
+  if (![1, 2, 3, 4, 5].includes(b.grade as number)) return null;
+  if (!Array.isArray(b.choices) || b.choices.some((c) => typeof c !== 'string')) return null;
+  return {
+    questionId: b.questionId,
+    grade: b.grade as Grade,
+    prompt: b.prompt,
+    correctAnswer: b.correctAnswer,
+    choices: b.choices as string[],
+  };
+}
+
+// The one route a browser calls cross-origin (Expo web in development runs
+// on its own port); packs don't need this because web builds bundle content.
+app.use('/v1/explain', cors());
+
+/**
+ * The AI tutor. On demand and unbaked, unlike everything above: the answer
+ * is minted (or served from the tutor's own cache) when a child asks.
+ */
+app.post('/v1/explain', async (c) => {
+  const config = tutorConfig();
+  if (!config) {
+    return c.json({ error: 'tutor is not configured on this server' }, 503);
+  }
+
+  let request: ExplainRequest | null = null;
+  try {
+    request = asExplainRequest(await c.req.json());
+  } catch {
+    // Fall through to the 400.
+  }
+  if (!request) return c.json({ error: 'bad explain request' }, 400);
+
+  try {
+    const steps = await explain(request, config);
+    return c.json({ steps });
+  } catch (error) {
+    // The child's app shows "try again", so the status only has to be honest.
+    const reason = error instanceof TutorError ? error.message : String(error);
+    console.error(`explain failed for ${request.questionId}: ${reason}`);
+    return c.json({ error: reason }, 502);
+  }
 });
 
 app.notFound((c) => c.json({ error: 'not found' }, 404));
