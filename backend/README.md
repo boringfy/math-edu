@@ -141,17 +141,19 @@ with a complete, verified set or fails to build. Nothing is generated on a
 running server.
 
 ```bash
-docker build -f backend/Dockerfile -t math-edu-content .      # from the repo root
-docker run -d --name math-edu-content --restart unless-stopped \
-  -p 8788:8787 math-edu-content
+# from the repo root; put the tutor's key in backend/.env first (optional)
+docker compose up -d --build
 curl localhost:8788/healthz
 ```
 
-`--restart unless-stopped` brings it back after a reboot. The container
-listens on 8787 inside; map it to whatever is free outside.
+`docker-compose.yml` at the repo root holds the whole shape: host port 8788,
+`restart: unless-stopped` so a reboot brings it back, and the tutor's
+environment from `backend/.env` (without the file, content still serves and
+the tutor route answers 503).
 
-To publish new content, rebuild the image and replace the container. Devices
-pick it up on their next check and play it after their next restart.
+To publish new content or code: `git pull && docker compose up -d --build`.
+Compose only replaces the container when the image actually changed. Devices
+pick content up on their next check and play it after their next restart.
 
 ### Pointing the app at it
 

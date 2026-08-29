@@ -1,0 +1,29 @@
+# The content server (and its AI tutor) as one service.
+#
+#   docker compose up -d --build     build, (re)create, start
+#   docker compose logs -f content   watch it
+#
+# The context is the repo root because backend/Dockerfile copies the
+# workspace package files from here; the root .dockerignore is what keeps
+# node_modules and .env out of that context.
+#
+# Publishing new content or code is `git pull` + `up -d --build`: compose
+# only replaces the container when the image actually changed.
+
+services:
+  content:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: math-edu-content
+    container_name: math-edu-content
+    restart: unless-stopped
+    ports:
+      # The app is built against http://<host>:8788.
+      - "8788:8787"
+    env_file:
+      # The tutor's key and model tuning — see backend/.env.example. Optional
+      # because content still serves without it: the tutor route answers 503
+      # and the app hides its help button.
+      - path: backend/.env
+        required: false
