@@ -77,8 +77,17 @@ describe('buildTutorPrompt', () => {
   it('carries the problem, the answer and the grade', () => {
     const prompt = buildTutorPrompt(request());
     expect(prompt).toContain('Which is bigger, 1/2 or 1/4?');
-    expect(prompt).toContain('The correct answer is: 1/2');
+    // The model sees the answer — teaching the wrong method confidently is
+    // worse — but only as reference it is forbidden to repeat.
+    expect(prompt).toContain('the answer is 1/2');
+    expect(prompt).toContain('NEVER say it');
     expect(prompt).toContain('grade 3');
+  });
+
+  it('demands the lesson stop short and hand the final move to the child', () => {
+    const prompt = buildTutorPrompt(request());
+    expect(prompt).toContain('STOP before the finish line');
+    expect(prompt).toContain('hands the problem back');
   });
 
   it('mentions choices only when the question had any', () => {

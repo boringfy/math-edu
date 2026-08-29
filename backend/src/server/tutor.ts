@@ -80,9 +80,15 @@ const ANGLES: Record<TutorTopic, string> = {
  *
  * Assumes the child is NOT familiar with the concept — that is who presses a
  * help button — so the model is told to teach the idea, not just recompute
- * the answer. Steps are demanded as numbered lines because that is the one
- * format small instruction-tuned models reliably produce and `parseSteps`
- * can reliably take apart.
+ * the answer. And it must never SAY the answer: the button sits on a live
+ * question, so a lesson that ends "...so it is 52" is not help, it is the
+ * answer key. The model is still shown the answer — teaching the wrong
+ * method confidently is worse — but as reference, with the lesson required
+ * to stop at the door and hand the child the final move.
+ *
+ * Steps are demanded as numbered lines because that is the one format small
+ * instruction-tuned models reliably produce and `parseSteps` can reliably
+ * take apart.
  */
 export function buildTutorPrompt(request: ExplainRequest): string {
   const topic = tutorTopicOf(request.questionId);
@@ -97,15 +103,17 @@ export function buildTutorPrompt(request: ExplainRequest): string {
       `is not yet familiar with the idea behind it, so teach the idea, don't just solve.`,
     '',
     `The problem: ${request.prompt}`,
-    `${choices}The correct answer is: ${request.correctAnswer}`,
+    `${choices}For your eyes only, so you teach the right method: the answer is ` +
+      `${request.correctAnswer}. The child still has to find it themself, so you must ` +
+      `NEVER say it, spell it out, or hint which choice it is.`,
     '',
     'How to teach it:',
     `- ${ANGLES[topic]}`,
     '- If an analogy or a tiny everyday example makes it clearer, use one; if the problem is plain enough, skip it.',
-    '- Walk from what the question is asking to the answer, one small move at a time.',
+    '- Walk the method one small move at a time — but STOP before the finish line. Set up the very last move and leave it undone. Never perform the final count, sum, or comparison that would reveal the answer, and never use a different number that happens to equal it.',
+    '- Your last step hands the problem back: tell the child exactly what final move to make, as a question ("Now hop back the eight steps — where do you land?"), with one cheerful word of confidence.',
     `- Use only words a grade ${request.grade} child knows. Short sentences. No symbols the child may not have met.`,
     '- The steps will be READ ALOUD by the app, so write for the ear: no formulas mid-sentence that sound strange spoken.',
-    '- End with one short cheerful line telling the child they can do it.',
     '',
     'Reply with ONLY 3 to 6 numbered steps, one per line, like:',
     '1. First step.',
@@ -184,7 +192,10 @@ export async function explain(
         ],
         // Generous, because a reasoning model spends tokens thinking before
         // the numbered steps ever start; a tight cap truncates the lesson.
-        max_tokens: 1500,
+        // Measured: the don't-reveal-the-answer rule pushes deliberation to
+        // ~1450 tokens on a comparison question, and a cap hit mid-thought
+        // comes back as empty content, not as a shorter lesson.
+        max_tokens: 3000,
         temperature: 0.6,
       }),
       signal: controller.signal,

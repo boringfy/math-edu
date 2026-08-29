@@ -108,7 +108,7 @@ export default function TutorLesson({ question, grade, onClose }: Props) {
               <Text style={styles.subtitle}>
                 {phase === 'thinking' && 'Hmm, let me think about this one'}
                 {phase === 'talking' && 'Listen with me…'}
-                {phase === 'done' && 'That was the whole trick!'}
+                {phase === 'done' && 'Now it’s your turn!'}
                 {phase === 'error' && 'Oh no, my thoughts got tangled'}
               </Text>
             </View>
