@@ -68,7 +68,8 @@ environment variables, read from `backend/.env` (gitignored — copy
 | `TUTOR_LLM_URL` | full chat-completions URL |
 | `TUTOR_LLM_KEY` | the provider's API key |
 | `TUTOR_LLM_MODEL` | model name |
-| `TUTOR_LLM_NO_THINK` | optional, `1` on Qwen models: halves the wait by shrinking hidden reasoning |
+| `TUTOR_LLM_EXTRA` | optional JSON merged into every request body — provider-specific tuning, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` turns the current model's hidden reasoning off (~60s → ~10s per lesson) |
+| `TUTOR_LLM_NO_THINK` | optional, `1`: softer fallback for Qwen models — prefixes `/no_think`, shrinking reasoning rather than removing it |
 
 With any of the first three unset the route answers 503 and the app hides its
 help button; content serving is unaffected. Each question's topic (parsed

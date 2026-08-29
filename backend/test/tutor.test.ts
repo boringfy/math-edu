@@ -36,6 +36,7 @@ const config: TutorConfig = {
   key: 'test-key',
   model: 'test-model',
   noThink: false,
+  extra: {},
 };
 
 /** A fetch that answers like an OpenAI-compatible provider. */
@@ -151,6 +152,21 @@ describe('explain', () => {
     expect(JSON.parse(init.body).messages[0].content.startsWith('/no_think ')).toBe(true);
   });
 
+  it('merges the extra tuning into the body, but never over the lesson', async () => {
+    const fetchFn = llmSaying('1. One.\n2. Two.');
+    const extra = {
+      chat_template_kwargs: { enable_thinking: false },
+      temperature: 0.2,
+      messages: 'must not win',
+    };
+    await explain(request(), { ...config, extra }, fetchFn);
+    const body = JSON.parse((fetchFn as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+    expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
+    // Tuning may retune sampling; the prompt itself is not negotiable.
+    expect(body.temperature).toBe(0.2);
+    expect(Array.isArray(body.messages)).toBe(true);
+  });
+
   it('answers a repeated question from memory', async () => {
     const fetchFn = llmSaying('1. Cut a pizza in two.\n2. A half beats a quarter.');
     await explain(request(), config, fetchFn);
@@ -201,7 +217,17 @@ describe('tutorConfig', () => {
       key: 'k',
       model: 'm',
       noThink: false,
+      extra: {},
     });
+  });
+
+  it('parses the extra tuning, and turns the tutor off rather than run without it', () => {
+    const base = { TUTOR_LLM_URL: 'u', TUTOR_LLM_KEY: 'k', TUTOR_LLM_MODEL: 'm' };
+    expect(tutorConfig({ ...base, TUTOR_LLM_EXTRA: '{"a":1}' })?.extra).toEqual({ a: 1 });
+    // Broken JSON silently ignored would mean a silently slow owl instead of
+    // a 503 someone investigates.
+    expect(tutorConfig({ ...base, TUTOR_LLM_EXTRA: '{oops' })).toBeNull();
+    expect(tutorConfig({ ...base, TUTOR_LLM_EXTRA: '[1]' })).toBeNull();
   });
 
   it('passes the think switch through only when asked', () => {

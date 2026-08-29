@@ -21,12 +21,22 @@ export interface TutorConfig {
   key: string;
   model: string;
   /**
-   * Prefix the prompt with Qwen's "/no_think" switch. Measured against the
-   * current provider it halves a child's wait (33s against 63s) by shrinking
-   * the hidden reasoning. Off unless asked for, because on another vendor's
-   * model the switch is just a strange token at the start of the prompt.
+   * Prefix the prompt with Qwen's "/no_think" switch. A soft fallback: it
+   * shrinks hidden reasoning where it is understood, and on another vendor's
+   * model it is just a strange token at the start of the prompt. Off unless
+   * asked for; prefer `extra` where the provider has a real switch.
    */
   noThink: boolean;
+  /**
+   * Extra request-body fields, merged into every chat-completions call.
+   * This is where provider-specific tuning lives so the code stays neutral —
+   * today `{"chat_template_kwargs":{"enable_thinking":false}}`, which turns
+   * the current model's hidden reasoning off entirely. Measured on a lesson:
+   * ~900 hidden tokens became ~140 total, and a child's wait fell from about
+   * a minute to roughly ten seconds (the rest is the provider's own pace,
+   * which varies). It may override the sampling defaults, never the prompt.
+   */
+  extra: Record<string, unknown>;
 }
 
 /** Read fresh per request, same as the manifest: a key rotation is a file edit. */
@@ -35,7 +45,21 @@ export function tutorConfig(env: NodeJS.ProcessEnv = process.env): TutorConfig |
   const key = env.TUTOR_LLM_KEY ?? '';
   const model = env.TUTOR_LLM_MODEL ?? '';
   if (!url || !key || !model) return null;
-  return { url, key, model, noThink: env.TUTOR_LLM_NO_THINK === '1' };
+
+  // Malformed tuning disables the tutor outright rather than quietly running
+  // without it — a 503 gets investigated, a silently slow owl does not.
+  let extra: Record<string, unknown> = {};
+  if (env.TUTOR_LLM_EXTRA) {
+    try {
+      const parsed: unknown = JSON.parse(env.TUTOR_LLM_EXTRA);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+      extra = parsed as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
+  return { url, key, model, noThink: env.TUTOR_LLM_NO_THINK === '1', extra };
 }
 
 /**
@@ -184,12 +208,6 @@ export async function explain(
       },
       body: JSON.stringify({
         model: config.model,
-        messages: [
-          {
-            role: 'user',
-            content: (config.noThink ? '/no_think ' : '') + buildTutorPrompt(request),
-          },
-        ],
         // Generous, because a reasoning model spends tokens thinking before
         // the numbered steps ever start; a tight cap truncates the lesson.
         // Measured: the don't-reveal-the-answer rule pushes deliberation to
@@ -197,6 +215,15 @@ export async function explain(
         // comes back as empty content, not as a shorter lesson.
         max_tokens: 3000,
         temperature: 0.6,
+        // The provider-specific tuning. After the defaults so it may retune
+        // them; before the messages so it can never replace the lesson.
+        ...config.extra,
+        messages: [
+          {
+            role: 'user',
+            content: (config.noThink ? '/no_think ' : '') + buildTutorPrompt(request),
+          },
+        ],
       }),
       signal: controller.signal,
     });
