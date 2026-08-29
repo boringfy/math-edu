@@ -174,6 +174,15 @@ describe('explain', () => {
     expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
+  it('does not let a mismatched request park its lesson under a real id', async () => {
+    const fetchFn = llmSaying('1. Cut a pizza in two.\n2. A half beats a quarter.');
+    await explain(request(), config, fetchFn);
+    // Same id, different question text — must be answered afresh, not from
+    // whatever the first caller claimed the question was.
+    await explain(request({ prompt: '56 ÷ 8 = ?', correctAnswer: '7' }), config, fetchFn);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
   it('turns a provider failure into a TutorError', async () => {
     const failing = vi.fn(async () => new Response('nope', { status: 429 })) as unknown as typeof fetch;
     await expect(explain(request(), config, failing)).rejects.toThrow(TutorError);

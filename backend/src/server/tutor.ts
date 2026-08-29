@@ -12,6 +12,8 @@
  * environment and nothing here mentions a vendor by name.
  */
 
+import { createHash } from 'node:crypto';
+
 import type { ExplainRequest, TutorTopic } from '../contract';
 import { tutorTopicOf } from '../contract';
 
@@ -178,11 +180,19 @@ const LLM_TIMEOUT_MS = 120_000;
 
 /**
  * Small models charge by the token and children repeat questions, so an
- * explanation once given is kept. Question content is immutable per id (the
- * bake guarantees it), which is what makes the id a safe key.
+ * explanation once given is kept. The key is the id PLUS a digest of what
+ * the request claims the question says: the server takes the client's word
+ * for the prompt, so keying on the id alone would let one mismatched request
+ * park the wrong lesson under a real question for everyone after it.
  */
 const cache = new Map<string, string[]>();
 const CACHE_MAX = 500;
+
+const cacheKey = (request: ExplainRequest): string =>
+  `${request.questionId}:${createHash('sha256')
+    .update(`${request.grade}|${request.prompt}|${request.correctAnswer}`)
+    .digest('hex')
+    .slice(0, 12)}`;
 
 export class TutorError extends Error {}
 
@@ -192,7 +202,8 @@ export async function explain(
   config: TutorConfig,
   fetchFn: typeof fetch = fetch,
 ): Promise<string[]> {
-  const cached = cache.get(request.questionId);
+  const key = cacheKey(request);
+  const cached = cache.get(key);
   if (cached) return cached;
 
   const controller = new AbortController();
@@ -260,7 +271,7 @@ export async function explain(
     const oldest = cache.keys().next().value;
     if (oldest !== undefined) cache.delete(oldest);
   }
-  cache.set(request.questionId, steps);
+  cache.set(key, steps);
   return steps;
 }
 
