@@ -53,6 +53,47 @@ describe('fetchLesson', () => {
       .mockResolvedValue({ ok: false, status: 503, json: async () => ({}) } as Response);
     await expect(fetchLesson(question, 2)).rejects.toThrow('503');
   });
+
+  /**
+   * A tablet on battery drops long connections — Wi-Fi power saving and Doze
+   * both do it, and a lesson takes most of a minute. That is the single most
+   * common way the owl fails, and it is not the server being down.
+   */
+  it('tries again when the connection breaks', async () => {
+    const fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockRejectedValueOnce(new TypeError('Network request failed'))
+      .mockResolvedValue(okResponse({ steps: ['Count up from 35.'] }));
+
+    expect(await fetchLesson(question, 2)).toEqual(['Count up from 35.']);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives up after the second break rather than hammering', async () => {
+    const fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockRejectedValue(new TypeError('Network request failed'));
+    await expect(fetchLesson(question, 2)).rejects.toThrow();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  /** The server answered; asking the same thing again would only annoy it. */
+  it('does not retry a server that replied', async () => {
+    const fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue({ ok: false, status: 502, json: async () => ({}) } as Response);
+    await expect(fetchLesson(question, 2)).rejects.toThrow('502');
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  /** We already waited as long as a child will; starting over would double it. */
+  it('does not retry its own timeout', async () => {
+    const aborted = new Error('Aborted');
+    aborted.name = 'AbortError';
+    const fetchSpy = jest.spyOn(global, 'fetch').mockRejectedValue(aborted);
+    await expect(fetchLesson(question, 2)).rejects.toThrow();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('the lesson looks', () => {

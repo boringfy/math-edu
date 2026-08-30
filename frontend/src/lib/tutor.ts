@@ -24,19 +24,8 @@ export const tutorAvailable = (): boolean => TUTOR_URL !== '';
  */
 const REQUEST_TIMEOUT_MS = 130_000;
 
-/**
- * Fetches the spoken steps for one question. Throws on anything less than a
- * usable lesson; the tutor UI turns that into "try again", never a blank.
- */
-export async function fetchLesson(question: Question, grade: Grade): Promise<string[]> {
-  const request: ExplainRequest = {
-    questionId: question.id,
-    grade,
-    prompt: question.prompt,
-    correctAnswer: question.correctAnswer,
-    choices: question.choices ?? [],
-  };
-
+/** One go at the server. */
+async function askOnce(request: ExplainRequest): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -54,6 +43,52 @@ export async function fetchLesson(question: Question, grade: Grade): Promise<str
     return steps;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * Worth trying a second time?
+ *
+ * Only when the connection itself broke. A lesson takes the better part of a
+ * minute, and a tablet running on battery does not hold a socket open that
+ * long reliably — Android's Wi-Fi power saving and Doze both cut it, which is
+ * why the owl fails far more often unplugged than plugged in. That looks
+ * identical to the server being down, and it isn't.
+ *
+ * An HTTP status means the server answered, so asking again would only annoy
+ * it; our own timeout firing means we already waited as long as a child will,
+ * and starting over would double that.
+ */
+function worthRetrying(error: unknown): boolean {
+  if (error instanceof Error) {
+    if (error.name === 'AbortError') return false;
+    if (/^tutor HTTP /.test(error.message)) return false;
+  }
+  return true;
+}
+
+/**
+ * Fetches the spoken steps for one question. Throws on anything less than a
+ * usable lesson; the tutor UI turns that into "try again", never a blank.
+ *
+ * A broken connection is retried once. That is close to free: the server
+ * keeps every lesson it has given, so if the first attempt did reach it and
+ * only the reply was lost, the second comes back out of that cache at once.
+ */
+export async function fetchLesson(question: Question, grade: Grade): Promise<string[]> {
+  const request: ExplainRequest = {
+    questionId: question.id,
+    grade,
+    prompt: question.prompt,
+    correctAnswer: question.correctAnswer,
+    choices: question.choices ?? [],
+  };
+
+  try {
+    return await askOnce(request);
+  } catch (error) {
+    if (!worthRetrying(error)) throw error;
+    return askOnce(request);
   }
 }
 

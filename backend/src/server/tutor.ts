@@ -17,7 +17,9 @@ import { createHash } from 'node:crypto';
 import type { ExplainRequest, TutorTopic } from '../contract';
 import { tutorTopicOf } from '../contract';
 
-export interface TutorConfig {
+export interface TutorProvider {
+  /** Which link in the chain this is, for logs: "primary", "fallback 2". */
+  label: string;
   /** Full chat-completions URL, e.g. "https://api.example.com/v1/chat/completions". */
   url: string;
   key: string;
@@ -41,27 +43,85 @@ export interface TutorConfig {
   extra: Record<string, unknown>;
 }
 
-/** Read fresh per request, same as the manifest: a key rotation is a file edit. */
-export function tutorConfig(env: NodeJS.ProcessEnv = process.env): TutorConfig | null {
+/**
+ * Parsed tuning: an object, `null` for malformed, `undefined` for absent.
+ * The three are different — absent means "inherit", malformed means "stop".
+ */
+function parseExtra(raw: string | undefined): Record<string, unknown> | null | undefined {
+  if (raw === undefined || raw === '') return undefined;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** How many links the chain can have: TUTOR_LLM_, then _2_ through _4_. */
+const MAX_PROVIDERS = 4;
+
+/**
+ * The chain of models to try, best first.
+ *
+ * One provider going down should not take the owl with it, so the primary can
+ * be followed by fallbacks: `TUTOR_LLM_2_MODEL`, `TUTOR_LLM_3_MODEL` and so
+ * on. A fallback inherits anything it does not set from the primary, so
+ * naming a second model on the same provider is a single line, while pointing
+ * one at a different vendor means giving it its own URL and key.
+ *
+ * Read fresh per request, same as the manifest: a key rotation, or adding a
+ * fallback during an outage, is a file edit rather than a redeploy.
+ */
+export function tutorProviders(env: NodeJS.ProcessEnv = process.env): TutorProvider[] {
   const url = env.TUTOR_LLM_URL ?? '';
   const key = env.TUTOR_LLM_KEY ?? '';
   const model = env.TUTOR_LLM_MODEL ?? '';
-  if (!url || !key || !model) return null;
+  if (!url || !key || !model) return [];
 
-  // Malformed tuning disables the tutor outright rather than quietly running
-  // without it — a 503 gets investigated, a silently slow owl does not.
-  let extra: Record<string, unknown> = {};
-  if (env.TUTOR_LLM_EXTRA) {
-    try {
-      const parsed: unknown = JSON.parse(env.TUTOR_LLM_EXTRA);
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
-      extra = parsed as Record<string, unknown>;
-    } catch {
-      return null;
-    }
+  // Malformed tuning on the primary disables the tutor outright rather than
+  // quietly running without it — a 503 gets investigated, a silently slow owl
+  // does not.
+  const extra = parseExtra(env.TUTOR_LLM_EXTRA);
+  if (extra === null) return [];
+
+  const primary: TutorProvider = {
+    label: 'primary',
+    url,
+    key,
+    model,
+    noThink: env.TUTOR_LLM_NO_THINK === '1',
+    extra: extra ?? {},
+  };
+  const providers = [primary];
+
+  for (let n = 2; n <= MAX_PROVIDERS; n++) {
+    const at = (field: string): string | undefined => env[`TUTOR_LLM_${n}_${field}`];
+    // Any field at all makes a link. A fallback that sets only a key is the
+    // "this credential is out of quota, try the other one" case, and one that
+    // sets only a model is the common same-provider spare.
+    if (!['URL', 'KEY', 'MODEL', 'EXTRA', 'NO_THINK'].some((f) => at(f))) continue;
+    const slotModel = at('MODEL');
+    const slotUrl = at('URL');
+
+    // A broken fallback is dropped rather than allowed to disable the tutor:
+    // the whole point of it is to be the part that can fail. The startup log
+    // prints the chain, so a fallback that failed to load is visible.
+    const slotExtra = parseExtra(at('EXTRA'));
+    if (slotExtra === null) continue;
+
+    const noThink = at('NO_THINK');
+    providers.push({
+      label: `fallback ${n}`,
+      url: slotUrl || primary.url,
+      key: at('KEY') || primary.key,
+      model: slotModel || primary.model,
+      noThink: noThink === undefined ? primary.noThink : noThink === '1',
+      extra: slotExtra === undefined ? primary.extra : slotExtra,
+    });
   }
 
-  return { url, key, model, noThink: env.TUTOR_LLM_NO_THINK === '1', extra };
+  return providers;
 }
 
 /**
@@ -174,9 +234,19 @@ export function parseSteps(text: string): string[] {
 
 /**
  * LLM latency is what it is: the current reasoning model was measured taking
- * a minute for a full lesson. A child watching a thinking owl gets this long.
+ * a minute for a full lesson. A child watching a thinking owl gets this long
+ * in total — the whole chain shares it, so adding a fallback shortens what
+ * each model is given rather than doubling how long the child waits.
+ *
+ * The app gives up at 130s, deliberately later than this, so a lesson that
+ * was coming is never thrown away by the client first.
  */
-const LLM_TIMEOUT_MS = 120_000;
+const DEFAULT_TIMEOUT_MS = 120_000;
+
+const totalTimeout = (env: NodeJS.ProcessEnv = process.env): number => {
+  const raw = Number(env.TUTOR_LLM_TIMEOUT_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TIMEOUT_MS;
+};
 
 /**
  * Small models charge by the token and children repeat questions, so an
@@ -196,18 +266,15 @@ const cacheKey = (request: ExplainRequest): string =>
 
 export class TutorError extends Error {}
 
-/** Asks the model for the lesson. Throws TutorError on anything but success. */
-export async function explain(
+/** One attempt at one provider. Throws TutorError so the caller can move on. */
+async function ask(
   request: ExplainRequest,
-  config: TutorConfig,
-  fetchFn: typeof fetch = fetch,
+  config: TutorProvider,
+  fetchFn: typeof fetch,
+  timeoutMs: number,
 ): Promise<string[]> {
-  const key = cacheKey(request);
-  const cached = cache.get(key);
-  if (cached) return cached;
-
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
   try {
@@ -265,14 +332,58 @@ export async function explain(
   if (steps.length === 0) {
     throw new TutorError('tutor sent nothing speakable');
   }
-
-  if (cache.size >= CACHE_MAX) {
-    // Drop the oldest entry; Map iterates in insertion order.
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-  cache.set(key, steps);
   return steps;
+}
+
+/**
+ * Asks for the lesson, trying each model in turn.
+ *
+ * A child stuck on a question is the worst moment to have nothing to say, and
+ * the reasons one provider fails — a rate limit, an outage, a model retired
+ * from under us, a reply that parses to nothing — are all reasons the next
+ * one might still work. So every failure is a reason to move down the chain,
+ * and only the last one is an error.
+ *
+ * Throws TutorError, naming every provider that failed, when none of them
+ * could answer.
+ */
+export async function explain(
+  request: ExplainRequest,
+  providers: TutorProvider[],
+  fetchFn: typeof fetch = fetch,
+): Promise<string[]> {
+  const key = cacheKey(request);
+  const cached = cache.get(key);
+  if (cached) return cached;
+  if (providers.length === 0) {
+    throw new TutorError('no tutor provider is configured');
+  }
+
+  // Split the child's patience evenly, so a primary that hangs cannot use up
+  // the whole budget and leave the fallback no time to answer in.
+  const each = Math.max(1, Math.floor(totalTimeout() / providers.length));
+
+  const failures: string[] = [];
+  for (const provider of providers) {
+    try {
+      const steps = await ask(request, provider, fetchFn, each);
+      if (failures.length > 0) {
+        console.warn(`tutor fell back to ${provider.label} (${provider.model}) after: ${failures.join('; ')}`);
+      }
+      if (cache.size >= CACHE_MAX) {
+        // Drop the oldest entry; Map iterates in insertion order.
+        const oldest = cache.keys().next().value;
+        if (oldest !== undefined) cache.delete(oldest);
+      }
+      cache.set(key, steps);
+      return steps;
+    } catch (error) {
+      const reason = error instanceof TutorError ? error.message : String(error);
+      failures.push(`${provider.label} (${provider.model}) ${reason}`);
+    }
+  }
+
+  throw new TutorError(failures.join('; '));
 }
 
 /** For tests, which must not see each other's answers. */

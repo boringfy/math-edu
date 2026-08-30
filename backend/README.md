@@ -40,7 +40,7 @@ rollback publishes a *lower* version on purpose. Neither must be mistaken for
 | `math.g1` … `math.g5` | the 60-lesson catalog + question pools keyed `topic:tier` |
 | `reading.g1` … `reading.g5` | the authored stories and their questions |
 | `logic.g1` … `logic.g5` | the 60-set catalog + puzzle pools keyed `family:tier` |
-| `rules` | coin rates, daily challenges, star thresholds, typed-entry share |
+| `rules` | coin rates, daily challenges, star thresholds, typed-entry share, adaptive-practice thresholds and unlock ladders |
 
 About 15.5MB in total, but roughly **1MB over the wire** — it is repetitive
 JSON and gzips about 16:1. A child downloads only the grade they play.
@@ -70,14 +70,70 @@ environment variables, read from `backend/.env` (gitignored — copy
 | `TUTOR_LLM_MODEL` | model name |
 | `TUTOR_LLM_EXTRA` | optional JSON merged into every request body — provider-specific tuning, e.g. `{"chat_template_kwargs":{"enable_thinking":false}}` turns the current model's hidden reasoning off (~60s → ~10s per lesson) |
 | `TUTOR_LLM_NO_THINK` | optional, `1`: softer fallback for Qwen models — prefixes `/no_think`, shrinking reasoning rather than removing it |
+| `TUTOR_LLM_2_*` … `TUTOR_LLM_4_*` | optional standby models, tried in order when the one above cannot answer. Each inherits whatever it does not set from the primary, so a second model on the same provider is just `TUTOR_LLM_2_MODEL=` |
+| `TUTOR_LLM_TIMEOUT_MS` | optional, default `120000`: how long a child waits across the whole chain |
 
 With any of the first three unset the route answers 503 and the app hides its
-help button; content serving is unaffected. Each question's topic (parsed
-from its id) selects a teaching angle in the prompt — fractions arrive as
-pizza slices, division as sharing between friends — and answers are cached in
-memory per question id, so a repeated ask costs nothing. Swapping providers
-is editing `.env` and restarting; for Docker, pass the same variables with
-`-e` or `--env-file`.
+help button; content serving is unaffected.
+
+A provider fails for reasons the next one might survive — a rate limit, an
+outage, a model retired from under us, a reply that parses to nothing — so
+every failure moves down the chain and only the last one is an error, which
+the log names in full. A malformed `TUTOR_LLM_EXTRA` on the *primary* still
+disables the tutor outright, because a silently untuned owl is worse than a
+503 someone investigates; on a fallback it only drops that fallback, since
+being the part that can fail is the whole job. Startup prints the chain.
+
+Each question's topic (parsed from its id) selects a teaching angle in the
+prompt — fractions arrive as pizza slices, division as sharing between
+friends — and answers are cached in memory per question id, so a repeated ask
+costs nothing. Swapping providers is editing `.env` and restarting; for
+Docker, pass the same variables with `-e` or `--env-file`.
+
+## Planning a level
+
+`POST /v1/levels` asks the same model to plan the next ten lessons: which
+skills each is about, a title a child might want to tap, and a theme for the
+level. It **never writes questions** — it picks from the factory catalog and
+names what it picked, and every number a child sees is still built by the
+deterministic factory it would have been anyway. The worst a model can do is
+choose badly.
+
+Unlike the tutor, this route has no failure mode the app ever sees. The
+deterministic composition is computed first; a reply is checked against the
+catalog slot by slot and folded in where it is valid, and if there is no model
+configured, or every one fails, or the reply is prose, the composed level is
+what gets served. Ids, indices, seeds and problem counts are never the model's
+to change — progress is stored against them.
+
+## Identity and progress sync
+
+The app plays entirely from the device; these routes only back that progress
+up so it can follow a child to a new device. All of them answer 503 until
+`SYNC_DB_PATH` names a SQLite file (docker-compose mounts `./data` for it) —
+unset, the server is exactly the bake-and-serve host it always was.
+
+```
+POST /v1/users                     → 201 { userId, secret }        anonymous, no body
+GET  /v1/profile                   → 200 { revision, profile }     Authorization: Bearer <userId>.<secret>
+PUT  /v1/profile                   → 200 { revision }              { baseRevision, profile }
+                                     409 { revision, profile }     stale base — merge and retry
+POST /v1/link/google               → 200 { userId, secret,
+                                           alreadyLinked, serverProfile }
+```
+
+The profile is one revisioned JSON blob the server never looks inside — what
+progress means is the app's business, so new progress fields never need a
+server deploy. Merging two devices' progress also happens on the device: a
+conflicting PUT is answered with the stored copy, and the client sends back
+what it wants kept.
+
+Registration is anonymous and stores no personal detail. Linking verifies a
+Google ID token against `GOOGLE_CLIENT_IDS` (comma-separated OAuth client
+ids; unset → 503) and stores only Google's opaque subject id — never a name
+or an email. A second device linking the same account is handed the first
+device's identity plus its stored profile to merge, and its own anonymous
+user is tombstoned pointing at where the progress went.
 
 ### Determinism
 
@@ -115,7 +171,7 @@ npm test -- -u
 | `npm run bake` | Build packs + manifest into `dist/` |
 | `npm run seed` | Build the shallower copy bundled into the app |
 | `npm run serve` | Serve `dist/` on `:8787` |
-| `npm run sync:contract` | Copy `src/contract/` into the app |
+| `npm run sync:shared` | Copy `src/contract/`, `src/generators/` and `src/factories/` into the app |
 | `npm test` | Contract drift check, then the suite |
 | `npm run typecheck` | `tsc --noEmit` |
 
@@ -126,7 +182,7 @@ src/
   contract/     types shared with the app — the source of truth
   content/      authored stories, lesson and puzzle catalogs, rules
   generators/   the question generators, moved out of the app
-  bake/         bake.ts, seed.ts, pools.ts, syncContract.ts, config.ts
+  bake/         bake.ts, seed.ts, pools.ts, syncShared.ts, config.ts
   server/       app.ts (routes) + index.ts (listener)
 ```
 
@@ -164,13 +220,15 @@ EXPO_PUBLIC_CONTENT_URL=http://192.168.0.113:8788 npm run android
 ```
 
 Over plain HTTP, `plugins/withContentCleartext.js` permits cleartext for that
-one host — Android blocks it by default in release builds, and without the
-exemption every update check fails silently. Built with no URL, the app runs
-on its bundled content and never touches the network.
+one host — Android blocks it by default in release builds, iOS blocks it
+through App Transport Security, and without the exemption every update check
+fails silently on both. Built with no URL, the app runs on its bundled
+content and never touches the network.
 
-The AI tutor asks the same host by default; set `EXPO_PUBLIC_TUTOR_URL` to
-split it onto its own server. With neither URL set the help button never
-appears.
+The AI tutor and progress sync ask the same host by default; set
+`EXPO_PUBLIC_TUTOR_URL` or `EXPO_PUBLIC_SYNC_URL` to split either onto its
+own server. With no URL set at all, the help button never appears and
+progress stays on the device.
 
 Settings ▸ Content in the app shows which version is live, when it last
 checked, and has a "Check now" button that skips the six-hour throttle.

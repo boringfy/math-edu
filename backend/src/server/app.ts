@@ -24,7 +24,9 @@ import { logger } from 'hono/logger';
 
 import type { ExplainRequest, Grade, Manifest } from '../contract';
 import { DIST_DIR } from '../bake/config';
-import { TutorError, explain, tutorConfig } from './tutor';
+import { sync } from './sync';
+import { ComposeRequest, asComposeRequest, planLevel } from './levels';
+import { TutorError, explain, tutorProviders } from './tutor';
 
 /**
  * The manifest is read from disk per request rather than cached in memory,
@@ -145,8 +147,8 @@ app.use('/v1/explain', cors());
  * is minted (or served from the tutor's own cache) when a child asks.
  */
 app.post('/v1/explain', async (c) => {
-  const config = tutorConfig();
-  if (!config) {
+  const providers = tutorProviders();
+  if (providers.length === 0) {
     return c.json({ error: 'tutor is not configured on this server' }, 503);
   }
 
@@ -159,7 +161,7 @@ app.post('/v1/explain', async (c) => {
   if (!request) return c.json({ error: 'bad explain request' }, 400);
 
   try {
-    const steps = await explain(request, config);
+    const steps = await explain(request, providers);
     return c.json({ steps });
   } catch (error) {
     // The child's app shows "try again", so the status only has to be honest.
@@ -168,6 +170,30 @@ app.post('/v1/explain', async (c) => {
     return c.json({ error: reason }, 502);
   }
 });
+
+// Identity and progress sync — see server/sync.ts. Every route in it answers
+// 503 until SYNC_DB_PATH is set, the same graceful off-switch as the tutor.
+/**
+ * Planning a level. Unlike the tutor this never answers an error: if no model
+ * is configured, or every one of them fails, the deterministic composition is
+ * served instead — so the app can always ask, and always gets a level.
+ */
+app.use('/v1/levels', cors());
+
+app.post('/v1/levels', async (c) => {
+  let request: ComposeRequest | null = null;
+  try {
+    request = asComposeRequest(await c.req.json());
+  } catch {
+    // Falls through to the 400.
+  }
+  if (!request) return c.json({ error: 'bad level request' }, 400);
+
+  const plan = await planLevel(request, tutorProviders());
+  return c.json(plan);
+});
+
+app.route('/', sync);
 
 app.notFound((c) => c.json({ error: 'not found' }, 404));
 

@@ -9,7 +9,7 @@
 import { serve } from '@hono/node-server';
 
 import { app, loadManifest } from './app';
-import { tutorConfig } from './tutor';
+import { tutorProviders } from './tutor';
 
 // The tutor's key lives in backend/.env, which is gitignored. A missing file
 // just means the tutor endpoint answers 503; content still serves.
@@ -24,7 +24,12 @@ const PORT = Number(process.env.PORT ?? 8787);
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   const loaded = loadManifest();
   console.log(`content server on http://localhost:${info.port}`);
-  console.log(tutorConfig() ? 'tutor is configured' : 'tutor off — set TUTOR_LLM_* to enable');
+  const providers = tutorProviders();
+  console.log(
+    providers.length === 0
+      ? 'tutor off — set TUTOR_LLM_* to enable'
+      : `tutor: ${providers.map((p) => `${p.label} ${p.model}`).join(' -> ')}`,
+  );
   if (loaded) {
     console.log(
       `serving manifest v${loaded.manifest.manifestVersion}, ${loaded.manifest.packs.length} packs`,

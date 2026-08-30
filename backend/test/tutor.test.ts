@@ -12,13 +12,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ExplainRequest } from '../src/contract';
 import { tutorTopicOf } from '../src/contract';
 import {
-  TutorConfig,
+  TutorProvider,
   TutorError,
   buildTutorPrompt,
   clearTutorCache,
   explain,
   parseSteps,
-  tutorConfig,
+  tutorProviders,
 } from '../src/server/tutor';
 import { app } from '../src/server/app';
 
@@ -31,13 +31,17 @@ const request = (overrides: Partial<ExplainRequest> = {}): ExplainRequest => ({
   ...overrides,
 });
 
-const config: TutorConfig = {
+const provider: TutorProvider = {
+  label: 'primary',
   url: 'https://llm.example.com/v1/chat/completions',
   key: 'test-key',
   model: 'test-model',
   noThink: false,
   extra: {},
 };
+
+/** The usual single-provider chain, for the tests that are not about fallback. */
+const config = [provider];
 
 /** A fetch that answers like an OpenAI-compatible provider. */
 const llmSaying = (content: string) =>
@@ -139,7 +143,7 @@ describe('explain', () => {
     expect(steps).toEqual(['Cut a pizza in two.', 'A half beats a quarter.']);
 
     const [url, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(url).toBe(config.url);
+    expect(url).toBe(provider.url);
     expect(init.headers.Authorization).toBe('Bearer test-key');
     expect(JSON.parse(init.body).model).toBe('test-model');
     expect(JSON.parse(init.body).messages[0].content).not.toContain('/no_think');
@@ -147,7 +151,7 @@ describe('explain', () => {
 
   it('prefixes the think switch when the config asks for it', async () => {
     const fetchFn = llmSaying('1. One.\n2. Two.');
-    await explain(request(), { ...config, noThink: true }, fetchFn);
+    await explain(request(), [{ ...provider, noThink: true }], fetchFn);
     const [, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(JSON.parse(init.body).messages[0].content.startsWith('/no_think ')).toBe(true);
   });
@@ -159,7 +163,7 @@ describe('explain', () => {
       temperature: 0.2,
       messages: 'must not win',
     };
-    await explain(request(), { ...config, extra }, fetchFn);
+    await explain(request(), [{ ...provider, extra }], fetchFn);
     const body = JSON.parse((fetchFn as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
     expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
     // Tuning may retune sampling; the prompt itself is not negotiable.
@@ -209,43 +213,160 @@ describe('the explain route', () => {
   });
 
   it('rejects a malformed request before spending a token on it', async () => {
-    vi.stubEnv('TUTOR_LLM_URL', config.url);
-    vi.stubEnv('TUTOR_LLM_KEY', config.key);
-    vi.stubEnv('TUTOR_LLM_MODEL', config.model);
+    vi.stubEnv('TUTOR_LLM_URL', provider.url);
+    vi.stubEnv('TUTOR_LLM_KEY', provider.key);
+    vi.stubEnv('TUTOR_LLM_MODEL', provider.model);
     const response = await post({ questionId: 'x', grade: 9 });
     expect(response.status).toBe(400);
   });
 });
 
-describe('tutorConfig', () => {
+describe('tutorProviders', () => {
+  const base = { TUTOR_LLM_URL: 'u', TUTOR_LLM_KEY: 'k', TUTOR_LLM_MODEL: 'm' };
+
   it('is all or nothing', () => {
-    expect(tutorConfig({})).toBeNull();
-    expect(tutorConfig({ TUTOR_LLM_URL: 'u', TUTOR_LLM_KEY: 'k' })).toBeNull();
-    expect(tutorConfig({ TUTOR_LLM_URL: 'u', TUTOR_LLM_KEY: 'k', TUTOR_LLM_MODEL: 'm' })).toEqual({
-      url: 'u',
-      key: 'k',
-      model: 'm',
-      noThink: false,
-      extra: {},
-    });
+    expect(tutorProviders({})).toEqual([]);
+    expect(tutorProviders({ TUTOR_LLM_URL: 'u', TUTOR_LLM_KEY: 'k' })).toEqual([]);
+    expect(tutorProviders(base)).toEqual([
+      { label: 'primary', url: 'u', key: 'k', model: 'm', noThink: false, extra: {} },
+    ]);
   });
 
   it('parses the extra tuning, and turns the tutor off rather than run without it', () => {
-    const base = { TUTOR_LLM_URL: 'u', TUTOR_LLM_KEY: 'k', TUTOR_LLM_MODEL: 'm' };
-    expect(tutorConfig({ ...base, TUTOR_LLM_EXTRA: '{"a":1}' })?.extra).toEqual({ a: 1 });
+    expect(tutorProviders({ ...base, TUTOR_LLM_EXTRA: '{"a":1}' })[0].extra).toEqual({ a: 1 });
     // Broken JSON silently ignored would mean a silently slow owl instead of
     // a 503 someone investigates.
-    expect(tutorConfig({ ...base, TUTOR_LLM_EXTRA: '{oops' })).toBeNull();
-    expect(tutorConfig({ ...base, TUTOR_LLM_EXTRA: '[1]' })).toBeNull();
+    expect(tutorProviders({ ...base, TUTOR_LLM_EXTRA: '{oops' })).toEqual([]);
+    expect(tutorProviders({ ...base, TUTOR_LLM_EXTRA: '[1]' })).toEqual([]);
   });
 
   it('passes the think switch through only when asked', () => {
-    const env = {
-      TUTOR_LLM_URL: 'u',
-      TUTOR_LLM_KEY: 'k',
-      TUTOR_LLM_MODEL: 'm',
+    expect(tutorProviders({ ...base, TUTOR_LLM_NO_THINK: '1' })[0].noThink).toBe(true);
+  });
+
+  it('adds a fallback from a model name alone, inheriting the rest', () => {
+    const chain = tutorProviders({
+      ...base,
+      TUTOR_LLM_EXTRA: '{"a":1}',
       TUTOR_LLM_NO_THINK: '1',
-    };
-    expect(tutorConfig(env)?.noThink).toBe(true);
+      TUTOR_LLM_2_MODEL: 'spare',
+    });
+    expect(chain).toHaveLength(2);
+    expect(chain[1]).toEqual({
+      label: 'fallback 2',
+      url: 'u',
+      key: 'k',
+      model: 'spare',
+      noThink: true,
+      extra: { a: 1 },
+    });
+  });
+
+  it('lets a fallback at another vendor bring its own everything', () => {
+    const chain = tutorProviders({
+      ...base,
+      TUTOR_LLM_EXTRA: '{"a":1}',
+      TUTOR_LLM_2_URL: 'https://other.example.com/v1/chat/completions',
+      TUTOR_LLM_2_KEY: 'other-key',
+      TUTOR_LLM_2_MODEL: 'other-model',
+      TUTOR_LLM_2_EXTRA: '{"b":2}',
+      TUTOR_LLM_2_NO_THINK: '1',
+    });
+    expect(chain[1]).toMatchObject({
+      url: 'https://other.example.com/v1/chat/completions',
+      key: 'other-key',
+      model: 'other-model',
+      extra: { b: 2 },
+      noThink: true,
+    });
+  });
+
+  /** The "this key is out of quota, try the other one" case. */
+  it('makes a fallback out of a second key alone', () => {
+    const chain = tutorProviders({ ...base, TUTOR_LLM_2_KEY: 'spare-key' });
+    expect(chain).toHaveLength(2);
+    expect(chain[1]).toMatchObject({ url: 'u', key: 'spare-key', model: 'm' });
+  });
+
+  it('keeps the chain in order and skips empty slots', () => {
+    const chain = tutorProviders({ ...base, TUTOR_LLM_2_MODEL: 'b', TUTOR_LLM_4_MODEL: 'd' });
+    expect(chain.map((p) => p.model)).toEqual(['m', 'b', 'd']);
+  });
+
+  /** A broken fallback is the one part that must never take the tutor down. */
+  it('drops a fallback with malformed tuning but keeps the primary', () => {
+    const chain = tutorProviders({
+      ...base,
+      TUTOR_LLM_2_MODEL: 'spare',
+      TUTOR_LLM_2_EXTRA: '{oops',
+    });
+    expect(chain.map((p) => p.model)).toEqual(['m']);
+  });
+});
+
+describe('falling back to another model', () => {
+  const chain: TutorProvider[] = [
+    provider,
+    { ...provider, label: 'fallback 2', model: 'spare-model' },
+  ];
+
+  /** Answers `status` first, then like a working provider. */
+  const failingThenWorking = (status: number) => {
+    let call = 0;
+    return vi.fn(async () => {
+      call++;
+      if (call === 1) return new Response('nope', { status });
+      return new Response(
+        JSON.stringify({ choices: [{ message: { content: '1. One.\n2. Two.' } }] }),
+        { status: 200 },
+      );
+    }) as unknown as typeof fetch;
+  };
+
+  it('uses the second model when the first refuses', async () => {
+    const fetchFn = failingThenWorking(429);
+    expect(await explain(request(), chain, fetchFn)).toEqual(['One.', 'Two.']);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks the second model by name, with its own key and url', async () => {
+    const fetchFn = failingThenWorking(500);
+    await explain(request(), chain, fetchFn);
+    const [, init] = (fetchFn as unknown as ReturnType<typeof vi.fn>).mock.calls[1];
+    expect(JSON.parse(String(init.body)).model).toBe('spare-model');
+  });
+
+  /** An unreadable reply is as good a reason to move on as an HTTP error. */
+  it('moves on when the first model sends nothing speakable', async () => {
+    let call = 0;
+    const fetchFn = vi.fn(async () => {
+      call++;
+      const content = call === 1 ? '' : '1. One.\n2. Two.';
+      return new Response(JSON.stringify({ choices: [{ message: { content } }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    expect(await explain(request(), chain, fetchFn)).toEqual(['One.', 'Two.']);
+  });
+
+  it('does not touch the fallback when the first model answers', async () => {
+    const fetchFn = llmSaying('1. One.\n2. Two.');
+    await explain(request(), chain, fetchFn);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails only when every model has, and names them all', async () => {
+    const failing = vi.fn(async () => new Response('nope', { status: 503 })) as unknown as typeof fetch;
+    await expect(explain(request(), chain, failing)).rejects.toThrow(/primary.*fallback 2/s);
+    expect(failing).toHaveBeenCalledTimes(2);
+  });
+
+  it('says so plainly when there is no provider at all', async () => {
+    await expect(explain(request(), [], llmSaying('1. a\n2. b'))).rejects.toThrow(TutorError);
+  });
+
+  it('caches what the fallback said, so the retry is free', async () => {
+    const fetchFn = failingThenWorking(429);
+    await explain(request(), chain, fetchFn);
+    await explain(request(), chain, fetchFn);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 });
