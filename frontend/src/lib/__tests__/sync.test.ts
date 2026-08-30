@@ -49,6 +49,7 @@ const data = (over: Partial<ProfileData> = {}): ProfileData => ({
   settings: DEFAULT_SETTINGS,
   adaptive: {},
   unlocks: emptyUnlocks(),
+  packed: {},
   ...over,
 });
 

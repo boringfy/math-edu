@@ -16,18 +16,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { LinkGoogleResponse, Profile, ProfileEnvelope } from '../content/contract';
 import { PROFILE_SCHEMA_VERSION } from '../content/contract';
-import {
-  DailyState,
-  Grade,
-  ProgressMap,
-  QuizResult,
-  Settings,
-  StopProgress,
-  Subject,
-  Tier,
-} from '../types';
+import { DailyState, Grade, ProgressMap, QuizResult, SUBJECTS, Settings, StopProgress, Subject, Tier } from '../types';
 import { AdaptiveStore } from './adaptive';
 import { Profile as Kid, ProfileStore, emptyProfiles, settle } from './profiles';
+import {
+  PackedProgress,
+  packProgress,
+  pruneUnlocks,
+  unpackProgress,
+} from './progressCodec';
 import { UnlockMap, emptyUnlocks, mergeUnlocks } from './unlocks';
 import {
   Identity,
@@ -80,6 +77,12 @@ export interface ProfileData {
    * Optional: a blob written before lessons had a price does not carry it.
    */
   unlocks?: UnlockMap;
+  /**
+   * Composed-lesson stars, packed a digit each — see `progressCodec`. The
+   * authored sixty stay in `progress`; this is the half that does not stop
+   * growing, and it is what keeps a backup under the server's size cap.
+   */
+  packed?: PackedProgress;
 }
 
 /* -------------------------------------------------------------- snapshot -- */
@@ -197,20 +200,34 @@ export function mergeDevices(
 
 export async function snapshotProfile(): Promise<ProfileData> {
   const tiers = await Promise.all(GRADES.map((g) => loadTier(g)));
+  const progress: Record<Subject, ProgressMap> = {
+    math: await loadProgress('math'),
+    reading: await loadProgress('reading'),
+    logic: await loadProgress('logic'),
+  };
+
+  // The composed half of every map is squeezed to a digit a lesson, and
+  // purchases the child has since passed are dropped — see `progressCodec`.
+  // Without this a family of two runs out of backup at about level 50.
+  const authored: Record<Subject, ProgressMap> = { math: {}, reading: {}, logic: {} };
+  const packed: PackedProgress = {};
+  for (const subject of SUBJECTS) {
+    const split = packProgress(progress[subject]);
+    authored[subject] = split.progress;
+    Object.assign(packed, split.packed);
+  }
+
   return {
     grades: await loadGrades(),
     tiers: { 1: tiers[0], 2: tiers[1], 3: tiers[2], 4: tiers[3], 5: tiers[4] },
     coins: await loadCoins(),
-    progress: {
-      math: await loadProgress('math'),
-      reading: await loadProgress('reading'),
-      logic: await loadProgress('logic'),
-    },
+    progress: authored,
+    packed,
     history: await loadHistory(),
     daily: await loadDaily(),
     settings: await loadSettings(),
     adaptive: await loadAdaptive(),
-    unlocks: await loadUnlocks(),
+    unlocks: pruneUnlocks(await loadUnlocks(), progress),
   };
 }
 
@@ -218,8 +235,10 @@ export async function applyProfile(data: ProfileData): Promise<void> {
   await saveGrades(data.grades);
   for (const grade of GRADES) await saveTier(grade, data.tiers[grade]);
   await saveCoins(data.coins);
-  for (const subject of ['math', 'reading', 'logic'] as Subject[]) {
-    await saveProgressMap(subject, data.progress[subject]);
+  for (const subject of SUBJECTS) {
+    // The digits go back to being ordinary stops before anything else sees
+    // them, so only this file ever knows the packed shape exists.
+    await saveProgressMap(subject, unpackProgress(data.progress[subject], data.packed, subject));
   }
   await saveHistoryList(data.history);
   if (data.daily) await saveDaily(data.daily);
@@ -416,7 +435,19 @@ export async function pushNow(): Promise<boolean> {
       response = await putProfile(identity, server.revision, wrap(merged, new Date().toISOString()));
     }
 
-    if (!response.ok) return false;
+    if (!response.ok) {
+      // 413 is the one worth saying out loud. Every other failure is a bad
+      // moment on a network and fixes itself on the next push; this one says
+      // the profile has outgrown what the server will hold, and it will
+      // never fix itself — every backup from here silently does nothing.
+      if (response.status === 413) {
+        console.error(
+          'progress is too large to back up: the server refused it. Backups ' +
+            'have stopped until it fits again.',
+        );
+      }
+      return false;
+    }
     const body = (await response.json()) as { revision: number };
     await saveSyncMeta({
       dirty: false,
