@@ -37,7 +37,6 @@ interface Props<T extends MapStop> {
   unlockCost?: number;
   /** False on a map whose lessons are free, such as reading. */
   charges?: boolean;
-  onUnlock?: (stop: T) => void;
   /**
    * Where the current stop sits, measured from the top of the trail's own
    * parent, so the screen around it can scroll straight to it.
@@ -57,12 +56,13 @@ export default function MapTrail<T extends MapStop>({
   coins = 0,
   unlockCost = 0,
   charges = true,
-  onUnlock,
   onCurrentOffset,
 }: Props<T>) {
   const scope = allStops ?? stops;
   const current = currentStop(scope, progress);
-  const forSale = unlocks !== undefined && subject !== undefined && onUnlock !== undefined;
+  // The price is only ever shown, never acted on separately: pressing START
+  // pays for the lesson and opens it in one go.
+  const priced = unlocks !== undefined && subject !== undefined;
 
   // The trail's own offset and the current stop's offset within it arrive in
   // separate layout events, so both are kept until the pair can be added up.
@@ -85,7 +85,7 @@ export default function MapTrail<T extends MapStop>({
   return (
     <View style={styles.map} onLayout={onTrailLayout}>
       {stops.map((stop, i) => {
-        const state = forSale
+        const state = priced
           ? stopState(subject, scope, stop, progress, unlocks, charges)
           : isUnlocked(scope, stop, progress)
             ? 'open'
@@ -120,16 +120,18 @@ export default function MapTrail<T extends MapStop>({
             )}
 
             <Pressable
-              disabled={!unlocked && !sale}
+              disabled={!unlocked && !(sale && affordable)}
               accessibilityRole="button"
               accessibilityLabel={
                 sale
-                  ? `Unlock ${stop.title} for ${unlockCost} coins`
+                  ? affordable
+                    ? `Play ${stop.title} for ${unlockCost} coins`
+                    : `${stop.title}, needs ${unlockCost} coins`
                   : unlocked
                     ? `Play ${stop.title}`
                     : `${stop.title}, locked`
               }
-              onPress={() => (sale ? onUnlock?.(stop) : onStart(stop))}
+              onPress={() => onStart(stop)}
               style={[styles.row, { transform: [{ translateX: offset }] }]}
             >
               <View
@@ -142,7 +144,7 @@ export default function MapTrail<T extends MapStop>({
                 ]}
               >
                 <Text style={[styles.icon, !unlocked && !sale && styles.lockedText]}>
-                  {unlocked ? stop.icon : sale ? '🪙' : '🔒'}
+                  {unlocked || sale ? stop.icon : '🔒'}
                 </Text>
                 <View style={styles.numberBadge}>
                   <Text style={styles.numberBadgeText}>{stop.index}</Text>
@@ -167,12 +169,22 @@ export default function MapTrail<T extends MapStop>({
                 </Text>
               ) : sale ? (
                 /*
-                  The price is shown whether or not it can be paid. A child
-                  who is short should be able to see what they are aiming
-                  for — hiding it would just read as another locked door.
+                  One button. The price sits beside START rather than in place
+                  of it, because "this costs 18" is a fact about the lesson,
+                  not a different thing to press — a child who has the coins
+                  should not have to buy and then start.
+
+                  It is shown even when they are short, greyed out with the
+                  price still legible, so there is something to aim at rather
+                  than another closed door.
                 */
-                <View style={[styles.buyPill, !affordable && styles.buyPillShort]}>
-                  <Text style={[styles.buyPillText, !affordable && styles.buyPillTextShort]}>
+                <View style={styles.startRow}>
+                  <View style={[styles.startPill, !affordable && styles.startPillShort]}>
+                    <Text style={[styles.startPillText, !affordable && styles.startPillTextShort]}>
+                      START
+                    </Text>
+                  </View>
+                  <Text style={[styles.priceTag, !affordable && styles.priceTagShort]}>
                     🪙 {unlockCost}
                   </Text>
                 </View>
@@ -246,14 +258,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   startPillText: { color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 1 },
-  buyPill: {
-    marginTop: 6,
-    backgroundColor: '#f5b700',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  buyPillText: { color: '#4a3600', fontSize: 12, fontWeight: '800' },
-  buyPillShort: { backgroundColor: '#eef0f6' },
-  buyPillTextShort: { color: colors.textMuted },
+  startRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  startPillShort: { backgroundColor: '#eef0f6' },
+  startPillTextShort: { color: colors.textMuted },
+  priceTag: { fontSize: 13, fontWeight: '800', color: '#8a6d00' },
+  priceTagShort: { color: colors.textMuted },
 });

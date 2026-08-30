@@ -87,7 +87,6 @@ const homeProps = (subject: Subject) => ({
   unlocks: emptyUnlocks(),
   unlockCost: 18,
   paidSubjects: ['math', 'logic'] as Subject[],
-  onUnlock: () => {},
   onStartLesson: () => {},
   onStartStory: () => {},
   onStartPuzzles: () => {},
@@ -96,15 +95,15 @@ const homeProps = (subject: Subject) => ({
 });
 
 /**
- * The lessons currently offered for sale, by the label the map gives them.
- * Deduped: a Pressable's label also lands on the host views it renders into.
+ * The lessons that cost coins, by the label the map gives them. Deduped: a
+ * Pressable's label also lands on the host views it renders into.
  */
-const forSale = (tree: ReactTestRenderer): string[] => [
+const priced = (tree: ReactTestRenderer): string[] => [
   ...new Set(
     tree.root
       .findAll((n) => typeof n.props.accessibilityLabel === 'string')
       .map((n) => String(n.props.accessibilityLabel))
-      .filter((label) => label.startsWith('Unlock ')),
+      .filter((label) => / for \d+ coins$| needs \d+ coins$/.test(label)),
   ),
 ];
 
@@ -148,7 +147,8 @@ describe('the map shows one level at a time', () => {
     );
     const text = textOf(tree);
     expect(text).toContain('Level 7');
-    // Lesson 61 has not been bought, so it shows its price rather than START.
+    // Lesson 61 has not been bought, so START carries its price.
+    expect(text).toContain('START');
     expect(squash(text)).toContain('🪙18');
   });
 
@@ -303,10 +303,30 @@ describe('managing the players', () => {
 describe('lessons have to be bought', () => {
   const cleared = { stars: 2 as const, bestPercent: 85, clearedAt: '2026-08-01T00:00:00.000Z' };
 
-  it('asks for coins before the next lesson, showing the price', () => {
+  /** One button: the price sits beside START rather than in place of it. */
+  it('shows START with the price beside it, not instead of it', () => {
     const tree = render(<HomeScreen {...homeProps('math')} progress={{ 'g1-l1': cleared }} />);
-    expect(forSale(tree)).toEqual(['Unlock Taking Away for 18 coins']);
+    expect(priced(tree)).toEqual(['Play Taking Away for 18 coins']);
+    expect(textOf(tree)).toContain('START');
     expect(squash(textOf(tree))).toContain('🪙18');
+  });
+
+  /** Pressing it once pays and opens; there is no separate buy step. */
+  it('starts the lesson on one press', () => {
+    const started: string[] = [];
+    const tree = render(
+      <HomeScreen
+        {...homeProps('math')}
+        progress={{ 'g1-l1': cleared }}
+        onStartLesson={(lesson) => started.push(lesson.id)}
+      />,
+    );
+    act(() =>
+      tree.root
+        .find((n) => n.props.accessibilityLabel === 'Play Taking Away for 18 coins')
+        .props.onPress(),
+    );
+    expect(started).toEqual(['g1-l2']);
   });
 
   it('opens it once it has been bought', () => {
@@ -325,19 +345,35 @@ describe('lessons have to be bought', () => {
     const tree = render(
       <HomeScreen {...homeProps('math')} coins={5} progress={{ 'g1-l1': cleared }} />,
     );
-    // Still on sale and still priced: a child should see what they are
-    // saving for rather than another closed door. App.buyStop is what
-    // refuses to take coins that are not there.
-    expect(forSale(tree)).toEqual(['Unlock Taking Away for 18 coins']);
-    expect(textOf(tree)).not.toContain('START');
+    // Greyed out with the price still legible, so there is something to aim
+    // at rather than another closed door.
+    expect(priced(tree)).toEqual(['Taking Away, needs 18 coins']);
+    expect(squash(textOf(tree))).toContain('🪙18');
+  });
+
+  it('will not start a lesson the child cannot afford', () => {
+    const started: string[] = [];
+    const tree = render(
+      <HomeScreen
+        {...homeProps('math')}
+        coins={5}
+        progress={{ 'g1-l1': cleared }}
+        onStartLesson={(lesson) => started.push(lesson.id)}
+      />,
+    );
+    const button = tree.root.find(
+      (n) => n.props.accessibilityLabel === 'Taking Away, needs 18 coins',
+    );
+    expect(button.props.disabled).toBe(true);
+    expect(started).toEqual([]);
   });
 
   /** The front door is never locked behind a purse a child does not have. */
   it('never charges for the very first lesson', () => {
     const tree = render(<HomeScreen {...homeProps('math')} coins={0} />);
-    // Nothing on sale: lesson one is free, and the rest are shut by the star
+    // Nothing priced: lesson one is free, and the rest are shut by the star
     // gate rather than by the purse.
-    expect(forSale(tree)).toEqual([]);
+    expect(priced(tree)).toEqual([]);
     expect(textOf(tree)).toContain('START');
   });
 
@@ -351,20 +387,14 @@ describe('lessons have to be bought', () => {
     expect(first.length).toBeGreaterThan(0);
   });
 
-  it('hands the purchase back with the subject that is showing', () => {
-    const bought: string[] = [];
+  /** Stories are free, so no story ever shows a price. */
+  it('never puts a price on a story', () => {
+    const done = Object.fromEntries(LIB.stories(1).slice(0, 3).map((s) => [s.id, cleared]));
     const tree = render(
-      <HomeScreen
-        {...homeProps('math')}
-        progress={{ 'g1-l1': cleared }}
-        onUnlock={(subject, stop) => bought.push(`${subject}:${stop.id}`)}
-      />,
+      <HomeScreen {...homeProps('reading')} progress={done} coins={0} />,
     );
-    const buy = tree.root.find(
-      (n) => n.props.accessibilityLabel === 'Unlock Taking Away for 18 coins',
-    );
-    act(() => buy.props.onPress());
-    expect(bought).toEqual(['math:g1-l2']);
+    expect(priced(tree)).toEqual([]);
+    expect(textOf(tree)).toContain('START');
   });
 });
 

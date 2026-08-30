@@ -86,7 +86,6 @@ interface Props {
   unlockCost: number;
   /** Which maps charge for the next lesson. */
   paidSubjects: Subject[];
-  onUnlock: (subject: Subject, stop: MapStop) => void;
   onStartLesson: (lesson: Lesson) => void;
   onStartStory: (story: Story) => void;
   onStartPuzzles: (set: PuzzleSet) => void;
@@ -116,7 +115,6 @@ export default function HomeScreen({
   unlocks,
   unlockCost,
   paidSubjects,
-  onUnlock,
   onStartLesson,
   onStartStory,
   onStartPuzzles,
@@ -310,7 +308,6 @@ export default function HomeScreen({
           coins={coins}
           unlockCost={unlockCost}
           charges={chargesForLessons(subject, paidSubjects)}
-          onUnlock={(stop) => onUnlock(subject, stop)}
           onCurrentOffset={jumpToCurrent}
         />
       )}
@@ -329,7 +326,6 @@ export default function HomeScreen({
           coins={coins}
           unlockCost={unlockCost}
           charges={chargesForLessons(subject, paidSubjects)}
-          onUnlock={(stop) => onUnlock(subject, stop)}
           onCurrentOffset={jumpToCurrent}
         />
       )}
@@ -348,7 +344,6 @@ export default function HomeScreen({
           coins={coins}
           unlockCost={unlockCost}
           charges={chargesForLessons(subject, paidSubjects)}
-          onUnlock={(stop) => onUnlock(subject, stop)}
           onCurrentOffset={jumpToCurrent}
         />
       )}

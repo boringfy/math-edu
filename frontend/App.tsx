@@ -86,6 +86,7 @@ import {
   UnlockMap,
   canBuy,
   chargesForLessons,
+  stopState,
   emptyUnlocks,
   withPaid,
 } from './src/lib/unlocks';
@@ -577,21 +578,21 @@ export default function App() {
   };
 
   /** Buys the next lesson. */
-  const buyStop = async (forSubject: Subject, stop: MapStop) => {
+  const buyStop = async (forSubject: Subject, stop: MapStop): Promise<boolean> => {
     /*
       One purchase at a time. Both the coins and the purchases are React
       state, so two taps landing before the first re-render would each read
       the same purse and the same list — charging once for two lessons, and
       losing one of them when the second write overwrote the first.
     */
-    if (buying.current) return;
+    if (buying.current) return false;
 
     // Checked here rather than trusted from the map: this is the only place
     // coins leave the purse, so it is the only place that has to be sure.
     const stops = mapFor(forSubject, stop.grade, levelOf(stop.index));
     const charges = chargesForLessons(forSubject, paidSubjects);
     if (!canBuy(forSubject, stops, stop, progress[forSubject], unlocks, coins, unlockCost, charges)) {
-      return;
+      return false;
     }
     buying.current = true;
     try {
@@ -606,9 +607,30 @@ export default function App() {
       setCoins(left);
       await saveCoins(left);
       markDirty();
+      return true;
     } finally {
       buying.current = false;
     }
+  };
+
+  /**
+   * Playing a lesson, paying for it on the way in if it has not been paid
+   * for.
+   *
+   * One press. The map shows the price beside START rather than in place of
+   * it, because what a lesson costs is a fact about the lesson and not a
+   * separate thing to do — a child with the coins should not have to buy and
+   * then start.
+   */
+  const play = async (forSubject: Subject, stop: MapStop, start: () => void) => {
+    const charges = chargesForLessons(forSubject, paidSubjects);
+    const stops = mapFor(forSubject, stop.grade, levelOf(stop.index));
+    const state = stopState(forSubject, stops, stop, progress[forSubject], unlocks, charges);
+
+    // Only a lesson still for sale costs anything; one already bought or
+    // already passed is simply opened.
+    if (state === 'forSale' && !(await buyStop(forSubject, stop))) return;
+    start();
   };
 
   const bank = async (
@@ -788,10 +810,9 @@ export default function App() {
             unlocks={unlocks}
             unlockCost={unlockCost}
             paidSubjects={paidSubjects}
-            onUnlock={(forSubject, stop) => void buyStop(forSubject, stop)}
-            onStartLesson={startLesson}
-              onStartStory={startStory}
-              onStartPuzzles={startPuzzles}
+            onStartLesson={(lesson) => void play('math', lesson, () => startLesson(lesson))}
+              onStartStory={(story) => void play('reading', story, () => startStory(story))}
+              onStartPuzzles={(set) => void play('logic', set, () => startPuzzles(set))}
               onStartPractice={startPractice}
               onOpenSettings={() => setPhase('settings')}
             />

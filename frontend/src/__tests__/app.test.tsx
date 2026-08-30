@@ -209,6 +209,69 @@ const kidKey = async (name: string): Promise<string> => {
   return activeId === '' ? `mathquiz:${name}` : `mathquiz:p:${activeId}:${name}`;
 };
 
+describe('paying for the next lesson', () => {
+  /**
+   * The behaviour this replaced: a lesson for sale used to show a coin, and
+   * pressing it bought the lesson and left you looking at a START you then
+   * had to press again. What a lesson costs is a fact about it, not a
+   * separate thing to do.
+   */
+  it('pays and opens the lesson in one press', async () => {
+    await AsyncStorage.setItem('mathquiz:coins', '100');
+    await AsyncStorage.setItem(
+      'mathquiz:lessons',
+      JSON.stringify({
+        'g1-l1': { stars: 3, bestPercent: 100, clearedAt: '2026-08-01T00:00:00.000Z' },
+      }),
+    );
+
+    const tree = await launch();
+    const second = LIB.lessons(1)[1];
+    await press(tree, `Play ${second.title} for 18 coins`);
+
+    // Straight into the quiz, with the price taken.
+    expect(nodeWithProp(tree, 'questions')).toBeTruthy();
+    expect(Number(await AsyncStorage.getItem(await kidKey('coins')))).toBe(82);
+    const bought = JSON.parse((await AsyncStorage.getItem(await kidKey('unlocks'))) ?? '{}');
+    expect(bought.math).toEqual([second.id]);
+  });
+
+  it('takes nothing for a lesson already bought', async () => {
+    await AsyncStorage.setItem('mathquiz:coins', '100');
+    await AsyncStorage.setItem(
+      'mathquiz:lessons',
+      JSON.stringify({
+        'g1-l1': { stars: 3, bestPercent: 100, clearedAt: '2026-08-01T00:00:00.000Z' },
+      }),
+    );
+    const second = LIB.lessons(1)[1];
+    await AsyncStorage.setItem(
+      'mathquiz:unlocks',
+      JSON.stringify({ math: [second.id], reading: [], logic: [] }),
+    );
+
+    const tree = await launch();
+    await press(tree, `Play ${second.title}`);
+    expect(Number(await AsyncStorage.getItem(await kidKey('coins')))).toBe(100);
+  });
+
+  /** Replaying to earn the coins back must never cost anything. */
+  it('takes nothing to replay a lesson already passed', async () => {
+    await AsyncStorage.setItem('mathquiz:coins', '20');
+    await AsyncStorage.setItem(
+      'mathquiz:lessons',
+      JSON.stringify({
+        'g1-l1': { stars: 1, bestPercent: 60, clearedAt: '2026-08-01T00:00:00.000Z' },
+      }),
+    );
+
+    const tree = await launch();
+    await press(tree, `Play ${LIB.lessons(1)[0].title}`);
+    expect(nodeWithProp(tree, 'questions')).toBeTruthy();
+    expect(Number(await AsyncStorage.getItem(await kidKey('coins')))).toBe(20);
+  });
+});
+
 describe('adaptive free practice', () => {
   it('starts with the starter types and unlocks a new one on a perfect round', async () => {
     // Grade 3, because grade 1 packs only bake the starter topics — there a
