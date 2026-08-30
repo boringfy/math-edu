@@ -43,3 +43,6 @@ backend/.env
 
 # baked content — regenerate with `npm run bake`
 backend/dist/
+
+# the sync database docker-compose keeps on the host
+/data/

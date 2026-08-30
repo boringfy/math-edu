@@ -256,4 +256,38 @@ describe('decodePack for rules', () => {
   it('refuses a bucket it cannot read, rather than a day with two challenges', () => {
     expect(decodePack(wrap({ challengeBuckets: [[{ id: 'a' }]] })).pack).toBeNull();
   });
+
+  describe('the adaptive block', () => {
+    const adaptive = {
+      strongRound: 0.9,
+      unlockAfter: 2,
+      perfectUnlocks: true,
+      topicWindow: 10,
+      topicUp: { minAttempts: 6, accuracy: 0.9 },
+      topicDown: { minAttempts: 4, accuracy: 0.5, wrongStreak: 3 },
+      roundUp: 0.9,
+      roundDown: 0.5,
+      newTopicWeight: 2,
+      weakTopicWeight: 1.5,
+      starterCount: { math: 3, logic: 3 },
+      unlockOrder: { math: ['addSub'], logic: ['series'] },
+    };
+
+    it('decodes a good adaptive block', () => {
+      const { pack } = decodePack(wrap({ adaptive }));
+      expect(pack?.kind === 'rules' && pack.rules.adaptive?.unlockAfter).toBe(2);
+    });
+
+    it('keeps the pack when the block is absent — older packs predate it', () => {
+      const { pack } = decodePack(wrap());
+      expect(pack).not.toBeNull();
+      expect(pack?.kind === 'rules' && pack.rules.adaptive).toBeUndefined();
+    });
+
+    it('drops a malformed block but never the pack over it', () => {
+      const { pack } = decodePack(wrap({ adaptive: { ...adaptive, unlockOrder: { math: [] } } }));
+      expect(pack).not.toBeNull();
+      expect(pack?.kind === 'rules' && pack.rules.adaptive).toBeUndefined();
+    });
+  });
 });

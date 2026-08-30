@@ -57,6 +57,57 @@ describe('the bundled content', () => {
     }
   });
 
+  it('intersects an unlock ladder with the pools the grade actually has', () => {
+    const order = ['fractions', 'addSub', 'imaginary', 'word'];
+    const topics = library.availableTopics('math', 3, order);
+    // Ladder order is kept; a topic the grade has no pool for is dropped.
+    expect(topics).not.toContain('imaginary');
+    expect(topics.indexOf('addSub')).toBeLessThan(topics.indexOf('word'));
+    for (const topic of topics) {
+      expect(library.practicePools('math', 3).some((k) => k.startsWith(`${topic}:`))).toBe(true);
+    }
+  });
+
+  it('lists logic families as practice pools too', () => {
+    expect(library.practicePools('logic', 3).length).toBeGreaterThan(0);
+  });
+
+  it('draws weighted practice in proportion to the weights', () => {
+    const picks = [
+      { key: 'addSub:2', weight: 3 },
+      { key: 'word:2', weight: 1 },
+    ];
+    const { questions } = library.weightedPractice('math', 3, picks, 2, 4, {}, Math.random);
+    expect(questions).toHaveLength(4);
+    const bySums = questions.filter((q) => q.id.includes(':addSub:')).length;
+    const byWords = questions.filter((q) => q.id.includes(':word:')).length;
+    // 3 of the 4 non-draw picks go to the heavy pool... but 4 >= 5 is false,
+    // so no cake question joins and the split is exactly 3 and 1.
+    expect(bySums).toBe(3);
+    expect(byWords).toBe(1);
+  });
+
+  it('keeps the one cake question in a full-size weighted round', () => {
+    const picks = [{ key: 'addSub:2', weight: 1 }];
+    const { questions } = library.weightedPractice('math', 3, picks, 2, 10, {}, Math.random);
+    expect(questions).toHaveLength(10);
+    expect(questions.filter((q) => q.mode === 'draw')).toHaveLength(1);
+  });
+
+  it('advances cursors on weighted draws rather than replaying them', () => {
+    const picks = [{ key: 'addSub:2', weight: 1 }];
+    const first = library.weightedPractice('math', 3, picks, 2, 4, {}, Math.random);
+    const second = library.weightedPractice('math', 3, picks, 2, 4, first.cursors, Math.random);
+    const firstIds = new Set(first.questions.map((q) => q.id));
+    expect(second.questions.some((q) => firstIds.has(q.id))).toBe(false);
+  });
+
+  it('draws nothing rather than throwing when no planned pool exists', () => {
+    const picks = [{ key: 'imaginary:2', weight: 2 }];
+    const { questions } = library.weightedPractice('math', 3, picks, 2, 10, {}, Math.random);
+    expect(questions).toHaveLength(0);
+  });
+
   it('spreads a multi-topic lesson across all of its topics', () => {
     const lesson = library.lessons(5).find((l) => l.focus.length >= 3);
     expect(lesson).toBeDefined();

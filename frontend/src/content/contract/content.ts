@@ -1,12 +1,12 @@
 // GENERATED FILE — DO NOT EDIT.
-// Copied from backend/src/contract by `npm run sync:contract`.
+// Copied from backend/src/contract by `npm run sync:shared`.
 // Change the original and re-run that; edits here are overwritten.
 
 /**
  * The content contract: everything the backend bakes and the client renders.
  *
  * This file is the single source of truth for both halves of the project.
- * `npm run sync:contract` copies the whole `contract/` directory into
+ * `npm run sync:shared` copies the whole `contract/` directory into
  * `frontend/src/content/contract/`, and CI fails if that copy is stale, so
  * the app can never be compiled against a shape the server has moved on from.
  *

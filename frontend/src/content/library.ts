@@ -249,6 +249,80 @@ export class Library {
     };
   }
 
+  /**
+   * The subset of an unlock ladder this grade can actually play: topics with
+   * at least one pool in the pack, in ladder order. What a grade has varies
+   * (grade 3 bakes no fractions pool at all), so the ladder is a wish list
+   * until it has been intersected with this.
+   */
+  availableTopics(scope: 'math' | 'logic', grade: Grade, order: string[]): string[] {
+    const pools = scope === 'math' ? this.mathPools(grade) : this.logicPools(grade);
+    const keys = Object.keys(pools);
+    return order.filter((topic) => keys.some((key) => key.startsWith(`${topic}:`)));
+  }
+
+  /** Every pool key this grade has, for building a practice plan against. */
+  practicePools(scope: 'math' | 'logic', grade: Grade): string[] {
+    const pools = scope === 'math' ? this.mathPools(grade) : this.logicPools(grade);
+    return Object.keys(pools);
+  }
+
+  /**
+   * Adaptive free practice: draws `count` questions across the given pools
+   * in proportion to their weights (largest remainder, so every weighted
+   * pool gets its fair rounding). Math rounds of 5 or more keep their one
+   * cake-drawing question, at the given tier; logic packs have no draw pool.
+   */
+  weightedPractice(
+    scope: 'math' | 'logic',
+    grade: Grade,
+    picks: { key: string; weight: number }[],
+    drawTier: Tier,
+    count: number,
+    cursors: CursorState,
+    random: () => number,
+  ): { questions: Question[]; cursors: CursorState } {
+    const pools = scope === 'math' ? this.mathPools(grade) : this.logicPools(grade);
+    const live = picks.filter((p) => (pools[p.key]?.length ?? 0) > 0 && p.weight > 0);
+    if (live.length === 0 || count <= 0) return { questions: [], cursors };
+
+    const drawCount = scope === 'math' && count >= 5 && pools[drawPoolKey(drawTier)] ? 1 : 0;
+    const target = count - drawCount;
+
+    // Largest remainder: whole shares first, the leftovers to the pools that
+    // were rounded down the hardest.
+    const totalWeight = live.reduce((sum, p) => sum + p.weight, 0);
+    const shares = live.map((p) => {
+      const exact = (target * p.weight) / totalWeight;
+      return { key: p.key, whole: Math.floor(exact), fraction: exact - Math.floor(exact) };
+    });
+    let remainder = target - shares.reduce((sum, s) => sum + s.whole, 0);
+    for (const share of [...shares].sort((a, b) => b.fraction - a.fraction)) {
+      if (remainder <= 0) break;
+      share.whole += 1;
+      remainder -= 1;
+    }
+
+    const next = { ...cursors };
+    const questions: Question[] = [];
+    for (const share of shares) {
+      if (share.whole === 0) continue;
+      const stateKey = `${scope}.g${grade}/${share.key}`;
+      const result = draw(pools[share.key], next[stateKey], share.whole, random);
+      next[stateKey] = result.cursor;
+      questions.push(...result.picked);
+    }
+
+    if (drawCount > 0) {
+      const stateKey = `${scope}.g${grade}/${drawPoolKey(drawTier)}`;
+      const result = draw(pools[drawPoolKey(drawTier)], next[stateKey], drawCount, random);
+      next[stateKey] = result.cursor;
+      questions.push(...result.picked);
+    }
+
+    return { questions, cursors: next };
+  }
+
   /** The questions for one stop on the logic map. */
   puzzleQuestions(
     set: PuzzleSet,

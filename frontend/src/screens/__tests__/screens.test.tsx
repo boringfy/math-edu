@@ -12,6 +12,8 @@ import { seedLibrary } from '../../content/testLibrary';
 import { passageOf, storyQuestions } from '../../content';
 import { shuffle } from '../../lib/grading';
 import { freshDaily, lessonAward } from '../../lib/progress';
+import { addProfile, emptyProfiles, makeProfile } from '../../lib/profiles';
+import { emptyUnlocks } from '../../lib/unlocks';
 
 
 import { AnswerRecord, DEFAULT_SETTINGS, Lesson, ProgressMap, Subject } from '../../types';
@@ -20,6 +22,11 @@ import HomeScreen from '../HomeScreen';
 import QuizScreen from '../QuizScreen';
 import ResultsScreen from '../ResultsScreen';
 import SettingsScreen from '../SettingsScreen';
+
+// The settings screen reads the sync state from storage on mount.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
 
 /** The content the screens are rendered against: the bundled packs. */
 const LIB = seedLibrary();
@@ -73,12 +80,33 @@ const homeProps = (subject: Subject) => ({
   coins: 137,
   daily,
   progress: noProgress,
+  adaptive: {},
+  profiles: emptyProfiles(),
+  onSwitchProfile: () => {},
+  onAddProfile: () => {},
+  unlocks: emptyUnlocks(),
+  unlockCost: 18,
+  paidSubjects: ['math', 'logic'] as Subject[],
+  onUnlock: () => {},
   onStartLesson: () => {},
   onStartStory: () => {},
   onStartPuzzles: () => {},
   onStartPractice: () => {},
   onOpenSettings: () => {},
 });
+
+/**
+ * The lessons currently offered for sale, by the label the map gives them.
+ * Deduped: a Pressable's label also lands on the host views it renders into.
+ */
+const forSale = (tree: ReactTestRenderer): string[] => [
+  ...new Set(
+    tree.root
+      .findAll((n) => typeof n.props.accessibilityLabel === 'string')
+      .map((n) => String(n.props.accessibilityLabel))
+      .filter((label) => label.startsWith('Unlock ')),
+  ),
+];
 
 /** The lesson map's meta lines, which MapTrail leaves to its caller. */
 const lessonMeta = (lesson: Lesson): [string, string] => [
@@ -89,6 +117,256 @@ const lessonMeta = (lesson: Lesson): [string, string] => [
 // The combo burst animates on timers; without this they outlive the test run.
 beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
+
+describe('the map shows one level at a time', () => {
+  const cleared = { stars: 1 as const, bestPercent: 60, clearedAt: '2026-08-01T00:00:00.000Z' };
+  const clearAll = (subject: 'math' | 'reading', grade: 1 | 2) =>
+    Object.fromEntries(
+      (subject === 'math' ? LIB.lessons(grade) : LIB.stories(grade)).map((s) => [s.id, cleared]),
+    );
+
+  it('draws ten lessons, not the whole sixty', () => {
+    const tree = render(<HomeScreen {...homeProps('math')} />);
+    const text = textOf(tree);
+    expect(text).toContain('Level 1');
+    expect(text).toContain(LIB.lessons(1)[0].title);
+    // Lesson 11 belongs to level 2 and has no business being on screen.
+    expect(text).not.toContain(LIB.lessons(1)[10].title);
+  });
+
+  it('counts the stars of the level, not of the map', () => {
+    expect(textOf(render(<HomeScreen {...homeProps('math')} />))).toContain('of 30');
+  });
+
+  /**
+   * The whole point of the exercise: a child who finishes the authored sixty
+   * gets a seventh level rather than a wall.
+   */
+  it('offers a level past the end of the authored map', () => {
+    const tree = render(
+      <HomeScreen {...homeProps('math')} grade={2} progress={clearAll('math', 2)} />,
+    );
+    const text = textOf(tree);
+    expect(text).toContain('Level 7');
+    // Lesson 61 has not been bought, so it shows its price rather than START.
+    expect(squash(text)).toContain('🪙18');
+  });
+
+  it('leaves reading where its author stopped', () => {
+    const tree = render(
+      <HomeScreen {...homeProps('reading')} grade={2} progress={clearAll('reading', 2)} />,
+    );
+    // Six levels of authored stories, and no seventh invented for them.
+    expect(textOf(tree)).toContain('Level 6');
+    expect(textOf(tree)).not.toContain('Level 7');
+  });
+
+  it('walks back to a level already finished', () => {
+    const tree = render(
+      <HomeScreen {...homeProps('math')} grade={2} progress={clearAll('math', 2)} />,
+    );
+    const back = tree.root
+      .findAll((n) => n.props.accessibilityLabel === 'Previous level')
+      .find((n) => typeof n.props.onPress === 'function');
+    act(() => back?.props.onPress());
+    expect(textOf(tree)).toContain('Level 6');
+  });
+
+  it('will not skip ahead of where the child has got to', () => {
+    const tree = render(<HomeScreen {...homeProps('math')} />);
+    const forward = tree.root
+      .findAll((n) => n.props.accessibilityLabel === 'Next level')
+      .find((n) => n.props.accessibilityLabel === 'Next level');
+    expect(forward?.props.disabled).toBe(true);
+    expect(textOf(tree)).toContain('Level 1');
+  });
+});
+
+describe('two children on one tablet', () => {
+  const family = () => {
+    let s = emptyProfiles();
+    s = addProfile(s, makeProfile('Mia', s.profiles));
+    s = addProfile(s, makeProfile('Theo', s.profiles));
+    return s;
+  };
+
+  const tap = (tree: ReactTestRenderer, label: string) =>
+    act(() => tree.root.find((n) => n.props.accessibilityLabel === label).props.onPress());
+
+  it('shows whose turn it is', () => {
+    const s = family();
+    const text = textOf(render(<HomeScreen {...homeProps('math')} profiles={s} />));
+    expect(text).toContain('Theo');
+  });
+
+  /** A tablet with one child should not be asked to think about switching. */
+  it('says nothing about players when there are none', () => {
+    const text = textOf(render(<HomeScreen {...homeProps('math')} />));
+    expect(text).not.toContain("Who's playing?");
+  });
+
+  it('opens the chooser and offers everyone', () => {
+    const s = family();
+    const tree = render(<HomeScreen {...homeProps('math')} profiles={s} />);
+    tap(tree, `Playing as Theo. Switch player`);
+    const text = textOf(tree);
+    expect(text).toContain("Who's playing?");
+    expect(text).toContain('Mia');
+    expect(text).toContain('Theo');
+  });
+
+  it('hands the tablet to the child who was picked', () => {
+    const s = family();
+    const switched: string[] = [];
+    const tree = render(
+      <HomeScreen {...homeProps('math')} profiles={s} onSwitchProfile={(id) => switched.push(id)} />,
+    );
+    tap(tree, 'Playing as Theo. Switch player');
+    tap(tree, 'Switch to Mia');
+    expect(switched).toEqual([s.profiles[0].id]);
+  });
+
+  it('closes the chooser once someone is picked', () => {
+    const s = family();
+    const tree = render(<HomeScreen {...homeProps('math')} profiles={s} />);
+    tap(tree, 'Playing as Theo. Switch player');
+    tap(tree, 'Switch to Mia');
+    expect(textOf(tree)).not.toContain("Who's playing?");
+  });
+});
+
+describe('managing the players', () => {
+  const family = () => {
+    let s = emptyProfiles();
+    s = addProfile(s, makeProfile('Mia', s.profiles));
+    s = addProfile(s, makeProfile('Theo', s.profiles));
+    return s;
+  };
+  const tap = (tree: ReactTestRenderer, label: string) =>
+    act(() => tree.root.find((n) => n.props.accessibilityLabel === label).props.onPress());
+
+  it('lists everyone, and says who is playing', () => {
+    const tree = render(<SettingsScreen {...settingsProps()} profiles={family()} />);
+    // The names are editable, so they live in a field's value rather than as
+    // text on the screen.
+    const named = tree.root
+      .findAll((n) => typeof n.props.accessibilityLabel === 'string')
+      .map((n) => String(n.props.accessibilityLabel))
+      .filter((l) => l.startsWith('Name for '));
+    expect([...new Set(named)]).toEqual(['Name for Mia', 'Name for Theo', 'Name for a new player']);
+    expect(textOf(tree)).toContain('playing');
+  });
+
+  /**
+   * Deleting a child throws away everything they earned, so it must take two
+   * taps — the first one only asks.
+   */
+  it('asks before throwing a child away', () => {
+    const s = family();
+    const removed: string[] = [];
+    const tree = render(
+      <SettingsScreen {...settingsProps()} profiles={s} onRemoveProfile={(id) => removed.push(id)} />,
+    );
+    tap(tree, 'Remove Mia');
+    expect(removed).toEqual([]);
+    expect(textOf(tree)).toContain('Delete');
+
+    tap(tree, 'Delete Mia and everything they earned');
+    expect(removed).toEqual([s.profiles[0].id]);
+  });
+
+  it('lets the asking be called off', () => {
+    const tree = render(<SettingsScreen {...settingsProps()} profiles={family()} />);
+    tap(tree, 'Remove Mia');
+    tap(tree, 'Keep them');
+    expect(textOf(tree)).not.toContain('Delete');
+  });
+
+  /** With nobody left there would be no one to switch to on the next launch. */
+  it('offers no way to remove the only child', () => {
+    let solo = emptyProfiles();
+    solo = addProfile(solo, makeProfile('Mia', solo.profiles));
+    const tree = render(<SettingsScreen {...settingsProps()} profiles={solo} />);
+    expect(tree.root.findAll((n) => n.props.accessibilityLabel === 'Remove Mia')).toHaveLength(0);
+  });
+
+  it('will not add a player with no name', () => {
+    const added: string[] = [];
+    const tree = render(
+      <SettingsScreen {...settingsProps()} profiles={family()} onAddProfile={(n) => added.push(n)} />,
+    );
+    tap(tree, 'Add this player');
+    expect(added).toEqual([]);
+  });
+});
+
+describe('lessons have to be bought', () => {
+  const cleared = { stars: 2 as const, bestPercent: 85, clearedAt: '2026-08-01T00:00:00.000Z' };
+
+  it('asks for coins before the next lesson, showing the price', () => {
+    const tree = render(<HomeScreen {...homeProps('math')} progress={{ 'g1-l1': cleared }} />);
+    expect(forSale(tree)).toEqual(['Unlock Taking Away for 18 coins']);
+    expect(squash(textOf(tree))).toContain('🪙18');
+  });
+
+  it('opens it once it has been bought', () => {
+    const tree = render(
+      <HomeScreen
+        {...homeProps('math')}
+        progress={{ 'g1-l1': cleared }}
+        unlocks={{ math: ['g1-l2'], reading: [], logic: [] }}
+      />,
+    );
+    expect(textOf(tree)).toContain('START');
+  });
+
+  /** A child with an empty purse must not be able to buy their way past. */
+  it('shows the price even when the child cannot afford it', () => {
+    const tree = render(
+      <HomeScreen {...homeProps('math')} coins={5} progress={{ 'g1-l1': cleared }} />,
+    );
+    // Still on sale and still priced: a child should see what they are
+    // saving for rather than another closed door. App.buyStop is what
+    // refuses to take coins that are not there.
+    expect(forSale(tree)).toEqual(['Unlock Taking Away for 18 coins']);
+    expect(textOf(tree)).not.toContain('START');
+  });
+
+  /** The front door is never locked behind a purse a child does not have. */
+  it('never charges for the very first lesson', () => {
+    const tree = render(<HomeScreen {...homeProps('math')} coins={0} />);
+    // Nothing on sale: lesson one is free, and the rest are shut by the star
+    // gate rather than by the purse.
+    expect(forSale(tree)).toEqual([]);
+    expect(textOf(tree)).toContain('START');
+  });
+
+  it('lets a lesson already passed be replayed for free', () => {
+    const tree = render(
+      <HomeScreen {...homeProps('math')} coins={0} progress={{ 'g1-l1': cleared }} />,
+    );
+    const first = tree.root.findAll(
+      (n) => typeof n.props.onPress === 'function' && n.props.disabled === false,
+    );
+    expect(first.length).toBeGreaterThan(0);
+  });
+
+  it('hands the purchase back with the subject that is showing', () => {
+    const bought: string[] = [];
+    const tree = render(
+      <HomeScreen
+        {...homeProps('math')}
+        progress={{ 'g1-l1': cleared }}
+        onUnlock={(subject, stop) => bought.push(`${subject}:${stop.id}`)}
+      />,
+    );
+    const buy = tree.root.find(
+      (n) => n.props.accessibilityLabel === 'Unlock Taking Away for 18 coins',
+    );
+    act(() => buy.props.onPress());
+    expect(bought).toEqual(['math:g1-l2']);
+  });
+});
 
 describe('HomeScreen', () => {
   it('renders the map, the coin purse and the day\'s challenges', () => {
@@ -165,12 +443,12 @@ describe('HomeScreen', () => {
     expect(openHistory('reading', 'Past reads')).toContain('0:31');
   });
 
-  it('shows the puzzle map on the logic tab', () => {
+  it('shows the puzzle map and free practice on the logic tab', () => {
     const text = textOf(render(<HomeScreen {...homeProps('logic')} />));
     expect(text).toContain('🧩 Boring Quest');
     expect(text).toContain(LIB.puzzleSets(1)[0].title);
     expect(text).toContain('puzzles get trickier as you go');
-    expect(text).not.toContain('Free practice');
+    expect(text).toContain('Free practice');
   });
 });
 
@@ -544,6 +822,10 @@ describe('CorrectionScreen', () => {
 
 /** Everything SettingsScreen needs, with the grades a fresh install has. */
 const settingsProps = () => ({
+  profiles: emptyProfiles(),
+  onAddProfile: () => {},
+  onRenameProfile: () => {},
+  onRemoveProfile: () => {},
   settings: DEFAULT_SETTINGS,
   onChange: () => {},
   grades: { math: 1 as const, reading: 1 as const, logic: 1 as const },
@@ -618,6 +900,7 @@ describe('ResultsScreen', () => {
           records={records}
           elapsedMs={62_000}
           tierChange={null}
+          adaptiveEvents={[]}
           afterCorrection={false}
           subject="math"
           stop={LIB.lessons(1)[0]}

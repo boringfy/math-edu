@@ -5,7 +5,7 @@
  * by the backend and re-exported here, so the several dozen files that say
  * `from '../types'` carry on working unchanged. The originals live in
  * `src/content/contract/`, which is a generated copy of the backend's; edit
- * it there and run `npm run sync:contract`.
+ * it there and run `npm run sync:shared`.
  *
  * Everything below the re-export is the app's own: progress, coins, history
  * and settings. None of it goes over the wire, and none of it belongs to the
@@ -13,6 +13,7 @@
  */
 
 export type {
+  AdaptiveRules,
   AnswerFormat,
   AnswerMode,
   CakeCutTask,

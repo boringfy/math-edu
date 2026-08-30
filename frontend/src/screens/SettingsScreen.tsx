@@ -6,13 +6,22 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { ContentStatus, UpdateOutcome, checkNow, contentStatus } from '../content';
+import { Identity, loadIdentity, syncAvailable } from '../lib/identity';
+import { SyncMeta, loadSyncMeta, pushNow } from '../lib/sync';
+import { ProfileStore, canAddProfile } from '../lib/profiles';
 import { colors } from '../theme';
 import { Grade, Settings, Subject } from '../types';
 
 interface Props {
+  /** Who is on this tablet, and what a grown-up may do about it. */
+  profiles: ProfileStore;
+  onAddProfile: (name: string) => void;
+  onRenameProfile: (id: string, name: string) => void;
+  onRemoveProfile: (id: string) => void;
   settings: Settings;
   onChange: (settings: Settings) => void;
   /** One grade per subject, so reading and arithmetic can differ. */
@@ -149,6 +158,10 @@ function Fact({ label, value }: { label: string; value: string }) {
  * saved as it is made, so there is nothing to confirm on the way out.
  */
 export default function SettingsScreen({
+  profiles,
+  onAddProfile,
+  onRenameProfile,
+  onRemoveProfile,
   settings,
   onChange,
   grades,
@@ -158,10 +171,35 @@ export default function SettingsScreen({
   const [status, setStatus] = useState<ContentStatus>(contentStatus);
   const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [syncMeta, setSyncMeta] = useState<SyncMeta | null>(null);
+  const [identity, setIdentity] = useState<Identity | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  /** Names being typed, so a half-typed name is not saved on every keystroke. */
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [newName, setNewName] = useState('');
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Read from disk on the way in, so opening this page shows what is there
   // now rather than what was there when the app started.
   useEffect(() => setStatus(contentStatus()), []);
+  useEffect(() => {
+    void loadSyncMeta().then(setSyncMeta);
+    void loadIdentity().then(setIdentity);
+  }, []);
+
+  const syncNow = useCallback(async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const ok = await pushNow();
+      setSyncMessage(ok ? 'Backed up.' : 'Could not reach the sync server — will retry later.');
+    } finally {
+      setSyncMeta(await loadSyncMeta());
+      setIdentity(await loadIdentity());
+      setSyncing(false);
+    }
+  }, []);
 
   const check = useCallback(async () => {
     setChecking(true);
@@ -190,7 +228,95 @@ export default function SettingsScreen({
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <Text style={styles.section}>Grade</Text>
+        <Text style={styles.section}>Players</Text>
+        <View style={styles.panel}>
+          {profiles.profiles.map((profile) => (
+            <View key={profile.id} style={styles.playerRow}>
+              <Text style={styles.playerAvatar}>{profile.avatar}</Text>
+              <TextInput
+                style={styles.playerName}
+                value={draft[profile.id] ?? profile.name}
+                accessibilityLabel={`Name for ${profile.name}`}
+                maxLength={12}
+                onChangeText={(text) => setDraft({ ...draft, [profile.id]: text })}
+                onEndEditing={() => onRenameProfile(profile.id, draft[profile.id] ?? profile.name)}
+              />
+              {profile.id === profiles.activeId && <Text style={styles.playing}>playing</Text>}
+              {/*
+                Removing a child throws away everything they earned, so it
+                asks — and the last one cannot go at all, or the next launch
+                would open on a stranger.
+              */}
+              {profiles.profiles.length > 1 && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${profile.name}`}
+                  onPress={() => setConfirming(profile.id)}
+                >
+                  <Text style={styles.remove}>{confirming === profile.id ? '' : '✕'}</Text>
+                </Pressable>
+              )}
+              {confirming === profile.id && (
+                <View style={styles.confirm}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete ${profile.name} and everything they earned`}
+                    onPress={() => {
+                      setConfirming(null);
+                      onRemoveProfile(profile.id);
+                    }}
+                  >
+                    <Text style={styles.confirmYes}>Delete</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Keep them"
+                    onPress={() => setConfirming(null)}
+                  >
+                    <Text style={styles.confirmNo}>Keep</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          ))}
+
+          {canAddProfile(profiles) && (
+            <View style={styles.playerRow}>
+              <Text style={styles.playerAvatar}>＋</Text>
+              <TextInput
+                style={styles.playerName}
+                value={newName}
+                placeholder="Add someone"
+                accessibilityLabel="Name for a new player"
+                maxLength={12}
+                onChangeText={setNewName}
+                onSubmitEditing={() => {
+                  if (newName.trim() === '') return;
+                  onAddProfile(newName);
+                  setNewName('');
+                }}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add this player"
+                disabled={newName.trim() === ''}
+                onPress={() => {
+                  if (newName.trim() === '') return;
+                  onAddProfile(newName);
+                  setNewName('');
+                }}
+              >
+                <Text style={[styles.addKid, newName.trim() === '' && styles.addKidOff]}>Add</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+        <Text style={styles.note}>
+          Everyone has their own stars, coins and lessons. Tap the face at the top of a map
+          to swap who is playing.
+        </Text>
+
+        <Text style={[styles.section, styles.sectionSpaced]}>Grade</Text>
         <View style={styles.panel}>
           {SUBJECT_ROWS.map(({ subject, label, icon }) => (
             <GradeRow
@@ -274,6 +400,48 @@ export default function SettingsScreen({
           time the app is opened. Nothing here is needed for the app to work — it will
           keep going on what it already has.
         </Text>
+
+        <Text style={[styles.section, styles.sectionSpaced]}>Backup &amp; sync</Text>
+        <View style={styles.panel}>
+          {!syncAvailable() ? (
+            <Fact label="Backup" value="off — no sync server is set for this build" />
+          ) : (
+            <>
+              <Fact
+                label="Progress backed up"
+                value={syncMeta?.lastSyncedAt ? ago(syncMeta.lastSyncedAt) : 'not yet'}
+              />
+              <Fact
+                label="Account"
+                value={
+                  identity?.provider === 'google'
+                    ? 'linked with Google'
+                    : identity
+                      ? 'this device only'
+                      : 'created on first backup'
+                }
+              />
+              <Pressable
+                style={[styles.button, syncing && styles.buttonOff]}
+                accessibilityRole="button"
+                accessibilityLabel="Back up now"
+                disabled={syncing}
+                onPress={() => void syncNow()}
+              >
+                {syncing ? (
+                  <ActivityIndicator color={colors.card} />
+                ) : (
+                  <Text style={styles.buttonText}>Back up now</Text>
+                )}
+              </Pressable>
+              {syncMessage !== null && <Text style={styles.message}>{syncMessage}</Text>}
+            </>
+          )}
+        </View>
+        <Text style={styles.note}>
+          Progress backs up on its own after each round. Linking a Google account (coming
+          with the next update) will carry it to a new device.
+        </Text>
       </ScrollView>
     </View>
   );
@@ -343,6 +511,28 @@ const styles = StyleSheet.create({
   gradePillOn: { borderColor: colors.primary, backgroundColor: colors.primary },
   gradePillText: { fontSize: 17, fontWeight: '800', color: colors.textMuted },
   gradePillTextOn: { color: colors.card },
+  playerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  playerAvatar: { fontSize: 26, width: 34, textAlign: 'center' },
+  playerName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    paddingVertical: 4,
+  },
+  playing: { fontSize: 12, fontWeight: '700', color: colors.primary },
+  remove: { fontSize: 18, color: colors.textMuted, paddingHorizontal: 6 },
+  confirm: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  confirmYes: { fontSize: 14, fontWeight: '800', color: colors.wrong ?? '#d92d20' },
+  confirmNo: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
+  addKid: { fontSize: 15, fontWeight: '800', color: colors.primary, paddingHorizontal: 6 },
+  addKidOff: { color: colors.textMuted, opacity: 0.5 },
   panel: {
     backgroundColor: colors.card,
     borderRadius: 16,

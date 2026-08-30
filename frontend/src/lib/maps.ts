@@ -31,6 +31,22 @@ export const currentOf = <T extends MapStop>(stops: T[], progress: ProgressMap):
 export const starsEarned = (stops: MapStop[], progress: ProgressMap): number =>
   starsOnMap(stops, progress);
 
+/** Labels for the pools a maths lesson draws on. */
+export const TOPIC_LABEL: Record<string, string> = {
+  addSub: '+ −',
+  mulDiv: '× ÷',
+  fractions: 'fractions',
+  decimals: 'decimals',
+  order: 'order of ops',
+  word: 'stories',
+  geometry: 'geometry',
+  measurement: 'measuring',
+  money: 'money',
+  speed: 'speed',
+  time: 'clocks',
+  place: 'place value',
+};
+
 /** Labels for the reasoning families a logic stop draws on. */
 export const FAMILY_LABEL: Record<string, string> = {
   sequence: 'numbers',

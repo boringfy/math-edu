@@ -80,11 +80,13 @@ export const isDrawingCorrect = (question: Question, pieces: number): boolean =>
   question.cakeTask !== undefined && pieces === question.cakeTask.pieces;
 
 /**
- * Adaptive difficulty: too many mistakes (accuracy < 50%) steps the tier
- * down; near-perfect (>= 90%) steps it up.
+ * Whole-round difficulty: too many mistakes steps the tier down and a
+ * near-perfect round steps it up. The fallback path when there is no
+ * per-topic state to go on (see `lib/adaptive.ts`); the thresholds come from
+ * the rules pack's `adaptive.roundDown`/`roundUp` when one is loaded.
  */
-export function adjustTier(tier: Tier, accuracy: number): Tier {
-  if (accuracy < 0.5) return Math.max(1, tier - 1) as Tier;
-  if (accuracy >= 0.9) return Math.min(3, tier + 1) as Tier;
+export function adjustTier(tier: Tier, accuracy: number, down = 0.5, up = 0.9): Tier {
+  if (accuracy < down) return Math.max(1, tier - 1) as Tier;
+  if (accuracy >= up) return Math.min(3, tier + 1) as Tier;
   return tier;
 }

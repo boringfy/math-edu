@@ -1,6 +1,8 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PuzzleTile from '../components/PuzzleTile';
+import { AdaptiveEvent } from '../lib/adaptive';
 import { formatElapsed } from '../lib/format';
+import { FAMILY_LABEL, TOPIC_LABEL } from '../lib/maps';
 import { ChallengeDef } from '../lib/progress';
 import { colors } from '../theme';
 import { AnswerRecord, CoinAward, MapStop, Stars, Subject } from '../types';
@@ -17,6 +19,8 @@ interface Props {
   elapsedMs: number;
   /** 'down' when too many mistakes lowered the difficulty for next time. */
   tierChange: 'up' | 'down' | null;
+  /** What this round unlocked or re-tuned, each celebrated as a banner. */
+  adaptiveEvents: AdaptiveEvent[];
   afterCorrection: boolean;
   subject: Subject;
   /** null for free practice, which sits outside the map. */
@@ -35,6 +39,7 @@ export default function ResultsScreen({
   records,
   elapsedMs,
   tierChange,
+  adaptiveEvents,
   afterCorrection,
   subject,
   stop,
@@ -140,6 +145,33 @@ export default function ResultsScreen({
           </Text>
         </View>
       )}
+
+      {adaptiveEvents.map((event) => {
+        const labels = subject === 'logic' ? FAMILY_LABEL : TOPIC_LABEL;
+        const name = labels[event.topic] ?? event.topic;
+        if (event.kind === 'unlock') {
+          return (
+            <View key={`unlock-${event.topic}`} style={[styles.banner, styles.bannerUp]}>
+              <Text style={styles.bannerUpText}>
+                🔓 New question type unlocked — {name}! It joins your next practice.
+              </Text>
+            </View>
+          );
+        }
+        return event.direction === 'up' ? (
+          <View key={`tier-${event.topic}`} style={[styles.banner, styles.bannerUp]}>
+            <Text style={styles.bannerUpText}>
+              {name} questions just got harder — nice work! 💪
+            </Text>
+          </View>
+        ) : (
+          <View key={`tier-${event.topic}`} style={[styles.banner, styles.bannerDown]}>
+            <Text style={styles.bannerDownText}>
+              We'll make {name} questions a bit easier for now.
+            </Text>
+          </View>
+        );
+      })}
 
       {records.map((r, i) => {
         const isSkipped = !r.correct && r.skipped;

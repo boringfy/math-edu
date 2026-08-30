@@ -20,6 +20,7 @@ import { PackId } from './contract';
 import { Slot, activeSlot, promoteIfReady, readIndex, readPack, updateWaiting } from './cache';
 import { Library } from './library';
 import { SEED_PACKS } from './seed';
+import { runEngineSelfCheck } from './selfCheck';
 import { UpdateOutcome, UpdaterConfig, checkForUpdate } from './updater';
 
 export * from './library';
@@ -66,6 +67,10 @@ export interface Boot {
  * and a Library that has not opened a single pack yet.
  */
 export function boot(): Boot {
+  // Cheap, dev-only, and the only place the question generators are ever
+  // exercised on Hermes rather than on V8.
+  runEngineSelfCheck();
+
   let promoted = false;
   let error: string | null = null;
   let slot: Slot;

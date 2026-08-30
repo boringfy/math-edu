@@ -27,3 +27,9 @@ services:
       # and the app hides its help button.
       - path: backend/.env
         required: false
+    environment:
+      # Where the sync database lives inside the container; ./data on the
+      # host, so `docker compose down` never takes anyone's progress with it.
+      SYNC_DB_PATH: /app/backend/data/sync.db
+    volumes:
+      - ./data:/app/backend/data

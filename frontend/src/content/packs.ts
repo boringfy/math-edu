@@ -13,6 +13,7 @@
  */
 
 import {
+  AdaptiveRules,
   ChallengeDef,
   KNOWN_ANSWER_MODES,
   KNOWN_TILE_TYPES,
@@ -23,6 +24,8 @@ import {
   Rules,
   SCHEMA_VERSION,
   Story,
+  Subject,
+  SUBJECTS,
   Tile,
   VisualPuzzle,
 } from './contract';
@@ -152,6 +155,51 @@ function cleanPools(v: unknown): { pools: Record<string, Question[]>; dropped: n
 }
 
 /**
+ * The adaptive-practice numbers, or undefined when the pack predates them or
+ * ships something this build cannot read. Absence is not an error — the app
+ * falls back to its compiled-in copy — so unlike the fields below, a bad
+ * `adaptive` never rejects the pack.
+ */
+function validAdaptive(v: unknown): AdaptiveRules | undefined {
+  if (!isObject(v)) return undefined;
+  const up = v.topicUp;
+  const down = v.topicDown;
+  const starters = v.starterCount;
+  const order = v.unlockOrder;
+  if (
+    !isNumber(v.strongRound) ||
+    !isNumber(v.unlockAfter) ||
+    typeof v.perfectUnlocks !== 'boolean' ||
+    !isNumber(v.topicWindow) ||
+    v.topicWindow < 1 ||
+    !isObject(up) ||
+    !isNumber(up.minAttempts) ||
+    !isNumber(up.accuracy) ||
+    !isObject(down) ||
+    !isNumber(down.minAttempts) ||
+    !isNumber(down.accuracy) ||
+    !isNumber(down.wrongStreak) ||
+    !isNumber(v.roundUp) ||
+    !isNumber(v.roundDown) ||
+    !isNumber(v.newTopicWeight) ||
+    !isNumber(v.weakTopicWeight) ||
+    !isObject(starters) ||
+    !isNumber(starters.math) ||
+    !isNumber(starters.logic) ||
+    !isObject(order) ||
+    !Array.isArray(order.math) ||
+    !order.math.every(isString) ||
+    order.math.length === 0 ||
+    !Array.isArray(order.logic) ||
+    !order.logic.every(isString) ||
+    order.logic.length === 0
+  ) {
+    return undefined;
+  }
+  return v as unknown as AdaptiveRules;
+}
+
+/**
  * Reward numbers arrive as content, so they get the same suspicion as
  * questions do: a malformed rules pack means the app keeps the values it was
  * compiled with rather than paying out NaN coins.
@@ -213,6 +261,16 @@ function validRules(v: unknown): Rules | null {
     challengeBuckets: buckets,
     entryShare: share as unknown as Rules['entryShare'],
     starThresholds: stars as unknown as Rules['starThresholds'],
+    // Absent on packs baked before lessons had to be bought, and a nonsense
+    // value would either give the game away or make it unplayable — so
+    // anything but a sane positive number falls back to the compiled-in one.
+    unlockCost: isNumber(v.unlockCost) && v.unlockCost >= 0 ? v.unlockCost : undefined,
+    // Anything but a list of subjects this app knows falls back, so a typo
+    // cannot accidentally put a price on every map — or take it off one.
+    paidSubjects: Array.isArray(v.paidSubjects)
+      ? (v.paidSubjects.filter((s): s is Subject => SUBJECTS.includes(s as Subject)) as Subject[])
+      : undefined,
+    adaptive: validAdaptive(v.adaptive),
   };
 }
 

@@ -1,23 +1,29 @@
-const { withAndroidManifest, withDangerousMod, AndroidConfig } = require('@expo/config-plugins');
+const {
+  withAndroidManifest,
+  withDangerousMod,
+  withInfoPlist,
+  AndroidConfig,
+} = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
 /**
- * Lets the app reach a content server over plain HTTP.
+ * Lets the app reach a content server over plain HTTP, on both platforms.
  *
  * Android has blocked cleartext HTTP by default since Android 9. The debug
  * manifest turns it back on so Metro works, but release builds do not get
  * that — so a release build pointed at `http://192.168.x.x:8787` would fail
  * every update check silently, look exactly like a server being down, and
- * quietly run on bundled content for ever.
+ * quietly run on bundled content for ever. iOS blocks the same traffic
+ * through App Transport Security, with the same silent symptom.
  *
  * Rather than turning cleartext on for everything, this permits it for
  * exactly the host EXPO_PUBLIC_CONTENT_URL names, and only when that URL is
  * http. Point the app at an https server, or at nothing, and the app is
  * built with no cleartext permission at all.
  *
- * android/ is a generated folder, so this runs at prebuild rather than being
- * a hand-edit the next prebuild would undo.
+ * android/ and ios/ are generated folders, so this runs at prebuild rather
+ * than being a hand-edit the next prebuild would undo.
  */
 
 const CONFIG_NAME = 'content_cleartext';
@@ -39,9 +45,35 @@ function cleartextHost() {
   return parsed.hostname;
 }
 
+/** True when the host is an IP literal rather than a name. */
+const isIpAddress = (host) => /^[0-9.]+$/.test(host) || host.includes(':');
+
 module.exports = function withContentCleartext(config) {
   const host = cleartextHost();
   if (!host) return config;
+
+  // iOS: an App Transport Security exception. ATS exceptions are keyed by
+  // domain name, so a named host gets a scoped one; an IP address (the usual
+  // home-network case) cannot be scoped and falls back to allowing local
+  // networking plus arbitrary loads — the same trade the Android debug build
+  // makes, taken knowingly and only when the URL is plain http.
+  config = withInfoPlist(config, (config) => {
+    const ats = { ...(config.modResults.NSAppTransportSecurity ?? {}) };
+    if (isIpAddress(host)) {
+      ats.NSAllowsArbitraryLoads = true;
+      ats.NSAllowsLocalNetworking = true;
+    } else {
+      ats.NSExceptionDomains = {
+        ...(ats.NSExceptionDomains ?? {}),
+        [host]: {
+          NSExceptionAllowsInsecureHTTPLoads: true,
+          NSIncludesSubdomains: false,
+        },
+      };
+    }
+    config.modResults.NSAppTransportSecurity = ats;
+    return config;
+  });
 
   // The rule itself, as an Android network security config resource.
   config = withDangerousMod(config, [
