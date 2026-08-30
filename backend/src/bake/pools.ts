@@ -26,8 +26,8 @@ import {
 } from '../contract';
 import { AVAILABLE, GENERATORS } from '../content/puzzles';
 import { cakeCutQuestion } from '../generators/drawPuzzles';
-import { lessonPools } from '../generators/questions';
-import { seed } from '../generators/rng';
+import { lessonPools } from '../content/lessonPools';
+import { ambient, seed } from '../generators/rng';
 import { BAKE_SEED, POOL_SIZE } from './config';
 
 /**
@@ -92,7 +92,7 @@ export function mathPools(grade: Grade): Record<PoolKey, Question[]> {
     const drawKey = drawPoolKey(tier);
     pools[drawKey] = fill(
       `math.g${grade}:${drawKey}`,
-      [() => cakeCutQuestion(tier)],
+      [() => cakeCutQuestion(tier, ambient)],
       POOL_SIZE.draw,
     );
   }
@@ -109,7 +109,7 @@ export function logicPools(grade: Grade): Record<PoolKey, Question[]> {
       const key = logicPoolKey(family, tier);
       const filled = fill(
         `logic.g${grade}:${key}`,
-        [() => GENERATORS[family](tier)],
+        [() => GENERATORS[family](tier, ambient)],
         POOL_SIZE.logic,
       );
       if (filled.length > 0) pools[key] = filled;

@@ -1,0 +1,2977 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`what each difficulty asks for > addition 1`] = `
+{
+  "dRange": [
+    1,
+    23,
+  ],
+  "settings": {
+    "d01": "{"maxSum":10}",
+    "d02": "{"maxSum":20}",
+    "d03": "{"maxSum":20}",
+    "d04": "{"maxSum":50}",
+    "d05": "{"maxSum":100}",
+    "d06": "{"maxSum":200}",
+    "d07": "{"maxSum":300}",
+    "d08": "{"maxSum":1000}",
+    "d09": "{"maxSum":1000}",
+    "d10": "{"maxSum":2000}",
+    "d11": "{"maxSum":2000}",
+    "d12": "{"maxSum":9999}",
+    "d13": "{"maxSum":9999}",
+    "d14": "{"maxSum":9999}",
+    "d15": "{"maxSum":9999}",
+    "d16": "{"maxSum":99999}",
+    "d17": "{"maxSum":99999}",
+    "d18": "{"maxSum":99999}",
+    "d19": "{"maxSum":999999}",
+    "d20": "{"maxSum":999999}",
+  },
+  "skill": "addSub",
+}
+`;
+
+exports[`what each difficulty asks for > analogy 1`] = `
+{
+  "dRange": [
+    4,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "—",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "analogy",
+}
+`;
+
+exports[`what each difficulty asks for > averageProblem 1`] = `
+{
+  "dRange": [
+    13,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > balanceScale 1`] = `
+{
+  "dRange": [
+    7,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "{"tier":1}",
+    "d08": "{"tier":1}",
+    "d09": "{"tier":1}",
+    "d10": "{"tier":2}",
+    "d11": "{"tier":2}",
+    "d12": "{"tier":2}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "balance",
+}
+`;
+
+exports[`what each difficulty asks for > busesProblem 1`] = `
+{
+  "dRange": [
+    10,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > cakeCut 1`] = `
+{
+  "dRange": [
+    1,
+    12,
+  ],
+  "settings": {
+    "d01": "{"tier":1}",
+    "d02": "{"tier":1}",
+    "d03": "{"tier":1}",
+    "d04": "{"tier":1}",
+    "d05": "{"tier":1}",
+    "d06": "{"tier":1}",
+    "d07": "{"tier":2}",
+    "d08": "{"tier":2}",
+    "d09": "{"tier":2}",
+    "d10": "{"tier":2}",
+    "d11": "{"tier":2}",
+    "d12": "{"tier":3}",
+    "d13": "(outside) {"tier":3}",
+    "d14": "(outside) {"tier":3}",
+    "d15": "(outside) {"tier":3}",
+    "d16": "(outside) {"tier":3}",
+    "d17": "(outside) {"tier":3}",
+    "d18": "(outside) {"tier":3}",
+    "d19": "(outside) {"tier":3}",
+    "d20": "(outside) {"tier":3}",
+  },
+  "skill": "draw",
+}
+`;
+
+exports[`what each difficulty asks for > changeInCents 1`] = `
+{
+  "dRange": [
+    4,
+    10,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxPrice":30}",
+    "d02": "(outside) {"maxPrice":30}",
+    "d03": "(outside) {"maxPrice":30}",
+    "d04": "{"maxPrice":30}",
+    "d05": "{"maxPrice":45}",
+    "d06": "{"maxPrice":45}",
+    "d07": "{"maxPrice":90}",
+    "d08": "{"maxPrice":90}",
+    "d09": "{"maxPrice":90}",
+    "d10": "{"maxPrice":99}",
+    "d11": "(outside) {"maxPrice":99}",
+    "d12": "(outside) {"maxPrice":99}",
+    "d13": "(outside) {"maxPrice":99}",
+    "d14": "(outside) {"maxPrice":99}",
+    "d15": "(outside) {"maxPrice":99}",
+    "d16": "(outside) {"maxPrice":99}",
+    "d17": "(outside) {"maxPrice":99}",
+    "d18": "(outside) {"maxPrice":99}",
+    "d19": "(outside) {"maxPrice":99}",
+    "d20": "(outside) {"maxPrice":99}",
+  },
+  "skill": "money",
+}
+`;
+
+exports[`what each difficulty asks for > changeProblem 1`] = `
+{
+  "dRange": [
+    10,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d02": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d03": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d04": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d05": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d06": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d07": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d08": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d09": "(outside) {"maxPrice":5,"maxCount":4}",
+    "d10": "{"maxPrice":5,"maxCount":4}",
+    "d11": "{"maxPrice":12,"maxCount":8}",
+    "d12": "{"maxPrice":12,"maxCount":8}",
+    "d13": "{"maxPrice":12,"maxCount":8}",
+    "d14": "{"maxPrice":20,"maxCount":9}",
+    "d15": "{"maxPrice":20,"maxCount":9}",
+    "d16": "{"maxPrice":20,"maxCount":9}",
+    "d17": "{"maxPrice":20,"maxCount":9}",
+    "d18": "{"maxPrice":20,"maxCount":9}",
+    "d19": "{"maxPrice":20,"maxCount":9}",
+    "d20": "{"maxPrice":20,"maxCount":9}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > circleDiameter 1`] = `
+{
+  "dRange": [
+    13,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > coinTotal 1`] = `
+{
+  "dRange": [
+    4,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) {"kinds":2}",
+    "d02": "(outside) {"kinds":2}",
+    "d03": "(outside) {"kinds":2}",
+    "d04": "{"kinds":2}",
+    "d05": "{"kinds":2}",
+    "d06": "{"kinds":2}",
+    "d07": "{"kinds":2}",
+    "d08": "{"kinds":2}",
+    "d09": "{"kinds":2}",
+    "d10": "{"kinds":3}",
+    "d11": "{"kinds":3}",
+    "d12": "{"kinds":3}",
+    "d13": "{"kinds":3}",
+    "d14": "{"kinds":3}",
+    "d15": "{"kinds":3}",
+    "d16": "{"kinds":4}",
+    "d17": "(outside) {"kinds":4}",
+    "d18": "(outside) {"kinds":4}",
+    "d19": "(outside) {"kinds":4}",
+    "d20": "(outside) {"kinds":4}",
+  },
+  "skill": "money",
+}
+`;
+
+exports[`what each difficulty asks for > coinsProblem 1`] = `
+{
+  "dRange": [
+    7,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxPrice":9,"maxCount":5}",
+    "d02": "(outside) {"maxPrice":9,"maxCount":5}",
+    "d03": "(outside) {"maxPrice":9,"maxCount":5}",
+    "d04": "(outside) {"maxPrice":9,"maxCount":5}",
+    "d05": "(outside) {"maxPrice":9,"maxCount":5}",
+    "d06": "(outside) {"maxPrice":9,"maxCount":5}",
+    "d07": "{"maxPrice":9,"maxCount":5}",
+    "d08": "{"maxPrice":25,"maxCount":10}",
+    "d09": "{"maxPrice":25,"maxCount":12}",
+    "d10": "{"maxPrice":25,"maxCount":12}",
+    "d11": "{"maxPrice":25,"maxCount":12}",
+    "d12": "{"maxPrice":50,"maxCount":12}",
+    "d13": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d14": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d15": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d16": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d17": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d18": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d19": "(outside) {"maxPrice":50,"maxCount":12}",
+    "d20": "(outside) {"maxPrice":50,"maxCount":12}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > containerTotal 1`] = `
+{
+  "dRange": [
+    10,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > cornersOfShape 1`] = `
+{
+  "dRange": [
+    1,
+    5,
+  ],
+  "settings": {
+    "d01": "—",
+    "d02": "—",
+    "d03": "—",
+    "d04": "—",
+    "d05": "—",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > cuboidVolume 1`] = `
+{
+  "dRange": [
+    10,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxEdge":5}",
+    "d02": "(outside) {"maxEdge":5}",
+    "d03": "(outside) {"maxEdge":5}",
+    "d04": "(outside) {"maxEdge":5}",
+    "d05": "(outside) {"maxEdge":5}",
+    "d06": "(outside) {"maxEdge":5}",
+    "d07": "(outside) {"maxEdge":5}",
+    "d08": "(outside) {"maxEdge":5}",
+    "d09": "(outside) {"maxEdge":5}",
+    "d10": "{"maxEdge":5}",
+    "d11": "{"maxEdge":9}",
+    "d12": "{"maxEdge":9}",
+    "d13": "{"maxEdge":12}",
+    "d14": "{"maxEdge":12}",
+    "d15": "{"maxEdge":12}",
+    "d16": "{"maxEdge":20}",
+    "d17": "(outside) {"maxEdge":20}",
+    "d18": "(outside) {"maxEdge":20}",
+    "d19": "(outside) {"maxEdge":20}",
+    "d20": "(outside) {"maxEdge":20}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > decimalAddSub 1`] = `
+{
+  "dRange": [
+    13,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"decimals":1}",
+    "d02": "(outside) {"decimals":1}",
+    "d03": "(outside) {"decimals":1}",
+    "d04": "(outside) {"decimals":1}",
+    "d05": "(outside) {"decimals":1}",
+    "d06": "(outside) {"decimals":1}",
+    "d07": "(outside) {"decimals":1}",
+    "d08": "(outside) {"decimals":1}",
+    "d09": "(outside) {"decimals":1}",
+    "d10": "(outside) {"decimals":1}",
+    "d11": "(outside) {"decimals":1}",
+    "d12": "(outside) {"decimals":1}",
+    "d13": "{"decimals":1}",
+    "d14": "{"decimals":2}",
+    "d15": "{"decimals":2}",
+    "d16": "{"decimals":2}",
+    "d17": "{"decimals":3}",
+    "d18": "{"decimals":3}",
+    "d19": "{"decimals":3}",
+    "d20": "{"decimals":3}",
+  },
+  "skill": "decimals",
+}
+`;
+
+exports[`what each difficulty asks for > decimalMultiplication 1`] = `
+{
+  "dRange": [
+    13,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "decimals",
+}
+`;
+
+exports[`what each difficulty asks for > digitPlace 1`] = `
+{
+  "dRange": [
+    4,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"length":2}",
+    "d02": "(outside) {"length":2}",
+    "d03": "(outside) {"length":2}",
+    "d04": "{"length":2}",
+    "d05": "{"length":3}",
+    "d06": "{"length":3}",
+    "d07": "{"length":3}",
+    "d08": "{"length":4}",
+    "d09": "{"length":4}",
+    "d10": "{"length":4}",
+    "d11": "{"length":4}",
+    "d12": "{"length":5}",
+    "d13": "(outside) {"length":5}",
+    "d14": "(outside) {"length":5}",
+    "d15": "(outside) {"length":5}",
+    "d16": "(outside) {"length":5}",
+    "d17": "(outside) {"length":5}",
+    "d18": "(outside) {"length":5}",
+    "d19": "(outside) {"length":5}",
+    "d20": "(outside) {"length":5}",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > distanceFromSpeedTime 1`] = `
+{
+  "dRange": [
+    10,
+    17,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d02": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d03": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d04": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d05": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d06": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d07": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d08": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d09": "(outside) {"maxSpeed":90,"maxHours":6}",
+    "d10": "{"maxSpeed":90,"maxHours":6}",
+    "d11": "{"maxSpeed":90,"maxHours":6}",
+    "d12": "{"maxSpeed":90,"maxHours":6}",
+    "d13": "{"maxSpeed":120,"maxHours":9}",
+    "d14": "{"maxSpeed":120,"maxHours":9}",
+    "d15": "{"maxSpeed":120,"maxHours":9}",
+    "d16": "{"maxSpeed":120,"maxHours":9}",
+    "d17": "{"maxSpeed":200,"maxHours":12}",
+    "d18": "(outside) {"maxSpeed":200,"maxHours":12}",
+    "d19": "(outside) {"maxSpeed":200,"maxHours":12}",
+    "d20": "(outside) {"maxSpeed":200,"maxHours":12}",
+  },
+  "skill": "speed",
+}
+`;
+
+exports[`what each difficulty asks for > division 1`] = `
+{
+  "dRange": [
+    7,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d02": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d03": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d04": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d05": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d06": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d07": "{"divisorMax":5,"quotientMax":5}",
+    "d08": "{"divisorMax":10,"quotientMax":10}",
+    "d09": "{"divisorMax":12,"quotientMax":12}",
+    "d10": "{"divisorMax":9,"quotientMax":20}",
+    "d11": "{"divisorMax":9,"quotientMax":99}",
+    "d12": "{"divisorMax":9,"quotientMax":99}",
+    "d13": "{"divisorMax":12,"quotientMax":99}",
+    "d14": "{"divisorMax":12,"quotientMax":99}",
+    "d15": "{"divisorMax":12,"quotientMax":99}",
+    "d16": "{"divisorMax":20,"quotientMax":199}",
+    "d17": "{"divisorMax":20,"quotientMax":199}",
+    "d18": "{"divisorMax":20,"quotientMax":199}",
+    "d19": "{"divisorMax":20,"quotientMax":199}",
+    "d20": "{"divisorMax":50,"quotientMax":999}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > dotArray 1`] = `
+{
+  "dRange": [
+    4,
+    6,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxRows":4,"maxColumns":5}",
+    "d02": "(outside) {"maxRows":4,"maxColumns":5}",
+    "d03": "(outside) {"maxRows":4,"maxColumns":5}",
+    "d04": "{"maxRows":4,"maxColumns":5}",
+    "d05": "{"maxRows":5,"maxColumns":6}",
+    "d06": "{"maxRows":6,"maxColumns":8}",
+    "d07": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d08": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d09": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d10": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d11": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d12": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d13": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d14": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d15": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d16": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d17": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d18": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d19": "(outside) {"maxRows":6,"maxColumns":8}",
+    "d20": "(outside) {"maxRows":6,"maxColumns":8}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > doubleOrHalf 1`] = `
+{
+  "dRange": [
+    4,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"max":20}",
+    "d02": "(outside) {"max":20}",
+    "d03": "(outside) {"max":20}",
+    "d04": "{"max":20}",
+    "d05": "{"max":50}",
+    "d06": "{"max":50}",
+    "d07": "{"max":100}",
+    "d08": "{"max":100}",
+    "d09": "{"max":500}",
+    "d10": "{"max":500}",
+    "d11": "{"max":500}",
+    "d12": "{"max":500}",
+    "d13": "{"max":2000}",
+    "d14": "(outside) {"max":2000}",
+    "d15": "(outside) {"max":2000}",
+    "d16": "(outside) {"max":2000}",
+    "d17": "(outside) {"max":2000}",
+    "d18": "(outside) {"max":2000}",
+    "d19": "(outside) {"max":2000}",
+    "d20": "(outside) {"max":2000}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > elapsedMinutes 1`] = `
+{
+  "dRange": [
+    5,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSpan":30}",
+    "d02": "(outside) {"maxSpan":30}",
+    "d03": "(outside) {"maxSpan":30}",
+    "d04": "(outside) {"maxSpan":30}",
+    "d05": "{"maxSpan":30}",
+    "d06": "{"maxSpan":55}",
+    "d07": "{"maxSpan":55}",
+    "d08": "{"maxSpan":55}",
+    "d09": "{"maxSpan":115}",
+    "d10": "{"maxSpan":115}",
+    "d11": "{"maxSpan":115}",
+    "d12": "{"maxSpan":115}",
+    "d13": "{"maxSpan":235}",
+    "d14": "(outside) {"maxSpan":235}",
+    "d15": "(outside) {"maxSpan":235}",
+    "d16": "(outside) {"maxSpan":235}",
+    "d17": "(outside) {"maxSpan":235}",
+    "d18": "(outside) {"maxSpan":235}",
+    "d19": "(outside) {"maxSpan":235}",
+    "d20": "(outside) {"maxSpan":235}",
+  },
+  "skill": "time",
+}
+`;
+
+exports[`what each difficulty asks for > evenOrOdd 1`] = `
+{
+  "dRange": [
+    4,
+    6,
+  ],
+  "settings": {
+    "d01": "(outside) {"max":40}",
+    "d02": "(outside) {"max":40}",
+    "d03": "(outside) {"max":40}",
+    "d04": "{"max":40}",
+    "d05": "{"max":99}",
+    "d06": "{"max":999}",
+    "d07": "(outside) {"max":999}",
+    "d08": "(outside) {"max":999}",
+    "d09": "(outside) {"max":999}",
+    "d10": "(outside) {"max":999}",
+    "d11": "(outside) {"max":999}",
+    "d12": "(outside) {"max":999}",
+    "d13": "(outside) {"max":999}",
+    "d14": "(outside) {"max":999}",
+    "d15": "(outside) {"max":999}",
+    "d16": "(outside) {"max":999}",
+    "d17": "(outside) {"max":999}",
+    "d18": "(outside) {"max":999}",
+    "d19": "(outside) {"max":999}",
+    "d20": "(outside) {"max":999}",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > expandedForm 1`] = `
+{
+  "dRange": [
+    5,
+    11,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "—",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > fewestCoins 1`] = `
+{
+  "dRange": [
+    10,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxAmount":40}",
+    "d02": "(outside) {"maxAmount":40}",
+    "d03": "(outside) {"maxAmount":40}",
+    "d04": "(outside) {"maxAmount":40}",
+    "d05": "(outside) {"maxAmount":40}",
+    "d06": "(outside) {"maxAmount":40}",
+    "d07": "(outside) {"maxAmount":40}",
+    "d08": "(outside) {"maxAmount":40}",
+    "d09": "(outside) {"maxAmount":40}",
+    "d10": "{"maxAmount":40}",
+    "d11": "{"maxAmount":99}",
+    "d12": "{"maxAmount":99}",
+    "d13": "{"maxAmount":99}",
+    "d14": "{"maxAmount":99}",
+    "d15": "{"maxAmount":99}",
+    "d16": "{"maxAmount":199}",
+    "d17": "(outside) {"maxAmount":199}",
+    "d18": "(outside) {"maxAmount":199}",
+    "d19": "(outside) {"maxAmount":199}",
+    "d20": "(outside) {"maxAmount":199}",
+  },
+  "skill": "money",
+}
+`;
+
+exports[`what each difficulty asks for > fractionAddSub 1`] = `
+{
+  "dRange": [
+    10,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "fractions",
+}
+`;
+
+exports[`what each difficulty asks for > fractionOfSetProblem 1`] = `
+{
+  "dRange": [
+    11,
+    17,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > gaveSomeAwayStory 1`] = `
+{
+  "dRange": [
+    1,
+    8,
+  ],
+  "settings": {
+    "d01": "{"maxStart":10}",
+    "d02": "{"maxStart":20}",
+    "d03": "{"maxStart":20}",
+    "d04": "{"maxStart":50}",
+    "d05": "{"maxStart":100}",
+    "d06": "{"maxStart":200}",
+    "d07": "{"maxStart":200}",
+    "d08": "{"maxStart":999}",
+    "d09": "(outside) {"maxStart":999}",
+    "d10": "(outside) {"maxStart":999}",
+    "d11": "(outside) {"maxStart":999}",
+    "d12": "(outside) {"maxStart":999}",
+    "d13": "(outside) {"maxStart":999}",
+    "d14": "(outside) {"maxStart":999}",
+    "d15": "(outside) {"maxStart":999}",
+    "d16": "(outside) {"maxStart":999}",
+    "d17": "(outside) {"maxStart":999}",
+    "d18": "(outside) {"maxStart":999}",
+    "d19": "(outside) {"maxStart":999}",
+    "d20": "(outside) {"maxStart":999}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > greatestOrSmallest 1`] = `
+{
+  "dRange": [
+    5,
+    10,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > hoursToMinutes 1`] = `
+{
+  "dRange": [
+    4,
+    11,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "—",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "—",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "time",
+}
+`;
+
+exports[`what each difficulty asks for > howManyCanBuy 1`] = `
+{
+  "dRange": [
+    7,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxBudget":60}",
+    "d02": "(outside) {"maxBudget":60}",
+    "d03": "(outside) {"maxBudget":60}",
+    "d04": "(outside) {"maxBudget":60}",
+    "d05": "(outside) {"maxBudget":60}",
+    "d06": "(outside) {"maxBudget":60}",
+    "d07": "{"maxBudget":60}",
+    "d08": "{"maxBudget":99}",
+    "d09": "{"maxBudget":99}",
+    "d10": "{"maxBudget":99}",
+    "d11": "{"maxBudget":99}",
+    "d12": "{"maxBudget":99}",
+    "d13": "{"maxBudget":199}",
+    "d14": "(outside) {"maxBudget":199}",
+    "d15": "(outside) {"maxBudget":199}",
+    "d16": "(outside) {"maxBudget":199}",
+    "d17": "(outside) {"maxBudget":199}",
+    "d18": "(outside) {"maxBudget":199}",
+    "d19": "(outside) {"maxBudget":199}",
+    "d20": "(outside) {"maxBudget":199}",
+  },
+  "skill": "money",
+}
+`;
+
+exports[`what each difficulty asks for > howManyCanBuyDollars 1`] = `
+{
+  "dRange": [
+    13,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "money",
+}
+`;
+
+exports[`what each difficulty asks for > howManyGlasses 1`] = `
+{
+  "dRange": [
+    13,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > howManyMoreNeeded 1`] = `
+{
+  "dRange": [
+    4,
+    11,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxTarget":50}",
+    "d02": "(outside) {"maxTarget":50}",
+    "d03": "(outside) {"maxTarget":50}",
+    "d04": "{"maxTarget":50}",
+    "d05": "{"maxTarget":100}",
+    "d06": "{"maxTarget":200}",
+    "d07": "{"maxTarget":200}",
+    "d08": "{"maxTarget":500}",
+    "d09": "{"maxTarget":500}",
+    "d10": "{"maxTarget":500}",
+    "d11": "{"maxTarget":2000}",
+    "d12": "(outside) {"maxTarget":2000}",
+    "d13": "(outside) {"maxTarget":2000}",
+    "d14": "(outside) {"maxTarget":2000}",
+    "d15": "(outside) {"maxTarget":2000}",
+    "d16": "(outside) {"maxTarget":2000}",
+    "d17": "(outside) {"maxTarget":2000}",
+    "d18": "(outside) {"maxTarget":2000}",
+    "d19": "(outside) {"maxTarget":2000}",
+    "d20": "(outside) {"maxTarget":2000}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > joinStory 1`] = `
+{
+  "dRange": [
+    1,
+    8,
+  ],
+  "settings": {
+    "d01": "{"maxTotal":10}",
+    "d02": "{"maxTotal":20}",
+    "d03": "{"maxTotal":20}",
+    "d04": "{"maxTotal":50}",
+    "d05": "{"maxTotal":100}",
+    "d06": "{"maxTotal":200}",
+    "d07": "{"maxTotal":200}",
+    "d08": "{"maxTotal":999}",
+    "d09": "(outside) {"maxTotal":999}",
+    "d10": "(outside) {"maxTotal":999}",
+    "d11": "(outside) {"maxTotal":999}",
+    "d12": "(outside) {"maxTotal":999}",
+    "d13": "(outside) {"maxTotal":999}",
+    "d14": "(outside) {"maxTotal":999}",
+    "d15": "(outside) {"maxTotal":999}",
+    "d16": "(outside) {"maxTotal":999}",
+    "d17": "(outside) {"maxTotal":999}",
+    "d18": "(outside) {"maxTotal":999}",
+    "d19": "(outside) {"maxTotal":999}",
+    "d20": "(outside) {"maxTotal":999}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > largestFraction 1`] = `
+{
+  "dRange": [
+    12,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "fractions",
+}
+`;
+
+exports[`what each difficulty asks for > legsProblem 1`] = `
+{
+  "dRange": [
+    1,
+    10,
+  ],
+  "settings": {
+    "d01": "{"maxAnswer":10}",
+    "d02": "{"maxAnswer":20}",
+    "d03": "{"maxAnswer":20}",
+    "d04": "{"maxAnswer":24}",
+    "d05": "{"maxAnswer":48}",
+    "d06": "{"maxAnswer":48}",
+    "d07": "{"maxAnswer":96}",
+    "d08": "{"maxAnswer":96}",
+    "d09": "{"maxAnswer":96}",
+    "d10": "{"maxAnswer":200}",
+    "d11": "(outside) {"maxAnswer":200}",
+    "d12": "(outside) {"maxAnswer":200}",
+    "d13": "(outside) {"maxAnswer":200}",
+    "d14": "(outside) {"maxAnswer":200}",
+    "d15": "(outside) {"maxAnswer":200}",
+    "d16": "(outside) {"maxAnswer":200}",
+    "d17": "(outside) {"maxAnswer":200}",
+    "d18": "(outside) {"maxAnswer":200}",
+    "d19": "(outside) {"maxAnswer":200}",
+    "d20": "(outside) {"maxAnswer":200}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > lengthConversion 1`] = `
+{
+  "dRange": [
+    4,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) {"allowed":["cm"],"maxValue":5}",
+    "d02": "(outside) {"allowed":["cm"],"maxValue":5}",
+    "d03": "(outside) {"allowed":["cm"],"maxValue":5}",
+    "d04": "{"allowed":["cm"],"maxValue":5}",
+    "d05": "{"allowed":["cm"],"maxValue":9}",
+    "d06": "{"allowed":["cm"],"maxValue":9}",
+    "d07": "{"allowed":["cm","m"],"maxValue":9}",
+    "d08": "{"allowed":["cm","m"],"maxValue":9}",
+    "d09": "{"allowed":["cm","m"],"maxValue":9}",
+    "d10": "{"allowed":["cm","m","km"],"maxValue":9}",
+    "d11": "{"allowed":["cm","m","km"],"maxValue":9}",
+    "d12": "{"allowed":["cm","m","km"],"maxValue":9}",
+    "d13": "{"allowed":["cm","m","km"],"maxValue":20}",
+    "d14": "{"allowed":["cm","m","km"],"maxValue":20}",
+    "d15": "{"allowed":["cm","m","km"],"maxValue":20}",
+    "d16": "{"allowed":["cm","m","km"],"maxValue":99}",
+    "d17": "(outside) {"allowed":["cm","m","km"],"maxValue":99}",
+    "d18": "(outside) {"allowed":["cm","m","km"],"maxValue":99}",
+    "d19": "(outside) {"allowed":["cm","m","km"],"maxValue":99}",
+    "d20": "(outside) {"allowed":["cm","m","km"],"maxValue":99}",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > lengthDifference 1`] = `
+{
+  "dRange": [
+    11,
+    17,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > letterSequence 1`] = `
+{
+  "dRange": [
+    4,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "{"tier":1}",
+    "d05": "{"tier":1}",
+    "d06": "{"tier":1}",
+    "d07": "{"tier":2}",
+    "d08": "{"tier":2}",
+    "d09": "{"tier":2}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "letters",
+}
+`;
+
+exports[`what each difficulty asks for > liquidLeft 1`] = `
+{
+  "dRange": [
+    10,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > litresToMillilitres 1`] = `
+{
+  "dRange": [
+    7,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxLitres":4}",
+    "d02": "(outside) {"maxLitres":4}",
+    "d03": "(outside) {"maxLitres":4}",
+    "d04": "(outside) {"maxLitres":4}",
+    "d05": "(outside) {"maxLitres":4}",
+    "d06": "(outside) {"maxLitres":4}",
+    "d07": "{"maxLitres":4}",
+    "d08": "{"maxLitres":9}",
+    "d09": "{"maxLitres":9}",
+    "d10": "{"maxLitres":9}",
+    "d11": "{"maxLitres":9}",
+    "d12": "{"maxLitres":20}",
+    "d13": "(outside) {"maxLitres":20}",
+    "d14": "(outside) {"maxLitres":20}",
+    "d15": "(outside) {"maxLitres":20}",
+    "d16": "(outside) {"maxLitres":20}",
+    "d17": "(outside) {"maxLitres":20}",
+    "d18": "(outside) {"maxLitres":20}",
+    "d19": "(outside) {"maxLitres":20}",
+    "d20": "(outside) {"maxLitres":20}",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > logicGrid 1`] = `
+{
+  "dRange": [
+    10,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "(outside) {"tier":1}",
+    "d08": "(outside) {"tier":1}",
+    "d09": "(outside) {"tier":1}",
+    "d10": "{"tier":1}",
+    "d11": "{"tier":1}",
+    "d12": "{"tier":1}",
+    "d13": "{"tier":2}",
+    "d14": "{"tier":2}",
+    "d15": "{"tier":2}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "grid",
+}
+`;
+
+exports[`what each difficulty asks for > matrixPattern 1`] = `
+{
+  "dRange": [
+    1,
+    20,
+  ],
+  "settings": {
+    "d01": "{"tier":1}",
+    "d02": "{"tier":1}",
+    "d03": "{"tier":1}",
+    "d04": "{"tier":2}",
+    "d05": "{"tier":2}",
+    "d06": "{"tier":2}",
+    "d07": "{"tier":3}",
+    "d08": "{"tier":3}",
+    "d09": "{"tier":3}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "matrix",
+}
+`;
+
+exports[`what each difficulty asks for > mirrorImage 1`] = `
+{
+  "dRange": [
+    4,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "{"tier":1}",
+    "d05": "{"tier":1}",
+    "d06": "{"tier":1}",
+    "d07": "{"tier":2}",
+    "d08": "{"tier":2}",
+    "d09": "{"tier":2}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "mirror",
+}
+`;
+
+exports[`what each difficulty asks for > missingAddend 1`] = `
+{
+  "dRange": [
+    1,
+    21,
+  ],
+  "settings": {
+    "d01": "{"maxSum":10}",
+    "d02": "{"maxSum":20}",
+    "d03": "{"maxSum":20}",
+    "d04": "{"maxSum":50}",
+    "d05": "{"maxSum":100}",
+    "d06": "{"maxSum":200}",
+    "d07": "{"maxSum":200}",
+    "d08": "{"maxSum":1000}",
+    "d09": "{"maxSum":1000}",
+    "d10": "{"maxSum":2000}",
+    "d11": "{"maxSum":2000}",
+    "d12": "{"maxSum":9999}",
+    "d13": "{"maxSum":9999}",
+    "d14": "{"maxSum":9999}",
+    "d15": "{"maxSum":9999}",
+    "d16": "{"maxSum":99999}",
+    "d17": "{"maxSum":99999}",
+    "d18": "{"maxSum":99999}",
+    "d19": "{"maxSum":99999}",
+    "d20": "{"maxSum":99999}",
+  },
+  "skill": "addSub",
+}
+`;
+
+exports[`what each difficulty asks for > missingAngleQuadrilateral 1`] = `
+{
+  "dRange": [
+    14,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > missingAngleStraightLine 1`] = `
+{
+  "dRange": [
+    10,
+    14,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > missingAngleTriangle 1`] = `
+{
+  "dRange": [
+    11,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > missingDivisionPart 1`] = `
+{
+  "dRange": [
+    7,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d02": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d03": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d04": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d05": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d06": "(outside) {"divisorMax":5,"quotientMax":5}",
+    "d07": "{"divisorMax":5,"quotientMax":5}",
+    "d08": "{"divisorMax":10,"quotientMax":10}",
+    "d09": "{"divisorMax":12,"quotientMax":12}",
+    "d10": "{"divisorMax":9,"quotientMax":20}",
+    "d11": "{"divisorMax":9,"quotientMax":50}",
+    "d12": "{"divisorMax":9,"quotientMax":50}",
+    "d13": "{"divisorMax":12,"quotientMax":50}",
+    "d14": "{"divisorMax":12,"quotientMax":50}",
+    "d15": "{"divisorMax":12,"quotientMax":50}",
+    "d16": "{"divisorMax":20,"quotientMax":99}",
+    "d17": "{"divisorMax":20,"quotientMax":99}",
+    "d18": "{"divisorMax":20,"quotientMax":99}",
+    "d19": "{"divisorMax":20,"quotientMax":99}",
+    "d20": "{"divisorMax":50,"quotientMax":499}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > missingFactor 1`] = `
+{
+  "dRange": [
+    5,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxFactor":5}",
+    "d02": "(outside) {"maxFactor":5}",
+    "d03": "(outside) {"maxFactor":5}",
+    "d04": "(outside) {"maxFactor":5}",
+    "d05": "{"maxFactor":5}",
+    "d06": "{"maxFactor":5}",
+    "d07": "{"maxFactor":5}",
+    "d08": "{"maxFactor":10}",
+    "d09": "{"maxFactor":12}",
+    "d10": "{"maxFactor":12}",
+    "d11": "{"maxFactor":12}",
+    "d12": "{"maxFactor":20}",
+    "d13": "{"maxFactor":20}",
+    "d14": "{"maxFactor":20}",
+    "d15": "{"maxFactor":50}",
+    "d16": "{"maxFactor":50}",
+    "d17": "{"maxFactor":50}",
+    "d18": "{"maxFactor":50}",
+    "d19": "{"maxFactor":50}",
+    "d20": "{"maxFactor":99}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > missingSubtractionPart 1`] = `
+{
+  "dRange": [
+    1,
+    21,
+  ],
+  "settings": {
+    "d01": "{"max":10}",
+    "d02": "{"max":20}",
+    "d03": "{"max":20}",
+    "d04": "{"max":50}",
+    "d05": "{"max":100}",
+    "d06": "{"max":200}",
+    "d07": "{"max":200}",
+    "d08": "{"max":1000}",
+    "d09": "{"max":1000}",
+    "d10": "{"max":2000}",
+    "d11": "{"max":2000}",
+    "d12": "{"max":9999}",
+    "d13": "{"max":9999}",
+    "d14": "{"max":9999}",
+    "d15": "{"max":9999}",
+    "d16": "{"max":99999}",
+    "d17": "{"max":99999}",
+    "d18": "{"max":99999}",
+    "d19": "{"max":99999}",
+    "d20": "{"max":99999}",
+  },
+  "skill": "addSub",
+}
+`;
+
+exports[`what each difficulty asks for > mixedLengthTotal 1`] = `
+{
+  "dRange": [
+    7,
+    15,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > moneyDecimalProblem 1`] = `
+{
+  "dRange": [
+    13,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > moneyLeftOver 1`] = `
+{
+  "dRange": [
+    10,
+    14,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxBudget":99}",
+    "d02": "(outside) {"maxBudget":99}",
+    "d03": "(outside) {"maxBudget":99}",
+    "d04": "(outside) {"maxBudget":99}",
+    "d05": "(outside) {"maxBudget":99}",
+    "d06": "(outside) {"maxBudget":99}",
+    "d07": "(outside) {"maxBudget":99}",
+    "d08": "(outside) {"maxBudget":99}",
+    "d09": "(outside) {"maxBudget":99}",
+    "d10": "{"maxBudget":99}",
+    "d11": "{"maxBudget":99}",
+    "d12": "{"maxBudget":99}",
+    "d13": "{"maxBudget":99}",
+    "d14": "{"maxBudget":199}",
+    "d15": "(outside) {"maxBudget":199}",
+    "d16": "(outside) {"maxBudget":199}",
+    "d17": "(outside) {"maxBudget":199}",
+    "d18": "(outside) {"maxBudget":199}",
+    "d19": "(outside) {"maxBudget":199}",
+    "d20": "(outside) {"maxBudget":199}",
+  },
+  "skill": "money",
+}
+`;
+
+exports[`what each difficulty asks for > multiplication 1`] = `
+{
+  "dRange": [
+    7,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) {"a":[2,5],"b":[2,5]}",
+    "d02": "(outside) {"a":[2,5],"b":[2,5]}",
+    "d03": "(outside) {"a":[2,5],"b":[2,5]}",
+    "d04": "(outside) {"a":[2,5],"b":[2,5]}",
+    "d05": "(outside) {"a":[2,5],"b":[2,5]}",
+    "d06": "(outside) {"a":[2,5],"b":[2,5]}",
+    "d07": "{"a":[2,5],"b":[2,5]}",
+    "d08": "{"a":[2,10],"b":[2,10]}",
+    "d09": "{"a":[2,12],"b":[2,12]}",
+    "d10": "{"a":[11,49],"b":[2,9]}",
+    "d11": "{"a":[11,99],"b":[2,9]}",
+    "d12": "{"a":[11,99],"b":[2,9]}",
+    "d13": "{"a":[11,99],"b":[2,12]}",
+    "d14": "{"a":[101,999],"b":[2,9]}",
+    "d15": "{"a":[101,999],"b":[2,9]}",
+    "d16": "{"a":[101,999],"b":[2,12]}",
+    "d17": "{"a":[101,999],"b":[2,12]}",
+    "d18": "{"a":[111,9999],"b":[2,12]}",
+    "d19": "{"a":[111,9999],"b":[2,12]}",
+    "d20": "{"a":[111,9999],"b":[2,12]}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > numberSequence 1`] = `
+{
+  "dRange": [
+    1,
+    20,
+  ],
+  "settings": {
+    "d01": "{"tier":1}",
+    "d02": "{"tier":1}",
+    "d03": "{"tier":1}",
+    "d04": "{"tier":2}",
+    "d05": "{"tier":2}",
+    "d06": "{"tier":2}",
+    "d07": "{"tier":3}",
+    "d08": "{"tier":3}",
+    "d09": "{"tier":3}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "sequence",
+}
+`;
+
+exports[`what each difficulty asks for > oddNumberOut 1`] = `
+{
+  "dRange": [
+    7,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "{"tier":1}",
+    "d08": "{"tier":1}",
+    "d09": "{"tier":1}",
+    "d10": "{"tier":2}",
+    "d11": "{"tier":2}",
+    "d12": "{"tier":2}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "oddNumber",
+}
+`;
+
+exports[`what each difficulty asks for > oddWordOut 1`] = `
+{
+  "dRange": [
+    1,
+    20,
+  ],
+  "settings": {
+    "d01": "—",
+    "d02": "—",
+    "d03": "—",
+    "d04": "—",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "oddWord",
+}
+`;
+
+exports[`what each difficulty asks for > orderOfOperations 1`] = `
+{
+  "dRange": [
+    13,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) {"withParens":false}",
+    "d02": "(outside) {"withParens":false}",
+    "d03": "(outside) {"withParens":false}",
+    "d04": "(outside) {"withParens":false}",
+    "d05": "(outside) {"withParens":false}",
+    "d06": "(outside) {"withParens":false}",
+    "d07": "(outside) {"withParens":false}",
+    "d08": "(outside) {"withParens":false}",
+    "d09": "(outside) {"withParens":false}",
+    "d10": "(outside) {"withParens":false}",
+    "d11": "(outside) {"withParens":false}",
+    "d12": "(outside) {"withParens":false}",
+    "d13": "{"withParens":false}",
+    "d14": "{"withParens":true}",
+    "d15": "{"withParens":true}",
+    "d16": "{"withParens":true}",
+    "d17": "{"withParens":true}",
+    "d18": "{"withParens":true}",
+    "d19": "{"withParens":true}",
+    "d20": "{"withParens":true}",
+  },
+  "skill": "order",
+}
+`;
+
+exports[`what each difficulty asks for > packsProblem 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxGroups":5,"perGroup":[2,5,10]}",
+    "d02": "(outside) {"maxGroups":5,"perGroup":[2,5,10]}",
+    "d03": "(outside) {"maxGroups":5,"perGroup":[2,5,10]}",
+    "d04": "{"maxGroups":5,"perGroup":[2,5,10]}",
+    "d05": "{"maxGroups":10,"perGroup":[2,3,4,5,10]}",
+    "d06": "{"maxGroups":10,"perGroup":[2,3,4,5,6,10]}",
+    "d07": "{"maxGroups":10,"perGroup":[2,3,4,5,6,10]}",
+    "d08": "{"maxGroups":12,"perGroup":[2,3,4,5,6,10]}",
+    "d09": "{"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d10": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d11": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d12": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d13": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d14": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d15": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d16": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d17": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d18": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d19": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+    "d20": "(outside) {"maxGroups":12,"perGroup":[2,3,4,5,6,7,8,9,10,11,12]}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > percentProblem 1`] = `
+{
+  "dRange": [
+    13,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > placeParts 1`] = `
+{
+  "dRange": [
+    4,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"length":2}",
+    "d02": "(outside) {"length":2}",
+    "d03": "(outside) {"length":2}",
+    "d04": "{"length":2}",
+    "d05": "{"length":3}",
+    "d06": "{"length":3}",
+    "d07": "{"length":3}",
+    "d08": "{"length":4}",
+    "d09": "{"length":4}",
+    "d10": "{"length":4}",
+    "d11": "{"length":4}",
+    "d12": "{"length":5}",
+    "d13": "(outside) {"length":5}",
+    "d14": "(outside) {"length":5}",
+    "d15": "(outside) {"length":5}",
+    "d16": "(outside) {"length":5}",
+    "d17": "(outside) {"length":5}",
+    "d18": "(outside) {"length":5}",
+    "d19": "(outside) {"length":5}",
+    "d20": "(outside) {"length":5}",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > readClock 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"step":30}",
+    "d02": "(outside) {"step":30}",
+    "d03": "(outside) {"step":30}",
+    "d04": "{"step":30}",
+    "d05": "{"step":15}",
+    "d06": "{"step":5}",
+    "d07": "{"step":5}",
+    "d08": "{"step":5}",
+    "d09": "{"step":1}",
+    "d10": "(outside) {"step":1}",
+    "d11": "(outside) {"step":1}",
+    "d12": "(outside) {"step":1}",
+    "d13": "(outside) {"step":1}",
+    "d14": "(outside) {"step":1}",
+    "d15": "(outside) {"step":1}",
+    "d16": "(outside) {"step":1}",
+    "d17": "(outside) {"step":1}",
+    "d18": "(outside) {"step":1}",
+    "d19": "(outside) {"step":1}",
+    "d20": "(outside) {"step":1}",
+  },
+  "skill": "time",
+}
+`;
+
+exports[`what each difficulty asks for > receivedSomeStory 1`] = `
+{
+  "dRange": [
+    1,
+    8,
+  ],
+  "settings": {
+    "d01": "{"maxTotal":10}",
+    "d02": "{"maxTotal":20}",
+    "d03": "{"maxTotal":20}",
+    "d04": "{"maxTotal":20}",
+    "d05": "{"maxTotal":100}",
+    "d06": "{"maxTotal":100}",
+    "d07": "{"maxTotal":100}",
+    "d08": "{"maxTotal":999}",
+    "d09": "(outside) {"maxTotal":999}",
+    "d10": "(outside) {"maxTotal":999}",
+    "d11": "(outside) {"maxTotal":999}",
+    "d12": "(outside) {"maxTotal":999}",
+    "d13": "(outside) {"maxTotal":999}",
+    "d14": "(outside) {"maxTotal":999}",
+    "d15": "(outside) {"maxTotal":999}",
+    "d16": "(outside) {"maxTotal":999}",
+    "d17": "(outside) {"maxTotal":999}",
+    "d18": "(outside) {"maxTotal":999}",
+    "d19": "(outside) {"maxTotal":999}",
+    "d20": "(outside) {"maxTotal":999}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > rectangleArea 1`] = `
+{
+  "dRange": [
+    10,
+    15,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":9}",
+    "d02": "(outside) {"maxSide":9}",
+    "d03": "(outside) {"maxSide":9}",
+    "d04": "(outside) {"maxSide":9}",
+    "d05": "(outside) {"maxSide":9}",
+    "d06": "(outside) {"maxSide":9}",
+    "d07": "(outside) {"maxSide":9}",
+    "d08": "(outside) {"maxSide":9}",
+    "d09": "(outside) {"maxSide":9}",
+    "d10": "{"maxSide":9}",
+    "d11": "{"maxSide":20}",
+    "d12": "{"maxSide":20}",
+    "d13": "{"maxSide":20}",
+    "d14": "{"maxSide":20}",
+    "d15": "{"maxSide":40}",
+    "d16": "(outside) {"maxSide":40}",
+    "d17": "(outside) {"maxSide":40}",
+    "d18": "(outside) {"maxSide":40}",
+    "d19": "(outside) {"maxSide":40}",
+    "d20": "(outside) {"maxSide":40}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > rectanglePerimeter 1`] = `
+{
+  "dRange": [
+    10,
+    15,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":9}",
+    "d02": "(outside) {"maxSide":9}",
+    "d03": "(outside) {"maxSide":9}",
+    "d04": "(outside) {"maxSide":9}",
+    "d05": "(outside) {"maxSide":9}",
+    "d06": "(outside) {"maxSide":9}",
+    "d07": "(outside) {"maxSide":9}",
+    "d08": "(outside) {"maxSide":9}",
+    "d09": "(outside) {"maxSide":9}",
+    "d10": "{"maxSide":9}",
+    "d11": "{"maxSide":20}",
+    "d12": "{"maxSide":20}",
+    "d13": "{"maxSide":20}",
+    "d14": "{"maxSide":20}",
+    "d15": "{"maxSide":40}",
+    "d16": "(outside) {"maxSide":40}",
+    "d17": "(outside) {"maxSide":40}",
+    "d18": "(outside) {"maxSide":40}",
+    "d19": "(outside) {"maxSide":40}",
+    "d20": "(outside) {"maxSide":40}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > repeatedAddition 1`] = `
+{
+  "dRange": [
+    4,
+    7,
+  ],
+  "settings": {
+    "d01": "(outside) {"tables":[2,5,10],"maxTimes":3}",
+    "d02": "(outside) {"tables":[2,5,10],"maxTimes":3}",
+    "d03": "(outside) {"tables":[2,5,10],"maxTimes":3}",
+    "d04": "{"tables":[2,5,10],"maxTimes":3}",
+    "d05": "{"tables":[2,3,4,5,10],"maxTimes":5}",
+    "d06": "{"tables":[2,3,4,5,6,10],"maxTimes":5}",
+    "d07": "{"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d08": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d09": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d10": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d11": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d12": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d13": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d14": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d15": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d16": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d17": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d18": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d19": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+    "d20": "(outside) {"tables":[2,3,4,5,6,7,8,9,10],"maxTimes":6}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > rotation 1`] = `
+{
+  "dRange": [
+    1,
+    20,
+  ],
+  "settings": {
+    "d01": "{"tier":1}",
+    "d02": "{"tier":1}",
+    "d03": "{"tier":1}",
+    "d04": "{"tier":2}",
+    "d05": "{"tier":2}",
+    "d06": "{"tier":2}",
+    "d07": "{"tier":3}",
+    "d08": "{"tier":3}",
+    "d09": "{"tier":3}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "rotation",
+}
+`;
+
+exports[`what each difficulty asks for > roundToTen 1`] = `
+{
+  "dRange": [
+    5,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"max":99}",
+    "d02": "(outside) {"max":99}",
+    "d03": "(outside) {"max":99}",
+    "d04": "(outside) {"max":99}",
+    "d05": "{"max":99}",
+    "d06": "{"max":199}",
+    "d07": "{"max":199}",
+    "d08": "{"max":199}",
+    "d09": "{"max":999}",
+    "d10": "{"max":999}",
+    "d11": "{"max":999}",
+    "d12": "{"max":9999}",
+    "d13": "(outside) {"max":9999}",
+    "d14": "(outside) {"max":9999}",
+    "d15": "(outside) {"max":9999}",
+    "d16": "(outside) {"max":9999}",
+    "d17": "(outside) {"max":9999}",
+    "d18": "(outside) {"max":9999}",
+    "d19": "(outside) {"max":9999}",
+    "d20": "(outside) {"max":9999}",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > shapeOddOneOut 1`] = `
+{
+  "dRange": [
+    1,
+    20,
+  ],
+  "settings": {
+    "d01": "{"tier":1}",
+    "d02": "{"tier":1}",
+    "d03": "{"tier":1}",
+    "d04": "{"tier":2}",
+    "d05": "{"tier":2}",
+    "d06": "{"tier":2}",
+    "d07": "{"tier":3}",
+    "d08": "{"tier":3}",
+    "d09": "{"tier":3}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "oddShape",
+}
+`;
+
+exports[`what each difficulty asks for > shapeSeries 1`] = `
+{
+  "dRange": [
+    1,
+    20,
+  ],
+  "settings": {
+    "d01": "{"tier":1}",
+    "d02": "{"tier":1}",
+    "d03": "{"tier":1}",
+    "d04": "{"tier":2}",
+    "d05": "{"tier":2}",
+    "d06": "{"tier":2}",
+    "d07": "{"tier":3}",
+    "d08": "{"tier":3}",
+    "d09": "{"tier":3}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "series",
+}
+`;
+
+exports[`what each difficulty asks for > shareEquallyProblem 1`] = `
+{
+  "dRange": [
+    7,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxGroups":5,"maxEach":5}",
+    "d02": "(outside) {"maxGroups":5,"maxEach":5}",
+    "d03": "(outside) {"maxGroups":5,"maxEach":5}",
+    "d04": "(outside) {"maxGroups":5,"maxEach":5}",
+    "d05": "(outside) {"maxGroups":5,"maxEach":5}",
+    "d06": "(outside) {"maxGroups":5,"maxEach":5}",
+    "d07": "{"maxGroups":5,"maxEach":5}",
+    "d08": "{"maxGroups":10,"maxEach":10}",
+    "d09": "{"maxGroups":12,"maxEach":12}",
+    "d10": "{"maxGroups":12,"maxEach":12}",
+    "d11": "{"maxGroups":12,"maxEach":12}",
+    "d12": "{"maxGroups":12,"maxEach":20}",
+    "d13": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d14": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d15": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d16": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d17": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d18": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d19": "(outside) {"maxGroups":12,"maxEach":20}",
+    "d20": "(outside) {"maxGroups":12,"maxEach":20}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > sidesOfShape 1`] = `
+{
+  "dRange": [
+    1,
+    5,
+  ],
+  "settings": {
+    "d01": "—",
+    "d02": "—",
+    "d03": "—",
+    "d04": "—",
+    "d05": "—",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > skipCount 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"steps":[2,5,10],"max":60}",
+    "d02": "(outside) {"steps":[2,5,10],"max":60}",
+    "d03": "(outside) {"steps":[2,5,10],"max":60}",
+    "d04": "{"steps":[2,5,10],"max":60}",
+    "d05": "{"steps":[2,3,5,10],"max":200}",
+    "d06": "{"steps":[3,4,5,10,25],"max":200}",
+    "d07": "{"steps":[3,4,5,10,25],"max":200}",
+    "d08": "{"steps":[3,4,5,10,25],"max":200}",
+    "d09": "{"steps":[6,7,8,9,25,50],"max":900}",
+    "d10": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d11": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d12": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d13": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d14": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d15": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d16": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d17": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d18": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d19": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+    "d20": "(outside) {"steps":[6,7,8,9,25,50],"max":900}",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > speedFromDistanceTime 1`] = `
+{
+  "dRange": [
+    11,
+    17,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d02": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d03": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d04": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d05": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d06": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d07": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d08": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d09": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d10": "(outside) {"maxSpeed":60,"maxHours":6}",
+    "d11": "{"maxSpeed":60,"maxHours":6}",
+    "d12": "{"maxSpeed":60,"maxHours":6}",
+    "d13": "{"maxSpeed":80,"maxHours":8}",
+    "d14": "{"maxSpeed":80,"maxHours":8}",
+    "d15": "{"maxSpeed":80,"maxHours":8}",
+    "d16": "{"maxSpeed":80,"maxHours":8}",
+    "d17": "{"maxSpeed":160,"maxHours":12}",
+    "d18": "(outside) {"maxSpeed":160,"maxHours":12}",
+    "d19": "(outside) {"maxSpeed":160,"maxHours":12}",
+    "d20": "(outside) {"maxSpeed":160,"maxHours":12}",
+  },
+  "skill": "speed",
+}
+`;
+
+exports[`what each difficulty asks for > squareArea 1`] = `
+{
+  "dRange": [
+    7,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":6}",
+    "d02": "(outside) {"maxSide":6}",
+    "d03": "(outside) {"maxSide":6}",
+    "d04": "(outside) {"maxSide":6}",
+    "d05": "(outside) {"maxSide":6}",
+    "d06": "(outside) {"maxSide":6}",
+    "d07": "{"maxSide":6}",
+    "d08": "{"maxSide":12}",
+    "d09": "{"maxSide":12}",
+    "d10": "{"maxSide":15}",
+    "d11": "{"maxSide":15}",
+    "d12": "{"maxSide":15}",
+    "d13": "{"maxSide":30}",
+    "d14": "(outside) {"maxSide":30}",
+    "d15": "(outside) {"maxSide":30}",
+    "d16": "(outside) {"maxSide":30}",
+    "d17": "(outside) {"maxSide":30}",
+    "d18": "(outside) {"maxSide":30}",
+    "d19": "(outside) {"maxSide":30}",
+    "d20": "(outside) {"maxSide":30}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > squarePerimeter 1`] = `
+{
+  "dRange": [
+    4,
+    10,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":5}",
+    "d02": "(outside) {"maxSide":5}",
+    "d03": "(outside) {"maxSide":5}",
+    "d04": "{"maxSide":5}",
+    "d05": "{"maxSide":10}",
+    "d06": "{"maxSide":10}",
+    "d07": "{"maxSide":20}",
+    "d08": "{"maxSide":20}",
+    "d09": "{"maxSide":20}",
+    "d10": "{"maxSide":50}",
+    "d11": "(outside) {"maxSide":50}",
+    "d12": "(outside) {"maxSide":50}",
+    "d13": "(outside) {"maxSide":50}",
+    "d14": "(outside) {"maxSide":50}",
+    "d15": "(outside) {"maxSide":50}",
+    "d16": "(outside) {"maxSide":50}",
+    "d17": "(outside) {"maxSide":50}",
+    "d18": "(outside) {"maxSide":50}",
+    "d19": "(outside) {"maxSide":50}",
+    "d20": "(outside) {"maxSide":50}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > stepBy 1`] = `
+{
+  "dRange": [
+    4,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"step":10,"max":90}",
+    "d02": "(outside) {"step":10,"max":90}",
+    "d03": "(outside) {"step":10,"max":90}",
+    "d04": "{"step":10,"max":90}",
+    "d05": "{"step":10,"max":490}",
+    "d06": "{"step":100,"max":899}",
+    "d07": "{"step":100,"max":899}",
+    "d08": "{"step":100,"max":899}",
+    "d09": "{"step":100,"max":4999}",
+    "d10": "{"step":100,"max":4999}",
+    "d11": "{"step":100,"max":4999}",
+    "d12": "{"step":1000,"max":9999}",
+    "d13": "(outside) {"step":1000,"max":9999}",
+    "d14": "(outside) {"step":1000,"max":9999}",
+    "d15": "(outside) {"step":1000,"max":9999}",
+    "d16": "(outside) {"step":1000,"max":9999}",
+    "d17": "(outside) {"step":1000,"max":9999}",
+    "d18": "(outside) {"step":1000,"max":9999}",
+    "d19": "(outside) {"step":1000,"max":9999}",
+    "d20": "(outside) {"step":1000,"max":9999}",
+  },
+  "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > subtraction 1`] = `
+{
+  "dRange": [
+    1,
+    23,
+  ],
+  "settings": {
+    "d01": "{"max":10}",
+    "d02": "{"max":20}",
+    "d03": "{"max":20}",
+    "d04": "{"max":50}",
+    "d05": "{"max":100}",
+    "d06": "{"max":200}",
+    "d07": "{"max":300}",
+    "d08": "{"max":1000}",
+    "d09": "{"max":1000}",
+    "d10": "{"max":2000}",
+    "d11": "{"max":2000}",
+    "d12": "{"max":9999}",
+    "d13": "{"max":9999}",
+    "d14": "{"max":9999}",
+    "d15": "{"max":9999}",
+    "d16": "{"max":99999}",
+    "d17": "{"max":99999}",
+    "d18": "{"max":99999}",
+    "d19": "{"max":999999}",
+    "d20": "{"max":999999}",
+  },
+  "skill": "addSub",
+}
+`;
+
+exports[`what each difficulty asks for > syllogism 1`] = `
+{
+  "dRange": [
+    13,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "(outside) {"tier":1}",
+    "d08": "(outside) {"tier":1}",
+    "d09": "(outside) {"tier":1}",
+    "d10": "(outside) {"tier":1}",
+    "d11": "(outside) {"tier":1}",
+    "d12": "(outside) {"tier":1}",
+    "d13": "{"tier":1}",
+    "d14": "{"tier":1}",
+    "d15": "{"tier":1}",
+    "d16": "{"tier":2}",
+    "d17": "{"tier":2}",
+    "d18": "{"tier":2}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "syllogism",
+}
+`;
+
+exports[`what each difficulty asks for > tableDivision 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"tables":[2,5,10],"maxQuotient":5}",
+    "d02": "(outside) {"tables":[2,5,10],"maxQuotient":5}",
+    "d03": "(outside) {"tables":[2,5,10],"maxQuotient":5}",
+    "d04": "{"tables":[2,5,10],"maxQuotient":5}",
+    "d05": "{"tables":[2,3,4,5,10],"maxQuotient":10}",
+    "d06": "{"tables":[2,3,4,5,6,10],"maxQuotient":10}",
+    "d07": "{"tables":[2,3,4,5,6,7,8,9,10],"maxQuotient":10}",
+    "d08": "{"tables":[2,3,4,5,6,7,8,9,10],"maxQuotient":10}",
+    "d09": "{"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d10": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d11": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d12": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d13": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d14": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d15": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d16": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d17": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d18": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d19": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+    "d20": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxQuotient":12}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > tableMultiplication 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"tables":[2,5,10],"maxOther":10}",
+    "d02": "(outside) {"tables":[2,5,10],"maxOther":10}",
+    "d03": "(outside) {"tables":[2,5,10],"maxOther":10}",
+    "d04": "{"tables":[2,5,10],"maxOther":10}",
+    "d05": "{"tables":[2,3,4,5,10],"maxOther":10}",
+    "d06": "{"tables":[2,3,4,5,6,10],"maxOther":10}",
+    "d07": "{"tables":[2,3,4,5,6,7,8,9,10],"maxOther":10}",
+    "d08": "{"tables":[2,3,4,5,6,7,8,9,10],"maxOther":10}",
+    "d09": "{"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d10": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d11": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d12": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d13": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d14": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d15": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d16": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d17": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d18": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d19": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+    "d20": "(outside) {"tables":[2,3,4,5,6,7,8,9,10,11,12],"maxOther":12}",
+  },
+  "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > takeAwayStory 1`] = `
+{
+  "dRange": [
+    1,
+    8,
+  ],
+  "settings": {
+    "d01": "{"maxStart":10}",
+    "d02": "{"maxStart":20}",
+    "d03": "{"maxStart":20}",
+    "d04": "{"maxStart":50}",
+    "d05": "{"maxStart":100}",
+    "d06": "{"maxStart":200}",
+    "d07": "{"maxStart":200}",
+    "d08": "{"maxStart":999}",
+    "d09": "(outside) {"maxStart":999}",
+    "d10": "(outside) {"maxStart":999}",
+    "d11": "(outside) {"maxStart":999}",
+    "d12": "(outside) {"maxStart":999}",
+    "d13": "(outside) {"maxStart":999}",
+    "d14": "(outside) {"maxStart":999}",
+    "d15": "(outside) {"maxStart":999}",
+    "d16": "(outside) {"maxStart":999}",
+    "d17": "(outside) {"maxStart":999}",
+    "d18": "(outside) {"maxStart":999}",
+    "d19": "(outside) {"maxStart":999}",
+    "d20": "(outside) {"maxStart":999}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > timeFromDistanceSpeed 1`] = `
+{
+  "dRange": [
+    10,
+    17,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d02": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d03": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d04": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d05": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d06": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d07": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d08": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d09": "(outside) {"maxSpeed":50,"maxHours":6}",
+    "d10": "{"maxSpeed":50,"maxHours":6}",
+    "d11": "{"maxSpeed":90,"maxHours":6}",
+    "d12": "{"maxSpeed":90,"maxHours":6}",
+    "d13": "{"maxSpeed":120,"maxHours":9}",
+    "d14": "{"maxSpeed":120,"maxHours":9}",
+    "d15": "{"maxSpeed":120,"maxHours":9}",
+    "d16": "{"maxSpeed":120,"maxHours":9}",
+    "d17": "{"maxSpeed":200,"maxHours":12}",
+    "d18": "(outside) {"maxSpeed":200,"maxHours":12}",
+    "d19": "(outside) {"maxSpeed":200,"maxHours":12}",
+    "d20": "(outside) {"maxSpeed":200,"maxHours":12}",
+  },
+  "skill": "speed",
+}
+`;
+
+exports[`what each difficulty asks for > timeLater 1`] = `
+{
+  "dRange": [
+    5,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"step":15}",
+    "d02": "(outside) {"step":15}",
+    "d03": "(outside) {"step":15}",
+    "d04": "(outside) {"step":15}",
+    "d05": "{"step":15}",
+    "d06": "{"step":5}",
+    "d07": "{"step":5}",
+    "d08": "{"step":5}",
+    "d09": "{"step":1}",
+    "d10": "(outside) {"step":1}",
+    "d11": "(outside) {"step":1}",
+    "d12": "(outside) {"step":1}",
+    "d13": "(outside) {"step":1}",
+    "d14": "(outside) {"step":1}",
+    "d15": "(outside) {"step":1}",
+    "d16": "(outside) {"step":1}",
+    "d17": "(outside) {"step":1}",
+    "d18": "(outside) {"step":1}",
+    "d19": "(outside) {"step":1}",
+    "d20": "(outside) {"step":1}",
+  },
+  "skill": "time",
+}
+`;
+
+exports[`what each difficulty asks for > totalLength 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxPieces":4}",
+    "d02": "(outside) {"maxPieces":4}",
+    "d03": "(outside) {"maxPieces":4}",
+    "d04": "{"maxPieces":4}",
+    "d05": "{"maxPieces":6}",
+    "d06": "{"maxPieces":6}",
+    "d07": "{"maxPieces":6}",
+    "d08": "{"maxPieces":6}",
+    "d09": "{"maxPieces":8}",
+    "d10": "(outside) {"maxPieces":8}",
+    "d11": "(outside) {"maxPieces":8}",
+    "d12": "(outside) {"maxPieces":8}",
+    "d13": "(outside) {"maxPieces":8}",
+    "d14": "(outside) {"maxPieces":8}",
+    "d15": "(outside) {"maxPieces":8}",
+    "d16": "(outside) {"maxPieces":8}",
+    "d17": "(outside) {"maxPieces":8}",
+    "d18": "(outside) {"maxPieces":8}",
+    "d19": "(outside) {"maxPieces":8}",
+    "d20": "(outside) {"maxPieces":8}",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > triangleArea 1`] = `
+{
+  "dRange": [
+    10,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d02": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d03": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d04": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d05": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d06": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d07": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d08": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d09": "(outside) {"maxBase":8,"maxHeight":6}",
+    "d10": "{"maxBase":8,"maxHeight":6}",
+    "d11": "{"maxBase":16,"maxHeight":12}",
+    "d12": "{"maxBase":16,"maxHeight":12}",
+    "d13": "{"maxBase":20,"maxHeight":15}",
+    "d14": "{"maxBase":20,"maxHeight":15}",
+    "d15": "{"maxBase":20,"maxHeight":15}",
+    "d16": "{"maxBase":40,"maxHeight":30}",
+    "d17": "(outside) {"maxBase":40,"maxHeight":30}",
+    "d18": "(outside) {"maxBase":40,"maxHeight":30}",
+    "d19": "(outside) {"maxBase":40,"maxHeight":30}",
+    "d20": "(outside) {"maxBase":40,"maxHeight":30}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > tripleAddition 1`] = `
+{
+  "dRange": [
+    3,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxEach":9}",
+    "d02": "(outside) {"maxEach":9}",
+    "d03": "{"maxEach":9}",
+    "d04": "{"maxEach":9}",
+    "d05": "{"maxEach":20}",
+    "d06": "{"maxEach":20}",
+    "d07": "{"maxEach":50}",
+    "d08": "{"maxEach":50}",
+    "d09": "{"maxEach":99}",
+    "d10": "{"maxEach":99}",
+    "d11": "{"maxEach":99}",
+    "d12": "{"maxEach":99}",
+    "d13": "{"maxEach":999}",
+    "d14": "{"maxEach":999}",
+    "d15": "{"maxEach":999}",
+    "d16": "{"maxEach":999}",
+    "d17": "{"maxEach":999}",
+    "d18": "{"maxEach":9999}",
+    "d19": "(outside) {"maxEach":9999}",
+    "d20": "(outside) {"maxEach":9999}",
+  },
+  "skill": "addSub",
+}
+`;
+
+exports[`what each difficulty asks for > weekDaysProblem 1`] = `
+{
+  "dRange": [
+    7,
+    11,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxWeeks":5}",
+    "d02": "(outside) {"maxWeeks":5}",
+    "d03": "(outside) {"maxWeeks":5}",
+    "d04": "(outside) {"maxWeeks":5}",
+    "d05": "(outside) {"maxWeeks":5}",
+    "d06": "(outside) {"maxWeeks":5}",
+    "d07": "{"maxWeeks":5}",
+    "d08": "{"maxWeeks":12}",
+    "d09": "{"maxWeeks":12}",
+    "d10": "{"maxWeeks":12}",
+    "d11": "{"maxWeeks":52}",
+    "d12": "(outside) {"maxWeeks":52}",
+    "d13": "(outside) {"maxWeeks":52}",
+    "d14": "(outside) {"maxWeeks":52}",
+    "d15": "(outside) {"maxWeeks":52}",
+    "d16": "(outside) {"maxWeeks":52}",
+    "d17": "(outside) {"maxWeeks":52}",
+    "d18": "(outside) {"maxWeeks":52}",
+    "d19": "(outside) {"maxWeeks":52}",
+    "d20": "(outside) {"maxWeeks":52}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > wheelsProblem 1`] = `
+{
+  "dRange": [
+    2,
+    10,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxAnswer":20}",
+    "d02": "{"maxAnswer":20}",
+    "d03": "{"maxAnswer":20}",
+    "d04": "{"maxAnswer":24}",
+    "d05": "{"maxAnswer":48}",
+    "d06": "{"maxAnswer":48}",
+    "d07": "{"maxAnswer":96}",
+    "d08": "{"maxAnswer":96}",
+    "d09": "{"maxAnswer":96}",
+    "d10": "{"maxAnswer":200}",
+    "d11": "(outside) {"maxAnswer":200}",
+    "d12": "(outside) {"maxAnswer":200}",
+    "d13": "(outside) {"maxAnswer":200}",
+    "d14": "(outside) {"maxAnswer":200}",
+    "d15": "(outside) {"maxAnswer":200}",
+    "d16": "(outside) {"maxAnswer":200}",
+    "d17": "(outside) {"maxAnswer":200}",
+    "d18": "(outside) {"maxAnswer":200}",
+    "d19": "(outside) {"maxAnswer":200}",
+    "d20": "(outside) {"maxAnswer":200}",
+  },
+  "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > whichClock 1`] = `
+{
+  "dRange": [
+    4,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) {"step":30}",
+    "d02": "(outside) {"step":30}",
+    "d03": "(outside) {"step":30}",
+    "d04": "{"step":30}",
+    "d05": "{"step":15}",
+    "d06": "{"step":5}",
+    "d07": "{"step":5}",
+    "d08": "{"step":5}",
+    "d09": "{"step":1}",
+    "d10": "(outside) {"step":1}",
+    "d11": "(outside) {"step":1}",
+    "d12": "(outside) {"step":1}",
+    "d13": "(outside) {"step":1}",
+    "d14": "(outside) {"step":1}",
+    "d15": "(outside) {"step":1}",
+    "d16": "(outside) {"step":1}",
+    "d17": "(outside) {"step":1}",
+    "d18": "(outside) {"step":1}",
+    "d19": "(outside) {"step":1}",
+    "d20": "(outside) {"step":1}",
+  },
+  "skill": "time",
+}
+`;
+
+exports[`what each difficulty asks for > whoIsFaster 1`] = `
+{
+  "dRange": [
+    14,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "speed",
+}
+`;

@@ -1,4 +1,5 @@
 import { Grade, PuzzleFamily, PuzzleSet, Question, Tier } from '../contract';
+import { Rng } from '../generators/generator';
 import {
   matrixPattern,
   mirrorImage,
@@ -33,12 +34,13 @@ export const FAMILY_LABEL: Record<PuzzleFamily, string> = {
   oddShape: 'shapes',
 };
 
-export const GENERATORS: Record<PuzzleFamily, (tier: Tier) => Question> = {
+export const GENERATORS: Record<PuzzleFamily, (tier: Tier, rng: Rng) => Question> = {
   sequence: numberSequence,
   letters: letterSequence,
-  oddWord: () => oddWordOut(),
+  // These two ignore the tier — the families have only one difficulty.
+  oddWord: (_tier, rng) => oddWordOut(rng),
   oddNumber: oddNumberOut,
-  analogy: () => analogy(),
+  analogy: (_tier, rng) => analogy(rng),
   syllogism,
   balance: balanceScale,
   grid: logicGrid,

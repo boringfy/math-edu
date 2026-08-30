@@ -1,3 +1,7 @@
+// GENERATED FILE — DO NOT EDIT.
+// Copied from backend/src/generators by `npm run sync:shared`.
+// Change the original and re-run that; edits here are overwritten.
+
 /**
  * The one source of randomness the generators are allowed to use.
  *

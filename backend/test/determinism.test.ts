@@ -55,7 +55,10 @@ describe('the bake is deterministic', () => {
 });
 
 describe('no generator reaches for unseeded randomness', () => {
-  const roots = ['src/generators', 'src/content'];
+  // `src/factories` is in here because the generators moved out from under
+  // this scan once already. It also covers the app's copy transitively: the
+  // drift gate proves that copy is byte-equal to what is scanned here.
+  const roots = ['src/generators', 'src/factories', 'src/content'];
 
   const walk = (dir: string): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((e) =>

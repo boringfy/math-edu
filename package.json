@@ -14,7 +14,7 @@
     "web": "npm run web -w frontend",
     "bake": "npm run bake -w backend",
     "serve": "npm run serve -w backend",
-    "sync:contract": "npm run sync:contract -w backend",
+    "sync:shared": "npm run sync:shared -w backend",
     "test": "npm test --workspaces --if-present"
   }
 }

@@ -7,10 +7,10 @@
   "scripts": {
     "bake": "tsx src/bake/bake.ts",
     "seed": "tsx src/bake/seed.ts",
-    "sync:contract": "tsx src/bake/syncContract.ts",
+    "sync:shared": "tsx src/bake/syncShared.ts",
     "serve": "tsx src/server/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx src/bake/syncContract.ts --check && tsc --noEmit && vitest run"
+    "test": "tsx src/bake/syncShared.ts --check && tsc --noEmit && vitest run"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

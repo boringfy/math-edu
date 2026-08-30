@@ -1,3 +1,7 @@
+// GENERATED FILE — DO NOT EDIT.
+// Copied from backend/src/generators by `npm run sync:shared`.
+// Change the original and re-run that; edits here are overwritten.
+
 import { Question } from '../contract';
 import { Rng, makeQuestion, numPool } from './generator';
 
