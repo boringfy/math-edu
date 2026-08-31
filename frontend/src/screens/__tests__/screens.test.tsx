@@ -156,9 +156,11 @@ describe('the map shows one level at a time', () => {
     const tree = render(
       <HomeScreen {...homeProps('reading')} grade={2} progress={clearAll('reading', 2)} />,
     );
-    // Six levels of authored stories, and no seventh invented for them.
-    expect(textOf(tree)).toContain('Level 6');
-    expect(textOf(tree)).not.toContain('Level 7');
+    // However many stories are written, the map stops on the last of them
+    // and never composes one more.
+    const last = Math.ceil(LIB.stories(2).length / 10);
+    expect(textOf(tree)).toContain(`Level ${last}`);
+    expect(textOf(tree)).not.toContain(`Level ${last + 1}`);
   });
 
   it('walks back to a level already finished', () => {

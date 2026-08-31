@@ -60,11 +60,14 @@ describe('which maps carry on', () => {
   });
 
   it('stops a finite map at its end', () => {
-    expect(highestOpenLevel('reading', 2, LIB.stories(2), {})).toBe(1);
+    const stories = LIB.stories(2);
+    expect(highestOpenLevel('reading', 2, stories, {})).toBe(1);
     const done = Object.fromEntries(
-      LIB.stories(2).map((s) => [s.id, { stars: 1 as const, bestPercent: 60, clearedAt: 'x' }]),
+      stories.map((s) => [s.id, { stars: 1 as const, bestPercent: 60, clearedAt: 'x' }]),
     );
-    expect(highestOpenLevel('reading', 2, LIB.stories(2), done)).toBe(6);
+    // However many stories are written, reading stops on the last of them
+    // rather than inventing an extra level.
+    expect(highestOpenLevel('reading', 2, stories, done)).toBe(authoredLevels(stories));
   });
 
   it('opens the next level once the authored map is finished', () => {

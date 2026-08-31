@@ -1,6 +1,7 @@
 import { Grade, Story } from '../contract';
 import { GRADE_1 } from './storyPacks/grade1';
 import { GRADE_2 } from './storyPacks/grade2';
+import { GRADE_2B } from './storyPacks/grade2b';
 import { GRADE_3 } from './storyPacks/grade3';
 import { GRADE_4 } from './storyPacks/grade4';
 import { GRADE_5 } from './storyPacks/grade5';
@@ -1608,7 +1609,7 @@ const OPENING: Record<Grade, StorySpec[]> = {
 
 const LIBRARY: Record<Grade, StorySpec[]> = {
   1: [...OPENING[1], ...GRADE_1],
-  2: [...OPENING[2], ...GRADE_2],
+  2: [...OPENING[2], ...GRADE_2, ...GRADE_2B],
   3: [...OPENING[3], ...GRADE_3],
   4: [...OPENING[4], ...GRADE_4],
   5: [...OPENING[5], ...GRADE_5],
