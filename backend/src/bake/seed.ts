@@ -12,17 +12,15 @@
  * size, and gets the full-depth version on the first update.
  */
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GRADES, Manifest, SCHEMA_VERSION } from '../contract';
-import { LESSONS } from '../content/lessons';
-import { PUZZLE_SETS } from '../content/puzzles';
-import { RULES } from '../content/rules';
-import { STORIES } from '../content/stories';
+import { Manifest, Pack, PackDescriptor, SCHEMA_VERSION } from '../contract';
 import { MIN_APP_VERSION } from './config';
-import { logicPools, mathPools } from './pools';
+import { buildPacks } from './packs';
+import { stampAndPersist } from './stamps';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SEED_DIR = join(here, '..', '..', '..', 'frontend', 'assets', 'seed');
@@ -35,55 +33,65 @@ const SEED_DIR = join(here, '..', '..', '..', 'frontend', 'assets', 'seed');
  */
 const SEED_DEPTH = { math: 30, logic: 20 };
 
-const trim = (
-  pools: Record<string, unknown[]>,
-  depth: number,
-): Record<string, unknown[]> =>
+const trim = <T,>(pools: Record<string, T[]>, depth: number): Record<string, T[]> =>
   Object.fromEntries(
     Object.entries(pools).map(([key, questions]) => [key, questions.slice(0, depth)]),
   );
+
+/** The bundled body for a pack: the full one, with its pools cut short. */
+function shallow(body: Pack): Pack {
+  if (body.kind === 'math') return { ...body, pools: trim(body.pools, SEED_DEPTH.math) };
+  if (body.kind === 'logic') return { ...body, pools: trim(body.pools, SEED_DEPTH.logic) };
+  return body;
+}
 
 export function bakeSeed(): { files: number; bytes: number } {
   rmSync(SEED_DIR, { recursive: true, force: true });
   mkdirSync(SEED_DIR, { recursive: true });
 
+  const built = buildPacks();
+  // Stamped from the full-depth bodies, exactly as the served bake stamps
+  // them, so the same checkout gives the bundled and served copies of a pack
+  // the same date and the client's comparison means something.
+  const stamps = stampAndPersist(built);
+
   let bytes = 0;
-  const write = (name: string, body: unknown): void => {
+  const write = (name: string, body: unknown): string => {
     const text = JSON.stringify(body);
     writeFileSync(join(SEED_DIR, name), text, 'utf8');
     bytes += Buffer.byteLength(text, 'utf8');
+    return text;
   };
 
-  for (const grade of GRADES) {
-    write(`math.g${grade}.json`, {
-      kind: 'math',
+  const descriptors: PackDescriptor[] = [];
+  for (const { id, body } of built) {
+    const text = write(`${id}.json`, shallow(body));
+    descriptors.push({
+      id,
+      // Zero, so a served pack outranks a bundled one whenever the two are
+      // the same age. Freshness is decided by `bakedAt`; this stays as the
+      // tie-break it always was.
+      version: 0,
+      sha256: createHash('sha256').update(text, 'utf8').digest('hex'),
+      // Bundled packs are read from the binary, never fetched.
+      url: '',
+      bytes: Buffer.byteLength(text, 'utf8'),
       schemaVersion: SCHEMA_VERSION,
-      grade,
-      catalog: LESSONS[grade],
-      pools: trim(mathPools(grade), SEED_DEPTH.math),
-    });
-    write(`reading.g${grade}.json`, {
-      kind: 'reading',
-      schemaVersion: SCHEMA_VERSION,
-      grade,
-      catalog: STORIES[grade],
-    });
-    write(`logic.g${grade}.json`, {
-      kind: 'logic',
-      schemaVersion: SCHEMA_VERSION,
-      grade,
-      catalog: PUZZLE_SETS[grade],
-      pools: trim(logicPools(grade), SEED_DEPTH.logic),
+      minAppVersion: MIN_APP_VERSION,
+      bakedAt: stamps[id]?.bakedAt,
     });
   }
 
-  write('rules.json', { kind: 'rules', schemaVersion: SCHEMA_VERSION, rules: RULES });
-
+  /*
+    Previously `packs: []`, which left the app with nothing to say about what
+    it was carrying. The descriptors are what let `Library` notice that the
+    binary holds newer content than the cache and prefer it.
+  */
   const manifest: Manifest = {
     manifestVersion: 0,
     generatedAt: new Date(0).toISOString(),
     minSupportedApp: MIN_APP_VERSION,
-    packs: [],
+    packs: descriptors,
   };
   write('manifest.json', manifest);
 

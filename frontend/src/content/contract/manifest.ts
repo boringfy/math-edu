@@ -43,6 +43,23 @@ export interface PackDescriptor {
    * renderer never breaks an app that has not been updated yet.
    */
   minAppVersion: string;
+  /**
+   * ISO 8601 of when this pack's *source* last changed — not when the bake
+   * ran. It is what lets a client tell two copies of the same pack apart.
+   *
+   * The app ships a full set of packs in its binary and also downloads them.
+   * Without a stamp there is nothing to compare: `version` restarts at 1 on
+   * every clean build (see `versionFor`), and the content hash does not
+   * order. So a device that had once downloaded a pack kept it for ever, and
+   * content shipped inside a newer app build could never take over from a
+   * server that had not been redeployed. That is exactly how a grade-2
+   * reading map stayed at 60 stories while the binary carried 120.
+   *
+   * Optional because manifests baked before this existed do not carry it, and
+   * a device may still be holding a cache index from one. Absent means
+   * "unknown", which loses to any known stamp on the other side.
+   */
+  bakedAt?: string;
 }
 
 export interface Manifest {

@@ -19,7 +19,7 @@ import { AppState, Platform } from 'react-native';
 import { PackId } from './contract';
 import { Slot, activeSlot, promoteIfReady, readIndex, readPack, updateWaiting } from './cache';
 import { Library } from './library';
-import { SEED_PACKS } from './seed';
+import { SEED_PACKS, seedBakedAt } from './seed';
 import { runEngineSelfCheck } from './selfCheck';
 import { UpdateOutcome, UpdaterConfig, checkForUpdate } from './updater';
 
@@ -95,10 +95,30 @@ export function boot(): Boot {
   };
   const fromBinary = (id: PackId): unknown | null => SEED_PACKS[id] ?? null;
 
+  /*
+    When each side was baked, so the library can prefer the binary on the one
+    occasion it should: content shipped in an app update while the server it
+    downloaded from is still serving the older set. The cache index is where
+    the downloaded stamp lives — it is the manifest entry the pack arrived
+    under. An index written before stamps existed reports null, which leaves
+    the download in front exactly as before.
+  */
+  const index = (() => {
+    try {
+      return readIndex(slot);
+    } catch {
+      return null;
+    }
+  })();
+  const stamps = {
+    downloaded: (id: PackId): string | null => index?.packs?.[id]?.bakedAt ?? null,
+    bundled: seedBakedAt,
+  };
+
   lastBootError = error;
   lastBootSlot = slot;
   lastBootPromoted = promoted;
-  return { library: new Library(fromDisk, fromBinary), slot, promoted, error };
+  return { library: new Library(fromDisk, fromBinary, stamps), slot, promoted, error };
 }
 
 /** What the app can say about the content it is running on. */

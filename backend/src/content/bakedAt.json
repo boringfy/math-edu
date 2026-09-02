@@ -1,0 +1,66 @@
+{
+  "logic.g1": {
+    "source": "b72fbb44ea3a",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "logic.g2": {
+    "source": "aee5b2f24f84",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "logic.g3": {
+    "source": "3be0e6a5171b",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "logic.g4": {
+    "source": "28062e9faa29",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "logic.g5": {
+    "source": "046f5c50ff7f",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "math.g1": {
+    "source": "dbd2d21cb9e2",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "math.g2": {
+    "source": "15d5bc32a611",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "math.g3": {
+    "source": "8594d6b3526e",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "math.g4": {
+    "source": "26bcda55d25b",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "math.g5": {
+    "source": "7276664cf157",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "reading.g1": {
+    "source": "6c67f6dbb57c",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "reading.g2": {
+    "source": "530de0283d64",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "reading.g3": {
+    "source": "3071cd546c79",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "reading.g4": {
+    "source": "036051a45855",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "reading.g5": {
+    "source": "e20a48eee726",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  },
+  "rules": {
+    "source": "7882c4ea1ff8",
+    "bakedAt": "2026-09-01T21:37:05.990Z"
+  }
+}

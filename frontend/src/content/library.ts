@@ -38,6 +38,56 @@ import { Pack } from './contract';
 /** Where a pack body comes from. Returns null when this slot has no copy. */
 export type PackSource = (id: PackId) => unknown | null;
 
+/**
+ * When each side's copy of a pack was baked, ISO 8601, or null if unknown.
+ *
+ * Both default to "unknown", which reproduces the old behaviour of always
+ * preferring the download — so a caller that does not care, such as a test
+ * over the bundled packs, need not supply either.
+ */
+export interface BakeStamps {
+  downloaded: (id: PackId) => string | null;
+  bundled: (id: PackId) => string | null;
+}
+
+const NO_STAMPS: BakeStamps = { downloaded: () => null, bundled: () => null };
+
+const parse = (iso: string | null): number | null => {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? null : t;
+};
+
+/**
+ * Whether the bundled copy should be tried first.
+ *
+ * An unstamped binary never wins: with nothing to compare, the download keeps
+ * the priority it has always had.
+ *
+ * An unstamped *download* loses to a stamped binary, and that is a deduction
+ * rather than a guess. Stamps are written by every bake from the moment they
+ * existed, so a cache index without one was necessarily written from a
+ * manifest baked before that — and a binary that carries a stamp was
+ * necessarily built after it. The download is provably the older of the two.
+ * This is the case that matters in practice: it is the state every device
+ * already in the field is in, and refusing to rule on it would leave them all
+ * pinned to whatever they downloaded last, which is the bug.
+ *
+ * The cost when this fires is pool depth, not correctness — bundled packs
+ * hold the same content with shallower question pools — and it corrects
+ * itself the moment the server is redeployed and a stamped pack arrives.
+ *
+ * Equal dates leave the download in front. So this can promote the binary
+ * over a stale cache, but it can never demote a server that is doing its job.
+ */
+export function bundledIsNewer(bundled: string | null, downloaded: string | null): boolean {
+  const a = parse(bundled);
+  if (a === null) return false;
+  const b = parse(downloaded);
+  if (b === null) return true;
+  return a > b;
+}
+
 export interface LoadNote {
   id: PackId;
   /** 'downloaded' or 'bundled' — which copy ended up being used. */
@@ -53,42 +103,55 @@ export class Library {
   constructor(
     private readonly downloaded: PackSource,
     private readonly bundled: PackSource,
+    private readonly stamps: BakeStamps = NO_STAMPS,
   ) {}
 
   /**
-   * Decodes a pack once, preferring the downloaded copy.
+   * Decodes a pack once, taking the newer of the two copies.
    *
-   * A downloaded pack that fails validation falls back to the one in the
-   * binary rather than taking the grade down with it — a bad publish costs
-   * freshness, not the app.
+   * The download normally wins: it is the whole point of publishing content,
+   * and it carries deeper question pools than the binary does. But it does
+   * not win merely by existing. A device that had once downloaded a pack used
+   * to keep it for ever, so content shipped inside a newer app build could
+   * never take over from a server that had not been redeployed — which is how
+   * a grade-2 reading map sat at 60 stories while the binary held 120. When
+   * the bundled copy is stamped strictly newer, it goes first.
+   *
+   * Either way the other copy is the fallback: whichever is tried first, a
+   * pack that fails validation hands over to the other rather than taking the
+   * grade down with it. A bad publish costs freshness, not the app.
    */
   private pack(id: PackId): Pack | null {
     const cached = this.cache.get(id);
     if (cached !== undefined) return cached;
 
+    const preferBundled = bundledIsNewer(this.stamps.bundled(id), this.stamps.downloaded(id));
+    const order: { source: PackSource; label: 'downloaded' | 'bundled' }[] = preferBundled
+      ? [
+          { source: this.bundled, label: 'bundled' },
+          { source: this.downloaded, label: 'downloaded' },
+        ]
+      : [
+          { source: this.downloaded, label: 'downloaded' },
+          { source: this.bundled, label: 'bundled' },
+        ];
+
     let result: Pack | null = null;
     let note: LoadNote = { id, source: 'none', dropped: 0 };
 
-    const fresh = this.downloaded(id);
-    if (fresh !== null && fresh !== undefined) {
-      const decoded = decodePack(fresh);
+    for (const { source, label } of order) {
+      const body = source(id);
+      if (body === null || body === undefined) continue;
+
+      const decoded = decodePack(body);
       if (decoded.pack) {
         result = decoded.pack;
-        note = { id, source: 'downloaded', dropped: decoded.dropped };
-      } else {
-        note = { id, source: 'none', reason: decoded.reason, dropped: decoded.dropped };
+        // `note.reason` carries why the copy tried first was rejected, when
+        // one was, so the settings screen can still explain the fallback.
+        note = { id, source: label, reason: note.reason, dropped: decoded.dropped };
+        break;
       }
-    }
-
-    if (!result) {
-      const seed = this.bundled(id);
-      if (seed !== null && seed !== undefined) {
-        const decoded = decodePack(seed);
-        if (decoded.pack) {
-          result = decoded.pack;
-          note = { id, source: 'bundled', reason: note.reason, dropped: decoded.dropped };
-        }
-      }
+      note = { id, source: 'none', reason: decoded.reason, dropped: decoded.dropped };
     }
 
     this.cache.set(id, result);

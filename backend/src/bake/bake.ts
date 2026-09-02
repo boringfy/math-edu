@@ -14,20 +14,10 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import {
-  GRADES,
-  Manifest,
-  Pack,
-  PackDescriptor,
-  PackId,
-  SCHEMA_VERSION,
-} from '../contract';
-import { LESSONS } from '../content/lessons';
-import { PUZZLE_SETS } from '../content/puzzles';
-import { RULES } from '../content/rules';
-import { STORIES } from '../content/stories';
+import { Manifest, PackDescriptor, PackId, SCHEMA_VERSION } from '../contract';
 import { BAKE_SEED, DIST_DIR, MIN_APP_VERSION } from './config';
-import { logicPools, mathPools } from './pools';
+import { buildPacks } from './packs';
+import { stampAndPersist } from './stamps';
 
 const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8').digest('hex');
 
@@ -54,59 +44,19 @@ function readPreviousManifest(): Manifest | null {
   }
 }
 
-/** Builds every pack body, before hashing or versioning. */
-function buildPacks(): { id: PackId; body: Pack }[] {
-  const packs: { id: PackId; body: Pack }[] = [];
-
-  for (const grade of GRADES) {
-    packs.push({
-      id: `math.g${grade}`,
-      body: {
-        kind: 'math',
-        schemaVersion: SCHEMA_VERSION,
-        grade,
-        catalog: LESSONS[grade],
-        pools: mathPools(grade),
-      },
-    });
-    packs.push({
-      id: `reading.g${grade}`,
-      body: {
-        kind: 'reading',
-        schemaVersion: SCHEMA_VERSION,
-        grade,
-        catalog: STORIES[grade],
-      },
-    });
-    packs.push({
-      id: `logic.g${grade}`,
-      body: {
-        kind: 'logic',
-        schemaVersion: SCHEMA_VERSION,
-        grade,
-        catalog: PUZZLE_SETS[grade],
-        pools: logicPools(grade),
-      },
-    });
-  }
-
-  packs.push({
-    id: 'rules',
-    body: { kind: 'rules', schemaVersion: SCHEMA_VERSION, rules: RULES },
-  });
-
-  return packs;
-}
-
 export function bake(): Manifest {
   const previous = readPreviousManifest();
   const packsDir = join(DIST_DIR, 'packs');
   rmSync(packsDir, { recursive: true, force: true });
   mkdirSync(packsDir, { recursive: true });
 
+  const built = buildPacks();
+  // Taken from the full-depth bodies, so the seed bake agrees. See stamps.ts.
+  const stamps = stampAndPersist(built);
+
   const descriptors: PackDescriptor[] = [];
 
-  for (const { id, body } of buildPacks()) {
+  for (const { id, body } of built) {
     // One hash, over exactly the bytes that will be served and exactly the
     // bytes the client will verify. The version is derived from it and kept
     // in the manifest, so republishing identical content is a no-op.
@@ -124,6 +74,7 @@ export function bake(): Manifest {
       bytes: Buffer.byteLength(text, 'utf8'),
       schemaVersion: SCHEMA_VERSION,
       minAppVersion: MIN_APP_VERSION,
+      bakedAt: stamps[id]?.bakedAt,
     });
   }
 

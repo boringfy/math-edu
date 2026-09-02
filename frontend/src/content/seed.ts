@@ -8,12 +8,13 @@
  * sensible; the first update replaces them wholesale.
  *
  * They are declared at version 0, which is below anything the bake emits, so
- * a served pack always wins.
+ * a served pack of the same age always wins. Which of two copies is *newer*
+ * is a separate question, answered by the `bakedAt` stamps below.
  *
  * Regenerate with `npm run seed -w backend`.
  */
 
-import { PackId } from './contract';
+import { Manifest, PackId } from './contract';
 
 /**
  * Metro needs a literal path per require, so this cannot be a loop. Adding a
@@ -37,3 +38,23 @@ export const SEED_PACKS: Record<PackId, unknown> = {
   'logic.g5': require('../../assets/seed/logic.g5.json'),
   rules: require('../../assets/seed/rules.json'),
 };
+
+/**
+ * What the bundled packs are, as the bake described them.
+ *
+ * Written by the same run that writes the packs, so it cannot drift from
+ * them the way a hand-kept list would.
+ */
+const SEED_MANIFEST = require('../../assets/seed/manifest.json') as Manifest;
+
+const SEED_BAKED_AT: Record<string, string> = Object.fromEntries(
+  (SEED_MANIFEST.packs ?? [])
+    .filter((p) => typeof p.bakedAt === 'string')
+    .map((p) => [p.id, p.bakedAt as string]),
+);
+
+/**
+ * When the bundled copy of a pack was baked, or null before the seed bake
+ * started recording it — in which case the download keeps its old priority.
+ */
+export const seedBakedAt = (id: PackId): string | null => SEED_BAKED_AT[id] ?? null;
