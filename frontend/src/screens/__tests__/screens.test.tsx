@@ -410,6 +410,27 @@ describe('HomeScreen', () => {
     expect(text).toContain('START');
   });
 
+  it('recovers today\'s completed total from history across every subject', () => {
+    const base = {
+      grade: 1 as const,
+      tier: 2 as const,
+      total: 5,
+      correctCount: 4,
+      fixedCount: 0,
+      skippedCount: 0,
+      elapsedMs: 30_000,
+    };
+    const history = [
+      { ...base, id: 'math', subject: 'math' as const, date: '2026-08-02T08:00:00.000Z' },
+      { ...base, id: 'logic', subject: 'logic' as const, date: '2026-08-02T09:00:00.000Z' },
+      { ...base, id: 'reading', subject: 'reading' as const, date: '2026-08-02T10:00:00.000Z' },
+      { ...base, id: 'old', subject: 'math' as const, date: '2026-08-01T10:00:00.000Z' },
+    ];
+
+    expect(textOf(render(<HomeScreen {...homeProps('math')} history={history} />)))
+      .toContain('0/3 done · 3 total today');
+  });
+
   it('opens the map at the stop the child is on, not back at the top', () => {
     const cleared = { stars: 3 as const, bestPercent: 100, clearedAt: '2026-08-01T00:00:00.000Z' };
     const progress: ProgressMap = { 'g1-l1': cleared, 'g1-l2': cleared, 'g1-l3': cleared };
@@ -473,6 +494,28 @@ describe('HomeScreen', () => {
 
     expect(openHistory('math', 'Past quizzes')).toContain('1:02');
     expect(openHistory('reading', 'Past reads')).toContain('0:31');
+  });
+
+  it('shows the saved level, lesson, and title needed to audit a result', () => {
+    const history = [{
+      id: 'r-level-2',
+      date: '2026-09-20T00:00:00.000Z',
+      subject: 'math' as const,
+      grade: 1 as const,
+      tier: 2 as const,
+      total: 5,
+      correctCount: 4,
+      fixedCount: 0,
+      skippedCount: 0,
+      elapsedMs: 30_000,
+      stopId: 'g1-l11',
+      stopTitle: 'Across Ten',
+      level: 2,
+      lesson: 1,
+    }];
+    const tree = render(<HomeScreen {...homeProps('math')} history={history} />);
+    press(tree, 'Past quizzes');
+    expect(textOf(tree)).toContain('Level 2 · Lesson 1 · Across Ten');
   });
 
   it('shows the puzzle map and free practice on the logic tab', () => {
@@ -612,7 +655,12 @@ describe('StoryPassage', () => {
 describe('DailyChallenges', () => {
   it('shows progress against each target', () => {
     const inProgress = { ...daily, progress: { [daily.challengeIds[0]]: 1 } };
-    expect(textOf(render(<DailyChallenges daily={inProgress} />))).toContain('1 /');
+    expect(textOf(render(<DailyChallenges daily={inProgress} totalToday={0} />))).toContain('1 /');
+  });
+
+  it('shows the total number of lessons finished today beside challenge progress', () => {
+    expect(textOf(render(<DailyChallenges daily={freshDaily('2026-09-23')} totalToday={7} />)))
+      .toContain('0/3 done · 7 total today');
   });
 });
 
@@ -844,6 +892,10 @@ describe('CorrectionScreen', () => {
 
     press(tree, 'Scratch paper');
     expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+  });
+
+  it('brings scratch paper to a second go at a logic puzzle', () => {
+    expect(correction({ subject: 'logic' }).root.findAllByType(ScratchPad)).toHaveLength(1);
   });
 
   it('leaves it out of a reading round and out of a switched-off one', () => {

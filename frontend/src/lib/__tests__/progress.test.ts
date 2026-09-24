@@ -66,6 +66,15 @@ describe('lessonAward', () => {
     expect(correctionAward(3).total).toBe(3 * COIN_RATES.fixed);
     expect(correctionAward(0).total).toBe(0);
   });
+
+  it('keeps rewards closer together without forcing round multiples', () => {
+    const small = correctionAward(1).total;
+    const strong = lessonAward({ correctCount: 10, total: 10, bestCombo: 10, firstClear: true });
+    expect(small).toBe(3);
+    expect(strong.total).toBeLessThan(40);
+    expect(strong.total % 5).not.toBe(0);
+    expect(new Set(Object.values(CHALLENGES).map((challenge) => challenge.reward))).toEqual(new Set([10]));
+  });
 });
 
 describe('daily challenges', () => {

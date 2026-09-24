@@ -23,6 +23,7 @@ import {
   composedQuestions,
   highestOpenLevel,
   isEndless,
+  LESSONS_PER_LEVEL,
   levelOf,
   masteryFor,
   stopsUpTo,
@@ -30,6 +31,7 @@ import {
 } from './src/lib/endless';
 import { fetchPlan, loadPlans } from './src/lib/levelPlanFetch';
 import { promoteToEntry, shuffle } from './src/lib/grading';
+import { recentHistory } from './src/lib/history';
 import { starsFor } from './src/lib/mapProgress';
 import {
   applyMetrics,
@@ -519,6 +521,7 @@ export default function App() {
 
   const resultFromSession = (s: Session): QuizResult => {
     const mistakes = s.records.filter((r) => !r.correct);
+    const stop = s.stop;
     return {
       id: s.resultId,
       date: new Date().toISOString(),
@@ -530,7 +533,10 @@ export default function App() {
       fixedCount: mistakes.filter((r) => r.fixed).length,
       skippedCount: mistakes.filter((r) => r.skipped).length,
       elapsedMs: s.elapsedMs,
-      stopId: s.stop?.id,
+      stopId: stop?.id,
+      stopTitle: stop?.title,
+      level: stop ? levelOf(stop.index) : undefined,
+      lesson: stop ? ((stop.index - 1) % LESSONS_PER_LEVEL) + 1 : undefined,
       stars: s.stars ?? undefined,
       coins: s.award.total,
     };
@@ -539,7 +545,7 @@ export default function App() {
   const persistResult = async (s: Session, newTier: Tier) => {
     const result = resultFromSession(s);
     await saveResult(result);
-    setHistory((prev) => [result, ...prev.filter((r) => r.id !== result.id)]);
+    setHistory((prev) => recentHistory([result, ...prev.filter((r) => r.id !== result.id)]));
     // The legacy per-grade dial stays live for math, so rolling this build
     // back loses nothing. It was never a logic setting, so logic never writes.
     if (newTier !== s.tier && s.subject === 'math') {

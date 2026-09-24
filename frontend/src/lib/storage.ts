@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { Profile, ProfileStore, emptyProfiles, makeProfile, settle } from './profiles';
 import { UnlockMap, emptyUnlocks } from './unlocks';
+import { recentHistory } from './history';
 
 // The 'mathquiz:' prefix is this app's storage namespace and predates the
 // reading half; keys are never renamed, or saved progress would be orphaned.
@@ -78,14 +79,17 @@ const PER_CHILD = [
   'tier:5',
 ];
 
-const MAX_HISTORY = 50;
-
 export async function loadHistory(): Promise<QuizResult[]> {
   try {
     const raw = await AsyncStorage.getItem(HISTORY());
     const stored = raw ? (JSON.parse(raw) as QuizResult[]) : [];
     // Results saved before the reading half existed are all math results.
-    return stored.map((r) => ({ ...r, subject: r.subject ?? 'math' }));
+    const history = stored.map((r) => ({ ...r, subject: r.subject ?? 'math' as const }));
+    const recent = recentHistory(history);
+    if (recent.length !== stored.length) {
+      await AsyncStorage.setItem(HISTORY(), JSON.stringify(recent));
+    }
+    return recent;
   } catch {
     return [];
   }
@@ -95,13 +99,13 @@ export async function loadHistory(): Promise<QuizResult[]> {
 export async function saveResult(result: QuizResult): Promise<void> {
   const history = await loadHistory();
   const rest = history.filter((r) => r.id !== result.id);
-  const next = [result, ...rest].slice(0, MAX_HISTORY);
+  const next = recentHistory([result, ...rest]);
   await AsyncStorage.setItem(HISTORY(), JSON.stringify(next));
 }
 
 /** Replaces the whole history — the sync merge writes its result with this. */
 export async function saveHistoryList(history: QuizResult[]): Promise<void> {
-  await AsyncStorage.setItem(HISTORY(), JSON.stringify(history.slice(0, MAX_HISTORY)));
+  await AsyncStorage.setItem(HISTORY(), JSON.stringify(recentHistory(history)));
 }
 
 /** Replaces a subject's whole map — the sync merge writes its result with this. */

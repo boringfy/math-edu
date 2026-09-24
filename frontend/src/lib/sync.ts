@@ -18,6 +18,7 @@ import type { LinkGoogleResponse, Profile, ProfileEnvelope } from '../content/co
 import { PROFILE_SCHEMA_VERSION } from '../content/contract';
 import { DailyState, Grade, ProgressMap, QuizResult, SUBJECTS, Settings, StopProgress, Subject, Tier } from '../types';
 import { AdaptiveStore } from './adaptive';
+import { recentHistory } from './history';
 import { Profile as Kid, ProfileStore, emptyProfiles, settle } from './profiles';
 import {
   PackedProgress,
@@ -315,7 +316,10 @@ export function mergeProfiles(
       reading: mergeMaps(local.data.progress.reading, remote.data.progress.reading),
       logic: mergeMaps(local.data.progress.logic, remote.data.progress.logic),
     },
-    history: history.slice(0, 50),
+    history: recentHistory(
+      history,
+      new Date(Date.parse(local.updatedAt) >= Date.parse(remote.updatedAt) ? local.updatedAt : remote.updatedAt),
+    ),
     daily: dailyNewer ?? null,
     settings: newer.settings,
     adaptive,

@@ -223,7 +223,7 @@ describe('snapshot and apply', () => {
     const original = data({
       coins: 42,
       grades: { math: 2, reading: 3, logic: 1 },
-      history: [result('a', '2026-08-02')],
+      history: [result('a', '2026-09-02')],
       adaptive: { 'math:2': adaptiveState({}) },
       progress: {
         math: { 'g2-l1': { stars: 2, bestPercent: 80, clearedAt: '2026-08-01T00:00:00.000Z' } },

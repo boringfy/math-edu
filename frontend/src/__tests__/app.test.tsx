@@ -387,6 +387,33 @@ describe('playing a lesson end to end', () => {
     expect(textOf(tree)).toContain(LIB.lessons(1)[1].title);
   });
 
+  it('records the exact map location after jumping into a new level', async () => {
+    const cleared = Object.fromEntries(
+      LIB.lessons(1).slice(0, 10).map((lesson) => [
+        lesson.id,
+        { stars: 1, bestPercent: 60, clearedAt: '2026-09-20T00:00:00.000Z' },
+      ]),
+    );
+    const next = LIB.lessons(1)[10];
+    await AsyncStorage.setItem('mathquiz:lessons', JSON.stringify(cleared));
+    await AsyncStorage.setItem(
+      'mathquiz:unlocks',
+      JSON.stringify({ math: [next.id], reading: [], logic: [] }),
+    );
+
+    const tree = await launch();
+    await openLesson(tree, 10);
+    await answerAllCorrectly(tree, nodeWithProp(tree, 'questions').props.questions as Question[]);
+
+    const history = JSON.parse((await AsyncStorage.getItem(await kidKey('history'))) ?? '[]');
+    expect(history[0]).toMatchObject({
+      stopId: next.id,
+      stopTitle: next.title,
+      level: 2,
+      lesson: 1,
+    });
+  });
+
   it('gives up a lesson without saving anything, back to the map', async () => {
     const tree = await launch();
     await openLesson(tree, 0);

@@ -8,6 +8,7 @@ import { AdaptiveStore, adaptiveKey } from '../lib/adaptive';
 import { formatElapsed } from '../lib/format';
 import { highestOpenLevel, isEndless, stopsUpTo, windowOf } from '../lib/endless';
 import { ProfileStore, activeProfile } from '../lib/profiles';
+import { dayKey } from '../lib/progress';
 import { chargesForLessons } from '../lib/unlocks';
 import { UnlockMap } from '../lib/unlocks';
 import { starsEarned } from '../lib/mapProgress';
@@ -136,6 +137,10 @@ export default function HomeScreen({
   const puzzleSets = library.puzzleSets(grade);
   const authored = subject === 'reading' ? stories : subject === 'logic' ? puzzleSets : lessons;
   const mine = history.filter((r) => r.subject === subject);
+  // History spans all three tabs. Count from it so an app update can recover
+  // everything already finished today instead of starting the badge at zero.
+  const totalToday = history.filter((result) => dayKey(new Date(result.date)) === daily.date).length;
+  const stopNoun = subject === 'reading' ? 'Story' : subject === 'logic' ? 'Puzzle' : 'Lesson';
   const [showHistory, setShowHistory] = useState(false);
 
   /**
@@ -291,7 +296,7 @@ export default function HomeScreen({
         style={styles.scroll}
         contentContainerStyle={styles.content}
       >
-        <DailyChallenges daily={daily} />
+        <DailyChallenges daily={daily} totalToday={totalToday} />
 
       {subject === 'reading' && (
         <MapTrail
@@ -431,6 +436,11 @@ export default function HomeScreen({
               <Text style={styles.historyMeta}>
                 Grade {r.grade} · {TIER_LABELS[r.tier]} · {formatElapsed(r.elapsedMs)}
               </Text>
+              {r.level !== undefined && r.lesson !== undefined && (
+                <Text style={styles.historyMeta}>
+                  Level {r.level} · {stopNoun} {r.lesson}{r.stopTitle ? ` · ${r.stopTitle}` : ''}
+                </Text>
+              )}
               {(r.fixedCount > 0 || r.skippedCount > 0) && (
                 <Text style={styles.historyMeta}>
                   {r.fixedCount} fixed{r.skippedCount > 0 ? ` · ${r.skippedCount} skipped` : ''}

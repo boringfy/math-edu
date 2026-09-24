@@ -67,6 +67,10 @@ export interface QuizResult {
   elapsedMs: number;
   /** Set when the quiz came from a map rather than free practice. */
   stopId?: string;
+  /** Snapshot of the map location, kept even if content is retitled later. */
+  stopTitle?: string;
+  level?: number;
+  lesson?: number;
   stars?: Stars;
   coins?: number;
 }

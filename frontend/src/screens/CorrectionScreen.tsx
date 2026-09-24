@@ -28,7 +28,7 @@ export interface CorrectionOutcome {
 }
 
 interface Props {
-  /** Only maths gets scrap paper; a story or a puzzle is nothing to work out. */
+  /** Maths and logic can use scrap paper; reading keeps its passage in view. */
   subject: Subject;
   /** The AI tutor pitches its explanation at this grade. */
   grade: Grade;
@@ -67,9 +67,9 @@ export default function CorrectionScreen({
   const [lastAnswer, setLastAnswer] = useState<string | null>(null);
   const [entry, setEntry] = useState('');
   const [cuts, setCuts] = useState<Chord[]>([]);
-  // A second go at a sum is exactly where working it out by hand helps most,
-  // so the paper is here too, out from the start and put away by the pencil.
-  const scratchable = scratchPaper && subject === 'math';
+  // A second go at a sum or puzzle is exactly where working it out by hand
+  // helps most, so the paper starts open and can be put away by the pencil.
+  const scratchable = scratchPaper && (subject === 'math' || subject === 'logic');
   const [scratching, setScratching] = useState(true);
   // The AI tutor. A mistake being corrected is exactly the child it is for.
   const tutorable = subject === 'math' && tutorAvailable();

@@ -5,10 +5,11 @@ import { DailyState } from '../types';
 
 interface Props {
   daily: DailyState;
+  totalToday: number;
 }
 
 /** The day's three goals, each with its own bar and its coin reward. */
-export default function DailyChallenges({ daily }: Props) {
+export default function DailyChallenges({ daily, totalToday }: Props) {
   const done = daily.challengeIds.filter((id) => daily.claimed.includes(id)).length;
 
   return (
@@ -16,7 +17,7 @@ export default function DailyChallenges({ daily }: Props) {
       <View style={styles.headerRow}>
         <Text style={styles.header}>Today's challenges</Text>
         <Text style={styles.headerCount}>
-          {done}/{daily.challengeIds.length} done
+          {done}/{daily.challengeIds.length} done · {totalToday} total today
         </Text>
       </View>
 
