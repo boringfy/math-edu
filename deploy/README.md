@@ -16,8 +16,14 @@ label. To inspect the job, run:
 systemctl --user status math-edu-deploy.timer
 journalctl --user -u math-edu-deploy.service -n 100 --no-pager
 git -C /fiopower/math-edu rev-parse HEAD
-curl -fsS https://math-edu.hashfront.com/healthz
+curl -fsS http://127.0.0.1:8788/healthz
 ```
+
+This validates the backend on `r7920.300k.xyz`. The public
+`math-edu.hashfront.com` hostname is behind Cloudflare and must separately
+route to this host before apps use this deployment. Check its update endpoint
+from outside the server; a 404 there while the local endpoint returns 204
+means the public hostname is still reaching a different origin.
 
 To trigger a check immediately, run `systemctl --user start math-edu-deploy.service`.
 The signing private key for app updates is **not** on this server. See
