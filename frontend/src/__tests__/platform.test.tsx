@@ -17,6 +17,9 @@ import { act, create, ReactTestInstance, ReactTestRenderer } from 'react-test-re
 import { Path } from 'react-native-svg';
 import App from '../../App';
 import ScratchPad from '../components/ScratchPad';
+import SettingsScreen from '../screens/SettingsScreen';
+import { DEFAULT_SETTINGS } from '../types';
+import { emptyProfiles } from '../lib/profiles';
 import { updaterConfig } from '../content';
 import { checkForUpdate } from '../content/updater';
 import { ERASER_BUTTONS } from '../lib/scratch';
@@ -137,9 +140,15 @@ describe(`${OS}: the scratch paper`, () => {
     expect(paths(tree)).toHaveLength(0);
   });
 
-  it('takes a fingertip on a tablet with no pen', () => {
+  it('takes a fingertip in the default finger mode', () => {
     const tree = pad(false);
     draw(tree, [[10, 10], [40, 40], [70, 70]], 'touch');
+    expect(paths(tree).length).toBeGreaterThan(0);
+  });
+
+  it('still takes a pen in finger mode', () => {
+    const tree = pad(false);
+    draw(tree, [[10, 10], [40, 40], [70, 70]], 'pen');
     expect(paths(tree).length).toBeGreaterThan(0);
   });
 
@@ -163,6 +172,31 @@ describe(`${OS}: the scratch paper`, () => {
       expect(paths(tree).length).toBeGreaterThan(0);
     });
   }
+});
+
+describe(`${OS}: drawing input setting`, () => {
+  it('names the device-specific pen mode and starts in finger mode', () => {
+    let tree!: ReactTestRenderer;
+    act(() => {
+      tree = create(
+        <SettingsScreen
+          profiles={emptyProfiles()}
+          onAddProfile={() => {}}
+          onRenameProfile={() => {}}
+          onRemoveProfile={() => {}}
+          settings={DEFAULT_SETTINGS}
+          onChange={() => {}}
+          grades={{ math: 1, reading: 1, logic: 1 }}
+          onGradeChange={() => {}}
+          onBack={() => {}}
+        />,
+      );
+    });
+    const label = OS === 'ios' ? 'Pencil mode' : 'Stylus mode';
+    const toggle = tree.root.find((n) => n.props.accessibilityLabel === label);
+    expect(toggle.props.value).toBe(false);
+    act(() => tree.unmount());
+  });
 });
 
 /* -------------------------------------------------------------------- app -- */
@@ -197,7 +231,7 @@ describe(`${OS}: the app itself`, () => {
     };
     const text = walk(tree.toJSON());
 
-    expect(text).toContain('Boring Quest');
+    expect(text).not.toContain('Have Fun Learning');
     expect(text).toContain('Math');
     expect(text).toContain('Reading');
     expect(text).toContain('Logic');

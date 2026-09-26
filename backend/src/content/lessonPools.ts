@@ -38,6 +38,10 @@ import { averageProblem, busesProblem, changeProblem, coinsProblem, fractionOfSe
 export function lessonPools(grade: Grade, tier: Tier): Record<TopicKey, Gen[]> {
   const empty: Record<TopicKey, Gen[]> = {
     addSub: [],
+    // Empty, and deliberately so. The authored sixty and the packs baked from
+    // them are frozen; data handling arrived afterwards and reaches children
+    // through the composed levels instead.
+    data: [],
     mulDiv: [],
     fractions: [],
     decimals: [],

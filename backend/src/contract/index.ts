@@ -6,6 +6,7 @@
  */
 
 export * from './content';
+export * from './feedback';
 export * from './manifest';
 export * from './packs';
 export * from './rules';

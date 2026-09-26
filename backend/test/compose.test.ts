@@ -113,7 +113,9 @@ describe('the seam at lesson 61', () => {
         firstComposedLevel: FIRST,
         mastery: {},
       });
-      const ds = lessons.flatMap((l) => l.slots.map((s) => s.d));
+      // Speed Match deliberately starts below the map difficulty: it drills
+      // recall and adapts independently from ordinary lesson composition.
+      const ds = lessons.filter((l) => !l.speed).flatMap((l) => l.slots.map((s) => s.d));
       expect(Math.min(...ds), `grade ${grade}`).toBeGreaterThanOrEqual(grade * 3 - 2);
     }
   });
@@ -180,6 +182,7 @@ describe('mastery moves one skill without moving the rest', () => {
     const lessons = level(10, { time: 4, mulDiv: 11 });
     const at = (skill: string) =>
       lessons
+        .filter((lesson) => !lesson.speed)
         .flatMap((l) => l.slots)
         .filter((s) => CATALOG[s.factory].skill === skill)
         .map((s) => s.d);

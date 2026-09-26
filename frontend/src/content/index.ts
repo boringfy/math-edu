@@ -28,11 +28,14 @@ export { CHECK_INTERVAL_MS } from './updater';
 export type { UpdateOutcome } from './updater';
 
 /**
- * Where content is served from. Set `EXPO_PUBLIC_CONTENT_URL` at build time;
- * with it unset the app runs entirely on the packs in the binary, which is
- * what the test suite and a first offline launch both do.
+ * Release builds must reach the production content host even when they are
+ * signed locally, outside EAS (which sets the same URL explicitly). Development
+ * and tests stay offline by default; an explicit URL overrides either mode.
  */
-export const CONTENT_URL = process.env.EXPO_PUBLIC_CONTENT_URL ?? '';
+export const PRODUCTION_CONTENT_URL = 'https://math-edu.hashfront.com';
+export const contentUrlFor = (configured: string | undefined, development: boolean): string =>
+  configured ?? (development ? '' : PRODUCTION_CONTENT_URL);
+export const CONTENT_URL = contentUrlFor(process.env.EXPO_PUBLIC_CONTENT_URL, __DEV__);
 
 /** Remembered from boot, so the settings page can show what went wrong. */
 let lastBootError: string | null = null;

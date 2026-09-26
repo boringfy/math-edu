@@ -138,6 +138,36 @@ export interface Settings {
    * needs everything but the pen turned away.
    */
   penOnly: boolean;
+  /**
+   * Whether answering makes a noise. On by default, because the sounds are
+   * short and quiet and a game that is silent for no visible reason reads as
+   * broken — but a tablet used in a classroom or a car needs the switch.
+   */
+  sounds: boolean;
+  /**
+   * Whether the tablet locks itself to this app.
+   *
+   * Android calls it screen pinning: Home, Recents and every other app stop
+   * working, and leaving asks for the device PIN. It is here so a grown-up
+   * sets it once rather than re-pinning from Recents every time the app opens.
+   *
+   * Off by default. A tablet that traps whoever picks it up, with no warning,
+   * is a worse default than one a child can wander off.
+   */
+  kioskMode: boolean;
+  /** Whether the device should invite the child back once a day. */
+  reminderEnabled: boolean;
+  /** Local wall-clock time for the daily reminder. */
+  reminderHour: number;
+  reminderMinute: number;
 }
 
-export const DEFAULT_SETTINGS: Settings = { scratchPaper: true, penOnly: true };
+export const DEFAULT_SETTINGS: Settings = {
+  scratchPaper: true,
+  penOnly: false,
+  sounds: true,
+  kioskMode: false,
+  reminderEnabled: false,
+  reminderHour: 17,
+  reminderMinute: 0,
+};

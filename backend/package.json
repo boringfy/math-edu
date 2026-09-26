@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Bakes Boring Quest's content into versioned packs and serves them",
+  "description": "Bakes Have Fun Learning's content into versioned packs and serves them",
   "scripts": {
     "bake": "tsx src/bake/bake.ts",
     "seed": "tsx src/bake/seed.ts",
     "sync:shared": "tsx src/bake/syncShared.ts",
     "serve": "tsx src/server/index.ts",
+    "updates:publish": "tsx src/updates/publish.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx src/bake/syncShared.ts --check && tsc --noEmit && vitest run"
   },

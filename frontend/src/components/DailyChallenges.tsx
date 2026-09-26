@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import CoinIcon from './CoinIcon';
 import { CHALLENGES } from '../lib/progress';
 import { colors } from '../theme';
 import { DailyState } from '../types';
@@ -29,12 +30,20 @@ export default function DailyChallenges({ daily, totalToday }: Props) {
         return (
           <View key={id} style={styles.challenge}>
             <View style={styles.labelRow}>
-              <Text style={[styles.title, complete && styles.titleDone]} numberOfLines={1}>
-                {def.icon} {def.title}
-              </Text>
-              <Text style={[styles.reward, complete && styles.rewardDone]}>
-                {complete ? '✔' : `🪙 ${def.reward}`}
-              </Text>
+              <View style={styles.titleRow}>
+                {def.icon === '🪙' ? <CoinIcon size={16} /> : <Text style={styles.titleIcon}>{def.icon}</Text>}
+                <Text style={[styles.title, complete && styles.titleDone]} numberOfLines={1}>
+                  {def.title}
+                </Text>
+              </View>
+              {complete ? (
+                <Text style={[styles.reward, styles.rewardDone]}>✔</Text>
+              ) : (
+                <View style={styles.rewardRow}>
+                  <CoinIcon size={15} />
+                  <Text style={styles.reward}>{def.reward}</Text>
+                </View>
+              )}
             </View>
             <View style={styles.track}>
               <View
@@ -69,9 +78,12 @@ const styles = StyleSheet.create({
   headerCount: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
   challenge: { marginTop: 14 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
+  titleIcon: { fontSize: 14 },
   title: { fontSize: 14, fontWeight: '600', color: colors.text, flexShrink: 1 },
   titleDone: { color: colors.correct },
-  reward: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginLeft: 8 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 8 },
+  reward: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
   rewardDone: { color: colors.correct, fontSize: 16 },
   track: {
     height: 10,

@@ -142,6 +142,7 @@ const LATE_TOPICS_FROM = 35;
 
 /** Names a drill can take, cycled so a grade doesn't repeat itself. */
 const TITLES: Record<TopicKey, string[]> = {
+  data: ['Charts & Tables', 'Reading Data', 'Bars & Symbols', 'What the Chart Says'],
   addSub: ['Sums Practice', 'Adding On', 'Taking Away', 'Number Bonds', 'Quick Sums', 'Missing Numbers'],
   mulDiv: ['Times Tables', 'Sharing Out', 'Multiply Drill', 'Division Drill', 'Groups & Rows', 'Factor Hunt'],
   fractions: ['Fraction Practice', 'Parts of a Whole', 'Comparing Fractions', 'Fraction Drill'],
@@ -157,6 +158,7 @@ const TITLES: Record<TopicKey, string[]> = {
 };
 
 const ICONS: Record<TopicKey, string> = {
+  data: '📊',
   addSub: '➕',
   mulDiv: '✖️',
   fractions: '🍕',
@@ -173,6 +175,7 @@ const ICONS: Record<TopicKey, string> = {
 
 /** Short labels, for naming a lesson that covers more than one topic. */
 const SHORT: Record<TopicKey, string> = {
+  data: 'Charts',
   addSub: 'Sums',
   mulDiv: 'Tables',
   fractions: 'Fractions',

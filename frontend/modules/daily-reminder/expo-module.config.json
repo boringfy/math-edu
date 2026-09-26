@@ -1,0 +1,5 @@
+{
+  "platforms": ["android", "ios"],
+  "ios": { "modules": ["DailyReminderModule"] },
+  "android": { "modules": ["expo.modules.dailyreminder.DailyReminderModule"] }
+}

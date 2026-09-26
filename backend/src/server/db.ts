@@ -47,6 +47,27 @@ const SCHEMA = `
     updated_at TEXT NOT NULL,
     blob       TEXT NOT NULL
   );
+  -- Suggestions and bug reports, told apart by the kind column rather than by
+  -- living in two tables: they are the same shape, and one table sorts, counts
+  -- and pages without a union. user_id carries no foreign key because feedback
+  -- is accepted from a device that has never registered for sync — losing the
+  -- report would be worse than storing an id that matches no row.
+  CREATE TABLE IF NOT EXISTS feedback (
+    id          TEXT PRIMARY KEY,
+    kind        TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    message     TEXT NOT NULL,
+    subject     TEXT,
+    grade       INTEGER,
+    device_id   TEXT NOT NULL,
+    user_id     TEXT,
+    profile_id  TEXT,
+    ip          TEXT NOT NULL,
+    app_version TEXT,
+    platform    TEXT
+  );
+  CREATE INDEX IF NOT EXISTS feedback_kind_created
+    ON feedback (kind, created_at DESC);
 `;
 
 export function openSyncDb(path: string): DatabaseSync {

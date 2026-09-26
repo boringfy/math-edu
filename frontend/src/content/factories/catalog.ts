@@ -20,6 +20,7 @@
 import { Tier } from '../contract';
 import * as draw from '../generators/drawPuzzles';
 import { ARITHMETIC } from './arithmetic';
+import { DATA_AND_SPACE } from './dataAndSpace';
 import { LOGIC } from './logic';
 import { Factory, Skill, Slot, factory } from './ramp';
 import { SHAPES_AND_UNITS } from './shapesAndUnits';
@@ -41,7 +42,14 @@ export const cakeCut = factory({
   build: ({ tier }, rng) => draw.cakeCutQuestion(tier, rng),
 });
 
-const ALL: Factory[] = [...ARITHMETIC, ...WORD, ...SHAPES_AND_UNITS, cakeCut, ...LOGIC];
+const ALL: Factory[] = [
+  ...ARITHMETIC,
+  ...WORD,
+  ...SHAPES_AND_UNITS,
+  ...DATA_AND_SPACE,
+  cakeCut,
+  ...LOGIC,
+];
 
 export const CATALOG: Record<string, Factory> = Object.fromEntries(
   ALL.map((f) => [f.id, f]),

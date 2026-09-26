@@ -45,6 +45,7 @@ export const TOPIC_LABEL: Record<string, string> = {
   speed: 'speed',
   time: 'clocks',
   place: 'place value',
+  data: 'charts',
 };
 
 /** Labels for the reasoning families a logic stop draws on. */
@@ -62,6 +63,13 @@ export const FAMILY_LABEL: Record<string, string> = {
   rotation: 'turning',
   mirror: 'mirrors',
   oddShape: 'shapes',
+  // Reasoning about shape and space. Composed levels only — the authored
+  // sixty predate them.
+  shapeRiddle: 'shape riddles',
+  heading: 'which way',
+  angleLogic: 'angles',
+  folding: 'folding',
+  netFold: 'nets',
 };
 
 /** Narrowing helpers, so screens can stay generic over the three maps. */

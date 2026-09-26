@@ -131,6 +131,8 @@ export function tutorProviders(env: NodeJS.ProcessEnv = process.env): TutorProvi
  * instead of one generic recitation for everything.
  */
 const ANGLES: Record<TutorTopic, string> = {
+  data:
+    'Teach it by reading one row at a time and saying what it means out loud. A chart is a list of counts written so you can compare them at a glance — and a pictogram always means checking the key first.',
   addSub:
     'Teach it with counting things the child knows — toys, sweets, hops along a number line. Adding is getting more, subtracting is some going away.',
   mulDiv:

@@ -1,4 +1,4 @@
-# 🧮📖🧩 Boring Quest
+# 🧮📖🧩 Have Fun Learning
 
 An elementary-school practice app for grades 1–5, built with Expo and React Native. It has three parts — **maths**, **reading comprehension** and **logic** — each with its own map and its own progress, switched between with the tab bar at the bottom of the home screen.
 

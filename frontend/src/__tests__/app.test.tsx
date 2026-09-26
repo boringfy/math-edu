@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 import { act, create, ReactTestRenderer } from 'react-test-renderer';
 import App from '../../App';
 import { seedLibrary } from '../content/testLibrary';
@@ -196,6 +197,27 @@ beforeEach(async () => {
 });
 afterEach(() => jest.useRealTimers());
 
+it('asks once on first launch and keeps usage sharing off when declined', async () => {
+  const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  try {
+    const first = await launch();
+    const call = alert.mock.calls.find(([title]) => title === 'Help us improve learning?');
+    expect(call).toBeDefined();
+    const buttons = call?.[2] ?? [];
+    await act(async () => {
+      buttons.find((button) => button.text === 'No thanks')?.onPress?.();
+    });
+    expect(await AsyncStorage.getItem('mathquiz:usageConsent')).toBe('no');
+    expect(await AsyncStorage.getItem('mathquiz:usageInstallId')).toBeNull();
+    alert.mockClear();
+    await launch();
+    expect(alert.mock.calls.some(([title]) => title === 'Help us improve learning?')).toBe(false);
+    await act(async () => first.unmount());
+  } finally {
+    alert.mockRestore();
+  }
+});
+
 /**
  * A key belonging to whoever is playing.
  *
@@ -353,7 +375,8 @@ describe('adaptive free practice', () => {
 describe('playing a lesson end to end', () => {
   it('banks coins, awards stars and opens the next lesson', async () => {
     const tree = await launch();
-    expect(textOf(tree)).toContain('🪙 0');
+    expect(tree.root.findAllByProps({ accessibilityLabel: '0 coins' }).length).toBeGreaterThan(0);
+    expect(tree.root.findAllByProps({ testID: 'gold-coin' }).length).toBeGreaterThan(0);
 
     await openLesson(tree, 0);
 
@@ -481,7 +504,7 @@ describe('playing a lesson end to end', () => {
     );
 
     const tree = await launch();
-    expect(textOf(tree)).toContain('🪙 250');
+    expect(tree.root.findAllByProps({ accessibilityLabel: '250 coins' }).length).toBeGreaterThan(0);
   });
 
   it('keeps the reading map, and its progress, apart from the math map', async () => {

@@ -4,7 +4,7 @@
  * format is the contract's business, and these tests pin that the app honours
  * it and survives a server that doesn't.
  */
-import { fetchLesson, TOPIC_LOOKS } from '../tutor';
+import { fetchLesson, TOPIC_LOOKS, tutorUrlFor } from '../tutor';
 import { tutorTopicOf } from '../../types';
 import type { Question } from '../../types';
 
@@ -23,6 +23,15 @@ const okResponse = (body: unknown) =>
 
 afterEach(() => {
   jest.restoreAllMocks();
+});
+
+describe('tutor release configuration', () => {
+  it('hides an unconfigured tutor in release but keeps development and explicit URLs', () => {
+    expect(tutorUrlFor(undefined, 'https://math-edu.hashfront.com', false)).toBe('');
+    expect(tutorUrlFor(undefined, 'https://math-edu.hashfront.com', true)).toBe('https://math-edu.hashfront.com');
+    expect(tutorUrlFor('https://tutor.hashfront.com', 'https://math-edu.hashfront.com', false))
+      .toBe('https://tutor.hashfront.com');
+  });
 });
 
 describe('fetchLesson', () => {

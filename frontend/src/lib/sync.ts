@@ -14,6 +14,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { iCloudAvailable, readICloudValue, writeICloudValue } from '../../modules/icloud-store';
 import type { LinkGoogleResponse, Profile, ProfileEnvelope } from '../content/contract';
 import { PROFILE_SCHEMA_VERSION } from '../content/contract';
 import { DailyState, Grade, ProgressMap, QuizResult, SUBJECTS, Settings, StopProgress, Subject, Tier } from '../types';
@@ -99,6 +100,54 @@ export interface ProfileData {
 export interface DeviceData {
   profiles: ProfileStore;
   kids: Record<string, ProfileData>;
+}
+
+interface ICloudEnvelope {
+  updatedAt: string;
+  data: DeviceData;
+}
+
+const ICLOUD_PROFILE_KEY = 'progress-v1';
+const ICLOUD_LIMIT_BYTES = 950_000;
+
+/** iCloud on Apple devices, the existing private sync service everywhere else. */
+export const backupAvailable = (): boolean => iCloudAvailable() || syncAvailable();
+
+const writeICloudEnvelope = (envelope: ICloudEnvelope): boolean => {
+  const encoded = JSON.stringify(envelope);
+  if (new TextEncoder().encode(encoded).byteLength > ICLOUD_LIMIT_BYTES) {
+    console.error('progress is too large to back up to iCloud');
+    return false;
+  }
+  return writeICloudValue(ICLOUD_PROFILE_KEY, encoded);
+};
+
+async function syncICloud(): Promise<ProfileData | null> {
+  const meta = await loadSyncMeta();
+  const changedAt = meta.changedAt ?? new Date().toISOString();
+  const local = await snapshotDevice();
+  let merged = local;
+  const raw = readICloudValue(ICLOUD_PROFILE_KEY);
+
+  if (raw) {
+    try {
+      const remote = JSON.parse(raw) as ICloudEnvelope;
+      if (typeof remote.updatedAt !== 'string' || !remote.data?.kids) return null;
+      merged = mergeDevices(
+        { updatedAt: changedAt, data: local },
+        { updatedAt: remote.updatedAt, data: remote.data },
+      );
+      await applyDevice(merged);
+    } catch {
+      // A partial or future-format cloud value must never replace local play.
+      return null;
+    }
+  }
+
+  const now = new Date().toISOString();
+  if (!writeICloudEnvelope({ updatedAt: now, data: merged })) return null;
+  await saveSyncMeta({ ...meta, dirty: false, lastSyncedAt: now, changedAt });
+  return merged.kids[currentProfile()] ?? null;
 }
 
 /**
@@ -377,7 +426,7 @@ export async function markDirtyNow(): Promise<void> {
  * saves at the end of a round collapses into one upload.
  */
 export function markDirty(): void {
-  if (!syncAvailable()) return;
+  if (!backupAvailable()) return;
   void markDirtyNow();
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(() => {
@@ -417,6 +466,7 @@ async function putProfile(
  * meantime. Every failure path simply leaves the profile dirty.
  */
 export async function pushNow(): Promise<boolean> {
+  if (iCloudAvailable()) return (await syncICloud()) !== null;
   const identity = await ensureRegistered();
   if (!identity) return false;
 
@@ -535,6 +585,7 @@ export async function linkWithGoogle(
  * nothing changed locally — offline, sync off, or no server copy yet.
  */
 export async function pullAndMerge(): Promise<ProfileData | null> {
+  if (iCloudAvailable()) return syncICloud();
   const identity = await ensureRegistered();
   if (!identity) return null;
 

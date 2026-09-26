@@ -12,6 +12,7 @@
  * before now.
  */
 
+import * as n from '../generators/numberSense';
 import * as q from '../generators/questions';
 import { Ramp, TABLES, factory } from './ramp';
 
@@ -299,6 +300,56 @@ export const decimalAddSub = factory({
   build: ({ decimals }, rng) => q.decimalAddSub(decimals, rng),
 });
 
+/*
+  Decimals had exactly two factories — add/subtract and multiply — for a topic
+  that runs across two school years. These are the rest of it: comparing,
+  ordering, rounding, dividing, and the bridge back to fractions.
+*/
+
+export const compareDecimals = factory({
+  id: 'compareDecimals',
+  skill: 'decimals',
+  gradeHint: [4, 5],
+  ramp: [{ d: 11 }, { d: 20 }],
+  build: (_args, rng) => n.compareDecimals(rng),
+});
+
+export const orderDecimals = factory({
+  id: 'orderDecimals',
+  skill: 'decimals',
+  gradeHint: [4, 5],
+  ramp: [{ d: 13 }, { d: 22 }],
+  build: (_args, rng) => n.orderDecimals(rng),
+});
+
+export const roundDecimal = factory({
+  id: 'roundDecimal',
+  skill: 'decimals',
+  gradeHint: [4, 5],
+  ramp: [{ d: 12 }, { d: 21 }],
+  build: (_args, rng) => n.roundDecimal(rng),
+});
+
+export const decimalDivision = factory({
+  id: 'decimalDivision',
+  skill: 'decimals',
+  gradeHint: [5, 5],
+  ramp: [
+    { d: 15, maxWhole: 5 },
+    { d: 18, maxWhole: 12 },
+    { d: 24, maxWhole: 30 },
+  ],
+  build: ({ maxWhole }, rng) => n.decimalDivision(maxWhole, rng),
+});
+
+export const fractionToDecimal = factory({
+  id: 'fractionToDecimal',
+  skill: 'decimals',
+  gradeHint: [4, 5],
+  ramp: [{ d: 12 }, { d: 20 }],
+  build: (_args, rng) => n.fractionToDecimal(rng),
+});
+
 export const decimalMultiplication = factory({
   id: 'decimalMultiplication',
   skill: 'decimals',
@@ -345,5 +396,10 @@ export const ARITHMETIC = [
   largestFraction,
   decimalAddSub,
   decimalMultiplication,
+  compareDecimals,
+  orderDecimals,
+  roundDecimal,
+  decimalDivision,
+  fractionToDecimal,
   orderOfOperations,
 ];

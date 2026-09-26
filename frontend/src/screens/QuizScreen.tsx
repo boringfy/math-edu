@@ -9,8 +9,11 @@ import {
   View,
 } from 'react-native';
 import ChoiceButton from '../components/ChoiceButton';
+import Celebration from '../components/Celebration';
+import MissFeedback from '../components/MissFeedback';
 import ComboBurst from '../components/ComboBurst';
 import CutBoard from '../components/CutBoard';
+import CountdownBar from '../components/CountdownBar';
 import ElapsedTimer from '../components/ElapsedTimer';
 import NumberPad from '../components/NumberPad';
 import PuzzleBoard from '../components/PuzzleBoard';
@@ -19,6 +22,8 @@ import ScratchPad from '../components/ScratchPad';
 import StoryPassage from '../components/StoryPassage';
 import TutorLesson from '../components/TutorLesson';
 import { Chord } from '../lib/cakeCuts';
+import { CelebrationKind, MISS_SOUND, MissKind, celebrationFor, missFor } from '../lib/celebrate';
+import { SoundName, playSound } from '../lib/sfx';
 import { isComboMilestone } from '../lib/progress';
 import { isAnswerCorrect, isDrawingCorrect } from '../lib/grading';
 import { tutorAvailable } from '../lib/tutor';
@@ -76,19 +81,66 @@ export default function QuizScreen({
   const [combo, setCombo] = useState(0);
   // `nonce` re-triggers the burst even when two milestones share a length.
   const [burst, setBurst] = useState({ combo: 0, nonce: 0 });
+  /*
+    The reward for answering quickly, and the clock it is judged against.
+
+    Timed per question rather than per round: the round clock includes reading
+    the story and every question before this one, and neither says anything
+    about how fast this answer came.
+  */
+  const [cheer, setCheer] = useState<{ kind: CelebrationKind | null; nonce: number }>({
+    kind: null,
+    nonce: 0,
+  });
+  const askedAt = useRef(Date.now());
+  /*
+    What a wrong answer gets. Always shown, unlike a celebration — see
+    `missFor` for why that trade was made knowingly, and why everything about
+    it is kept mild.
+  */
+  const [miss, setMiss] = useState<{ kind: MissKind | null; nonce: number }>({
+    kind: null,
+    nonce: 0,
+  });
   // Giving up asks first: the button sits next to the question all round, and
   // a child tapping it by mistake shouldn't lose the answers they have given.
   const [quitting, setQuitting] = useState(false);
-  // Scrap paper for working a sum out by hand. It is out on the desk from the
-  // start — a child stuck on one shouldn't have to know to ask for it — and
-  // the pencil in the header puts it away when the question needs the room.
-  const scratchable = scratchPaper && subject === 'math';
-  const [scratching, setScratching] = useState(true);
+  // Scrap paper, for working something out by hand. The pencil in the header
+  // fetches it and puts it away.
+  /*
+    A Speed Match lesson, recognised by its questions carrying a per-question
+    limit. Read off the questions rather than passed in, so the clock and the
+    problems can never disagree about which lesson this is.
+  */
+  const speedRound = questions.some((q) => q.limitSeconds !== undefined);
+  const scratchable = scratchPaper && (subject === 'math' || subject === 'logic');
+  /*
+    Whether it starts out on the desk, which differs by what the tab asks of a
+    child.
+
+    A sum is worked out, so on maths the paper is there from the start: a
+    child stuck on one shouldn't have to know to ask for it.
+
+    A puzzle is read. Its clues are the thing to look at, and a sheet of paper
+    above them pushes them off the screen — so on logic the pad is folded away
+    and the pencil is there for the harder ones, where crossing possibilities
+    off is the way through. Reading gets none at all.
+  */
+  const [scratching, setScratching] = useState(subject === 'math');
   // The AI tutor, teaching maths only for now: the per-topic lessons are
   // written for sums, and a reading answer is in the story, not a method.
   const tutorable = subject === 'math' && tutorAvailable();
   const [helping, setHelping] = useState(false);
   const recordsRef = useRef<AnswerRecord[]>([]);
+  /*
+    The question an answer has already been taken for.
+
+    A speed round has two things racing to answer: the child's tap and the
+    clock running out. Both call `record`, and a tap landing in the same tick
+    as the expiry would file two answers for one question — leaving the round
+    with more records than it had questions. First one wins.
+  */
+  const answeredRef = useRef(-1);
   const bestComboRef = useRef(0);
   const { width } = useWindowDimensions();
 
@@ -145,8 +197,23 @@ export default function QuizScreen({
   const drawnChoices =
     question.puzzle !== undefined && Object.keys(question.puzzle.options).length > 0;
 
-  const record = (answer: string, correct: boolean) => {
+  const record = (answer: string | null, correct: boolean) => {
+    if (answeredRef.current === index) return;
+    answeredRef.current = index;
     recordsRef.current.push({ question, chosen: answer, correct });
+
+    // Only correct answers, and only quick ones — see `celebrate.ts` for why
+    // a slow correct answer is left alone.
+    const earned = correct ? celebrationFor(Date.now() - askedAt.current, question, passage !== undefined) : null;
+    if (earned) {
+      setCheer((c) => ({ kind: earned, nonce: c.nonce + 1 }));
+      playSound(earned);
+    }
+    if (!correct) {
+      const shrug = missFor();
+      setMiss((m) => ({ kind: shrug, nonce: m.nonce + 1 }));
+      playSound(MISS_SOUND[shrug] as SoundName);
+    }
 
     const streak = correct ? combo + 1 : 0;
     setCombo(streak);
@@ -156,6 +223,7 @@ export default function QuizScreen({
     }
 
     if (index + 1 < questions.length) {
+      askedAt.current = Date.now();
       setIndex(index + 1);
       setEntry('');
       setCuts([]);
@@ -177,7 +245,16 @@ export default function QuizScreen({
             Read it as many times as you like. You can look back at any time.
           </Text>
         </ScrollView>
-        <Pressable style={styles.readButton} onPress={() => setReading(false)}>
+        <Pressable
+          style={styles.readButton}
+          onPress={() => {
+            // The first question's clock starts here, not when the screen
+            // mounted — otherwise the whole time spent reading the story
+            // counts against it and no reading answer is ever "fast".
+            askedAt.current = Date.now();
+            setReading(false);
+          }}
+        >
           <Text style={styles.readButtonText}>
             {readAloud ? '⭐ ' : ''}I've read it — {questions.length} question
             {questions.length > 1 ? 's' : ''}
@@ -227,7 +304,22 @@ export default function QuizScreen({
         {passage && <StoryPassage passage={passage} />}
 
         {/* Keyed by question: a fresh sheet each time, last one's working gone. */}
-        {scratchable && scratching && <ScratchPad key={index} penOnly={penOnly} />}
+        {scratchable && scratching && <ScratchPad key={`scratch-${index}`} penOnly={penOnly} />}
+
+        {question.limitSeconds !== undefined && (
+          /*
+            Keyed on the question, so each one starts a fresh clock and no
+            timer outlives the question it belonged to. Running out records a
+            miss with no answer given — `chosen: null`, which the correction
+            round already shows as a dash — and moves on, because a drill that
+            waits for you is not a drill.
+          */
+          <CountdownBar
+            key={`countdown-${index}`}
+            seconds={question.limitSeconds}
+            onExpire={() => record(null, false)}
+          />
+        )}
 
         <View style={styles.promptCard}>
           <Text
@@ -271,8 +363,11 @@ export default function QuizScreen({
           // question that draws its picture above the choices rather than on
           // them.
           <View style={drawnChoices ? styles.optionGrid : undefined}>
-            {question.choices.map((choice) => (
-              <View key={choice} style={drawnChoices ? styles.option : undefined}>
+            {question.choices.map((choice, choiceIndex) => (
+              <View
+                key={`${choice}-${choiceIndex}`}
+                style={drawnChoices ? styles.option : undefined}
+              >
                 <ChoiceButton
                   label={choice}
                   tile={question.puzzle?.options[choice]}
@@ -294,6 +389,8 @@ export default function QuizScreen({
         />
       )}
 
+      <Celebration kind={cheer.kind} nonce={cheer.nonce} />
+      <MissFeedback kind={miss.kind} nonce={miss.nonce} />
       <ComboBurst combo={burst.combo} nonce={burst.nonce} />
       {helping && (
         <TutorLesson question={question} grade={grade} onClose={() => setHelping(false)} />

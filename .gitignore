@@ -29,6 +29,7 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+!frontend/updates/certificate.pem
 
 # local env files
 .env*.local
@@ -40,6 +41,9 @@ backend/.env
 # generated native folders
 /frontend/ios
 /frontend/android
+/frontend/coverage/
+/frontend/modules/**/build/
+/frontend/modules/**/.gradle/
 
 # baked content — regenerate with `npm run bake`
 backend/dist/

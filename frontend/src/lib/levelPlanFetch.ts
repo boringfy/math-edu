@@ -22,17 +22,24 @@ export const levelPlansAvailable = (): boolean => LEVELS_URL !== '';
 const storageKey = (profile: string) =>
   profile === '' ? 'mathquiz:levelplans' : `mathquiz:p:${profile}:levelplans`;
 
+let activeProfile = '';
+let generation = 0;
+
 export async function loadPlans(profile: string): Promise<void> {
+  activeProfile = profile;
+  const loadingGeneration = ++generation;
+  latestBasis.clear();
   clearPlans();
   try {
     const raw = await AsyncStorage.getItem(storageKey(profile));
+    if (loadingGeneration !== generation) return;
     if (!raw) return;
     for (const [key, plan] of Object.entries(JSON.parse(raw) as Record<string, LevelPlan>)) {
       setPlan(key, plan);
     }
   } catch {
     // A damaged cache is one the app composes around.
-    clearPlans();
+    if (loadingGeneration === generation) clearPlans();
   }
 }
 
@@ -45,6 +52,7 @@ async function persist(profile: string): Promise<void> {
 }
 
 const REQUEST_TIMEOUT_MS = 20_000;
+const latestBasis = new Map<string, string>();
 
 export interface PlanRequest {
   subject: 'math' | 'logic';
@@ -55,6 +63,19 @@ export interface PlanRequest {
   struggling: string[];
 }
 
+/** The current playable level plus four more, kept ready for offline play. */
+export const PREFETCH_LEVELS = 5;
+
+const requestBasis = (request: PlanRequest): string =>
+  JSON.stringify([
+    request.subject,
+    request.grade,
+    request.level,
+    request.firstComposedLevel,
+    Object.entries(request.mastery).sort(([a], [b]) => a.localeCompare(b)),
+    [...request.struggling].sort(),
+  ]);
+
 /**
  * Asks the server to plan a level, once.
  *
@@ -62,10 +83,19 @@ export interface PlanRequest {
  * redraw. Never throws: the level it would have planned is the level the app
  * already has.
  */
-export async function fetchPlan(request: PlanRequest, profile: string): Promise<boolean> {
-  if (!levelPlansAvailable()) return false;
+export async function fetchPlan(
+  request: PlanRequest,
+  profile: string,
+  replaceIfLearnerChanged = false,
+): Promise<boolean> {
+  if (!levelPlansAvailable() || profile !== activeProfile) return false;
+  const fetchingGeneration = generation;
   const key = planKey(request.subject, request.grade, request.level);
-  if (hasPlan(key)) return false;
+  const basis = requestBasis(request);
+  const held = hasPlan(key) ? worthKeeping()[key] : undefined;
+  if (held && (!replaceIfLearnerChanged || held.basis === basis)) return false;
+  const requestId = `${profile}:${key}`;
+  latestBasis.set(requestId, basis);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -78,10 +108,11 @@ export async function fetchPlan(request: PlanRequest, profile: string): Promise<
     });
     if (!response.ok) return false;
 
-    const plan = (await response.json()) as LevelPlan;
-    // A level the server composed the same way the app would have is not
-    // worth holding on to, and not worth redrawing for.
-    if (plan?.source !== 'ai') return false;
+    const plan = { ...((await response.json()) as LevelPlan), basis };
+    if (plan?.source !== 'ai' && plan?.source !== 'local') return false;
+    // A slower response based on older performance must not overwrite the
+    // fresher request that followed it.
+    if (fetchingGeneration !== generation || latestBasis.get(requestId) !== basis) return false;
     if (!setPlan(key, plan)) return false;
 
     await persist(profile);

@@ -60,11 +60,14 @@ describe('holding a plan', () => {
     expect(plannedLevel('math', 2, 8)).toBeNull();
   });
 
-  /** Only a plan a model actually improved is worth a place on disk. */
-  it('keeps only what the model improved', () => {
+  /** Local server plans also mark a level as available offline. */
+  it('keeps every plan the server delivered', () => {
     setPlan(planKey('math', 2, 7), planFor(7, 'From a model', 'ai'));
     setPlan(planKey('math', 2, 8), planFor(8, 'Composed here', 'local'));
-    expect(Object.keys(worthKeeping())).toEqual([planKey('math', 2, 7)]);
+    expect(Object.keys(worthKeeping())).toEqual([
+      planKey('math', 2, 7),
+      planKey('math', 2, 8),
+    ]);
   });
 
   it('forgets everything on request, for a change of child', () => {

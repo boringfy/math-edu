@@ -11,10 +11,17 @@ import { CONTENT_URL } from '../content';
 import type { ExplainRequest, ExplainResponse, Grade, Question, TutorTopic } from '../types';
 
 /**
- * Where the tutor lives. Usually the content server; its own variable so the
- * two can be split later. Empty means no tutor, and the help button hides.
+ * The tutor is opt-in in release builds. The content server can run without a
+ * model provider; showing a help button there would only lead to a 503.
+ * Development keeps the content server as a convenient default for testing.
  */
-export const TUTOR_URL = process.env.EXPO_PUBLIC_TUTOR_URL ?? CONTENT_URL;
+export const tutorUrlFor = (
+  configured: string | undefined,
+  contentUrl: string,
+  development: boolean,
+): string => configured ?? (development ? contentUrl : '');
+
+export const TUTOR_URL = tutorUrlFor(process.env.EXPO_PUBLIC_TUTOR_URL, CONTENT_URL, __DEV__);
 
 export const tutorAvailable = (): boolean => TUTOR_URL !== '';
 
@@ -99,6 +106,7 @@ export async function fetchLesson(question: Question, grade: Grade): Promise<str
  * shop — so the special treatment is visible before a word is spoken.
  */
 export const TOPIC_LOOKS: Record<TutorTopic, { icon: string; title: string }> = {
+  data: { icon: '📊', title: 'Reading the chart!' },
   addSub: { icon: '🍬', title: 'Counting time!' },
   mulDiv: { icon: '🍪', title: 'Fair shares!' },
   fractions: { icon: '🍕', title: 'Pizza pieces!' },

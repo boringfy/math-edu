@@ -1,4 +1,4 @@
-# Boring Quest — content backend
+# Have Fun Learning — content backend
 
 Bakes every question, story and puzzle into versioned packs, and serves them
 to the app.

@@ -156,3 +156,250 @@ export function circleDiameter(rng: Rng): Question {
     'integer',
   );
 }
+
+/* ------------------------------------------------ more shape and space -- */
+
+/**
+ * Naming a shape from its side count — `sidesOfShape` the other way round.
+ *
+ * Recognising "five sides" as a pentagon is a different act from recalling
+ * how many sides a pentagon has, and a child who can do the second does not
+ * always manage the first.
+ */
+export function shapeFromSides(rng: Rng): Question {
+  const named = [
+    { name: 'triangle', sides: 3 },
+    { name: 'square', sides: 4 },
+    { name: 'pentagon', sides: 5 },
+    { name: 'hexagon', sides: 6 },
+    { name: 'octagon', sides: 8 },
+  ];
+  const shape = rng.pick(named);
+  return makeQuestion(
+    rng,
+    `A flat shape has ${shape.sides} straight sides. What is it called?`,
+    shape.name,
+    named.filter((s) => s.name !== shape.name).map((s) => s.name),
+    `${shape.sides} sides makes ${article(shape.name)} ${shape.name}`,
+    null,
+  );
+}
+
+const RIGHT_ANGLES = [
+  { name: 'square', corners: 4 },
+  { name: 'rectangle', corners: 4 },
+  { name: 'right-angled triangle', corners: 1 },
+  { name: 'regular pentagon', corners: 0 },
+  { name: 'circle', corners: 0 },
+];
+
+export function rightAnglesInShape(rng: Rng): Question {
+  const shape = rng.pick(RIGHT_ANGLES);
+  return makeQuestion(
+    rng,
+    `How many right angles does ${article(shape.name)} ${shape.name} have?`,
+    String(shape.corners),
+    numPool(shape.corners, [shape.corners + 1, shape.corners + 2, Math.max(0, shape.corners - 1)]),
+    shape.corners === 0
+      ? `${article(shape.name)} ${shape.name} has no square corners at all`
+      : `${article(shape.name)} ${shape.name} has ${shape.corners} square corner${shape.corners === 1 ? '' : 's'}`,
+    'integer',
+  );
+}
+
+const SYMMETRY = [
+  { name: 'square', lines: 4 },
+  { name: 'rectangle', lines: 2 },
+  { name: 'equilateral triangle', lines: 3 },
+  { name: 'regular pentagon', lines: 5 },
+  { name: 'regular hexagon', lines: 6 },
+  { name: 'parallelogram', lines: 0 },
+];
+
+export function linesOfSymmetry(rng: Rng): Question {
+  const shape = rng.pick(SYMMETRY);
+  return makeQuestion(
+    rng,
+    `How many lines of symmetry does ${article(shape.name)} ${shape.name} have?`,
+    String(shape.lines),
+    numPool(shape.lines, [shape.lines + 1, shape.lines + 2, Math.max(0, shape.lines - 2)]),
+    shape.lines === 0
+      ? `A parallelogram cannot be folded onto itself at all — it has none`
+      : `It can be folded onto itself ${shape.lines} different way${shape.lines === 1 ? '' : 's'}`,
+    'integer',
+  );
+}
+
+const SOLIDS = [
+  { name: 'cube', faces: 6, edges: 12, vertices: 8 },
+  { name: 'cuboid', faces: 6, edges: 12, vertices: 8 },
+  { name: 'square-based pyramid', faces: 5, edges: 8, vertices: 5 },
+  { name: 'triangular prism', faces: 5, edges: 9, vertices: 6 },
+  { name: 'cylinder', faces: 3, edges: 2, vertices: 0 },
+];
+
+/** Faces, edges or corners of a solid — the part of shape work that is 3D. */
+export function facesEdgesVertices(rng: Rng): Question {
+  const solid = rng.pick(SOLIDS);
+  const part = rng.pick(['faces', 'edges', 'vertices'] as const);
+  const count = solid[part];
+  const word = part === 'vertices' ? 'vertices (corners)' : part;
+  return makeQuestion(
+    rng,
+    `How many ${word} does ${article(solid.name)} ${solid.name} have?`,
+    String(count),
+    // The other two counts of the same solid are the honest confusions.
+    numPool(count, [solid.faces, solid.edges, solid.vertices, count + 2].filter((n) => n !== count)),
+    `${article(solid.name)} ${solid.name} has ${count} ${word}`,
+    'integer',
+  );
+}
+
+export function rectanglePerimeter(maxSide: number, rng: Rng): Question {
+  // Never square: that is `squarePerimeter`'s question, and a child who
+  // spots two equal sides stops reading. Ordered so the longer side is the
+  // one called "long", because "5 cm long and 35 cm wide" reads as a mistake.
+  const a = rng.randInt(2, maxSide);
+  let b = rng.randInt(2, maxSide);
+  if (a === b) b = b === maxSide ? b - 1 : b + 1;
+  const length = Math.max(a, b);
+  const width = Math.min(a, b);
+  const perimeter = 2 * (length + width);
+  return makeQuestion(
+    rng,
+    `A rectangle is ${length} cm long and ${width} cm wide. What is its perimeter in cm?`,
+    String(perimeter),
+    // Adding only two sides, the area, and doubling just one side.
+    numPool(perimeter, [length + width, length * width, length * 2 + width]),
+    `Two lengths and two widths: 2 × (${length} + ${width}) = ${perimeter} cm`,
+    'integer',
+  );
+}
+
+export function rectangleArea(maxSide: number, rng: Rng): Question {
+  const a = rng.randInt(2, maxSide);
+  let b = rng.randInt(2, maxSide);
+  if (a === b) b = b === maxSide ? b - 1 : b + 1;
+  const length = Math.max(a, b);
+  const width = Math.min(a, b);
+  const area = length * width;
+  return makeQuestion(
+    rng,
+    `A rectangle is ${length} cm long and ${width} cm wide. What is its area in square cm?`,
+    String(area),
+    // The perimeter, and the two ways of adding rather than multiplying.
+    numPool(area, [2 * (length + width), length + width, area + length]),
+    `Length times width: ${length} × ${width} = ${area} square cm`,
+    'integer',
+  );
+}
+
+/**
+ * A perimeter and one side, working backwards to the other.
+ *
+ * Reversing a formula is a step up from applying it, and it is where a child
+ * who has memorised "times four" rather than understood it comes unstuck.
+ */
+export function missingSideFromPerimeter(maxSide: number, rng: Rng): Question {
+  const a = rng.randInt(2, maxSide);
+  let b = rng.randInt(2, maxSide);
+  if (a === b) b = b === maxSide ? b - 1 : b + 1;
+  const length = Math.max(a, b);
+  const width = Math.min(a, b);
+  const perimeter = 2 * (length + width);
+  return makeQuestion(
+    rng,
+    `A rectangle has a perimeter of ${perimeter} cm. It is ${length} cm long. How wide is it in cm?`,
+    String(width),
+    // Halving once too few or too many times, and subtracting straight off.
+    numPool(width, [perimeter - length, perimeter / 2 - length + 1, length]),
+    `Half the perimeter is ${perimeter / 2}, and ${perimeter / 2} − ${length} = ${width} cm`,
+    'integer',
+  );
+}
+
+export function angleAroundPoint(rng: Rng): Question {
+  // The two given angles are drawn large enough that the third stays an
+  // ordinary angle. A reflex answer like 247° is arithmetically right and
+  // pedagogically useless at the age this is set.
+  const missing = rng.randInt(30, 160);
+  const rest = 360 - missing;
+  const a = rng.randInt(Math.max(20, rest - 170), Math.min(170, rest - 20));
+  const b = rest - a;
+  return makeQuestion(
+    rng,
+    `Three angles meet at a point. Two of them are ${a}° and ${b}°. What is the third?`,
+    String(missing),
+    // Using 180 instead of 360, and forgetting one of the two given angles.
+    numPool(missing, [180 - a, 360 - a, missing + 10]),
+    `Angles round a point make 360°: 360 − ${a} − ${b} = ${missing}°`,
+    'integer',
+  );
+}
+
+export function circleCircumference(rng: Rng): Question {
+  // Radii chosen so the answer stays a whole number of centimetres with π
+  // taken as 3, which is how this is taught before calculators appear.
+  const radius = rng.randInt(2, 20);
+  const circumference = 2 * 3 * radius;
+  return makeQuestion(
+    rng,
+    `A circle has a radius of ${radius} cm. Taking π as 3, what is its circumference in cm?`,
+    String(circumference),
+    // Using the radius instead of the diameter, and the area formula.
+    numPool(circumference, [3 * radius, 3 * radius * radius, 2 * radius]),
+    `Circumference is π × diameter: 3 × ${2 * radius} = ${circumference} cm`,
+    'integer',
+  );
+}
+
+export function circleArea(rng: Rng): Question {
+  const radius = rng.randInt(2, 12);
+  const area = 3 * radius * radius;
+  return makeQuestion(
+    rng,
+    `A circle has a radius of ${radius} cm. Taking π as 3, what is its area in square cm?`,
+    String(area),
+    // Squaring the diameter instead, and the circumference.
+    numPool(area, [3 * 2 * radius, 3 * (2 * radius) * (2 * radius), radius * radius]),
+    `Area is π × radius × radius: 3 × ${radius} × ${radius} = ${area} square cm`,
+    'integer',
+  );
+}
+
+/**
+ * An L-shape, given as two rectangles.
+ *
+ * The first area question where the shape is not the formula: a child has to
+ * split it before any formula is any use.
+ */
+export function compoundArea(maxSide: number, rng: Rng): Question {
+  const a = rng.randInt(2, maxSide);
+  const b = rng.randInt(2, maxSide);
+  const c = rng.randInt(2, maxSide);
+  const d = rng.randInt(2, maxSide);
+  const area = a * b + c * d;
+  return makeQuestion(
+    rng,
+    `An L-shape is made of two rectangles joined together. One is ${a} cm by ${b} cm, the other is ${c} cm by ${d} cm. What is the total area in square cm?`,
+    String(area),
+    // Only one of the two pieces, and adding the sides instead.
+    numPool(area, [a * b, c * d, a + b + c + d]),
+    `Work out each piece and add: (${a} × ${b}) + (${c} × ${d}) = ${a * b} + ${c * d} = ${area} square cm`,
+    'integer',
+  );
+}
+
+export function cubeSurfaceArea(maxEdge: number, rng: Rng): Question {
+  const edge = rng.randInt(2, maxEdge);
+  const surface = 6 * edge * edge;
+  return makeQuestion(
+    rng,
+    `A cube has edges of ${edge} cm. What is its total surface area in square cm?`,
+    String(surface),
+    // The volume, one face only, and counting four faces instead of six.
+    numPool(surface, [edge * edge * edge, edge * edge, 4 * edge * edge]),
+    `Six identical faces: 6 × ${edge} × ${edge} = ${surface} square cm`,
+    'integer',
+  );
+}

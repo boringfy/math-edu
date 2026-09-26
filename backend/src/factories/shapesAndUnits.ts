@@ -481,6 +481,139 @@ export const hoursToMinutes = factory({
   build: (_args, rng) => t.hoursToMinutes(rng),
 });
 
+/* ------------------------------------------------ more shape and space -- */
+
+/*
+  The geometry the catalog was thinnest on. Before these it had no rectangle
+  perimeter or area at all — only squares — a circle that could give its
+  diameter but not its circumference, and almost nothing below d 4 for the
+  youngest children. These fill that in and carry the skill further up.
+*/
+
+export const shapeFromSides = factory({
+  id: 'shapeFromSides',
+  skill: 'geometry',
+  gradeHint: [1, 2],
+  ramp: [{ d: 1 }, { d: 5 }],
+  build: (_args, rng) => g.shapeFromSides(rng),
+});
+
+export const rightAnglesInShape = factory({
+  id: 'rightAnglesInShape',
+  skill: 'geometry',
+  gradeHint: [2, 3],
+  ramp: [{ d: 3 }, { d: 8 }],
+  build: (_args, rng) => g.rightAnglesInShape(rng),
+});
+
+export const linesOfSymmetry = factory({
+  id: 'linesOfSymmetry',
+  skill: 'geometry',
+  gradeHint: [2, 4],
+  ramp: [{ d: 3 }, { d: 9 }],
+  build: (_args, rng) => g.linesOfSymmetry(rng),
+});
+
+export const facesEdgesVertices = factory({
+  id: 'facesEdgesVertices',
+  skill: 'geometry',
+  gradeHint: [3, 5],
+  ramp: [{ d: 4 }, { d: 11 }],
+  build: (_args, rng) => g.facesEdgesVertices(rng),
+});
+
+/*
+  Named for the shape rather than the operation because `word.ts` already has
+  a `rectanglePerimeter`: that one wraps the same sum in a story about a
+  garden, this one states the rectangle plainly. Two different questions, and
+  factory ids are global.
+*/
+export const perimeterOfRectangle = factory({
+  id: 'perimeterOfRectangle',
+  skill: 'geometry',
+  gradeHint: [2, 4],
+  ramp: [
+    { d: 5, maxSide: 6 },
+    { d: 6, maxSide: 12 },
+    { d: 8, maxSide: 20 },
+    { d: 12, maxSide: 50 },
+  ],
+  build: ({ maxSide }, rng) => g.rectanglePerimeter(maxSide, rng),
+});
+
+export const areaOfRectangle = factory({
+  id: 'areaOfRectangle',
+  skill: 'geometry',
+  gradeHint: [3, 5],
+  ramp: [
+    { d: 7, maxSide: 6 },
+    { d: 9, maxSide: 12 },
+    { d: 11, maxSide: 20 },
+    { d: 14, maxSide: 40 },
+  ],
+  build: ({ maxSide }, rng) => g.rectangleArea(maxSide, rng),
+});
+
+export const missingSideFromPerimeter = factory({
+  id: 'missingSideFromPerimeter',
+  skill: 'geometry',
+  gradeHint: [4, 5],
+  ramp: [
+    { d: 9, maxSide: 8 },
+    { d: 11, maxSide: 15 },
+    { d: 15, maxSide: 30 },
+  ],
+  build: ({ maxSide }, rng) => g.missingSideFromPerimeter(maxSide, rng),
+});
+
+export const angleAroundPoint = factory({
+  id: 'angleAroundPoint',
+  skill: 'geometry',
+  gradeHint: [5, 5],
+  ramp: [{ d: 12 }, { d: 18 }],
+  build: (_args, rng) => g.angleAroundPoint(rng),
+});
+
+export const compoundArea = factory({
+  id: 'compoundArea',
+  skill: 'geometry',
+  gradeHint: [5, 5],
+  ramp: [
+    { d: 14, maxSide: 8 },
+    { d: 17, maxSide: 15 },
+    { d: 21, maxSide: 25 },
+  ],
+  build: ({ maxSide }, rng) => g.compoundArea(maxSide, rng),
+});
+
+export const cubeSurfaceArea = factory({
+  id: 'cubeSurfaceArea',
+  skill: 'geometry',
+  gradeHint: [5, 5],
+  ramp: [
+    { d: 15, maxEdge: 8 },
+    { d: 18, maxEdge: 15 },
+    { d: 22, maxEdge: 25 },
+  ],
+  build: ({ maxEdge }, rng) => g.cubeSurfaceArea(maxEdge, rng),
+});
+
+export const circleCircumference = factory({
+  id: 'circleCircumference',
+  skill: 'geometry',
+  gradeHint: [5, 5],
+  ramp: [{ d: 16 }, { d: 23 }],
+  build: (_args, rng) => g.circleCircumference(rng),
+});
+
+export const circleArea = factory({
+  id: 'circleArea',
+  skill: 'geometry',
+  gradeHint: [5, 5],
+  ramp: [{ d: 18 }, { d: 25 }],
+  build: (_args, rng) => g.circleArea(rng),
+});
+
 export const SHAPES_AND_UNITS = [
   sidesOfShape,
   cornersOfShape,
@@ -492,6 +625,18 @@ export const SHAPES_AND_UNITS = [
   missingAngleQuadrilateral,
   cuboidVolume,
   circleDiameter,
+  shapeFromSides,
+  rightAnglesInShape,
+  linesOfSymmetry,
+  facesEdgesVertices,
+  perimeterOfRectangle,
+  areaOfRectangle,
+  missingSideFromPerimeter,
+  angleAroundPoint,
+  compoundArea,
+  cubeSurfaceArea,
+  circleCircumference,
+  circleArea,
   lengthConversion,
   totalLength,
   mixedLengthTotal,

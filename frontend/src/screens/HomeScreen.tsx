@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import DailyChallenges from '../components/DailyChallenges';
+import CoinIcon from '../components/CoinIcon';
 import MapTrail from '../components/MapTrail';
 import ProfilePicker from '../components/ProfilePicker';
 import { Library } from '../content';
@@ -42,22 +43,22 @@ const TIER_NAME = ['Easy', 'Normal', 'Hard'];
 /** The words each subject uses for its own map and its own past results. */
 const SUBJECT_UI: Record<
   Subject,
-  { title: string; tail: string; history: string; empty: string }
+  { icon: string; tail: string; history: string; empty: string }
 > = {
   math: {
-    title: '🧮 Boring Quest',
+    icon: '🧮',
     tail: 'lessons get harder as you go',
     history: 'Past quizzes',
     empty: 'No quizzes yet — your results will show up here.',
   },
   reading: {
-    title: '📖 Boring Quest',
+    icon: '📖',
     tail: 'stories get longer as you go',
     history: 'Past reads',
     empty: 'No stories read yet — your results will show up here.',
   },
   logic: {
-    title: '🧩 Boring Quest',
+    icon: '🧩',
     tail: 'puzzles get trickier as you go',
     history: 'Past puzzles',
     empty: 'No puzzles solved yet — your results will show up here.',
@@ -65,6 +66,7 @@ const SUBJECT_UI: Record<
 };
 
 interface Props {
+  planRevision?: number;
   subject: Subject;
   /** The content for this launch; maps are drawn from its catalogs. */
   library: Library;
@@ -81,6 +83,7 @@ interface Props {
   /** Who is playing, and the chooser that swaps them. */
   profiles: ProfileStore;
   onSwitchProfile: (id: string) => void;
+  onRenameProfile: (id: string, name: string) => void;
   onAddProfile: () => void;
   /** What a lesson costs, and what has been bought so far. */
   unlocks: UnlockMap;
@@ -100,6 +103,7 @@ interface Props {
  * map's contents and the maths-only free practice differ.
  */
 export default function HomeScreen({
+  planRevision = 0,
   subject,
   library,
   history,
@@ -112,6 +116,7 @@ export default function HomeScreen({
   adaptive,
   profiles,
   onSwitchProfile,
+  onRenameProfile,
   onAddProfile,
   unlocks,
   unlockCost,
@@ -173,7 +178,7 @@ export default function HomeScreen({
    */
   const allStops = useMemo(
     () => stopsUpTo(subject, grade, level, authored, isEndless(subject) ? adaptive[adaptiveKey(subject, grade)] : undefined),
-    [subject, grade, level, authored, adaptive],
+    [subject, grade, level, authored, adaptive, planRevision],
   );
   const stops = windowOf<MapStop>(allStops, level);
   const stars = starsEarned(stops, progress);
@@ -193,6 +198,7 @@ export default function HomeScreen({
           setPicking(false);
           onSwitchProfile(id);
         }}
+        onRename={onRenameProfile}
         onAdd={() => {
           setPicking(false);
           onAddProfile();
@@ -208,28 +214,19 @@ export default function HomeScreen({
         genuinely fixed, and genuinely tappable.
       */}
       <View style={styles.titleRow}>
-        {/* One app name on every tab; the icon and the tab bar say which part. */}
-        <Text style={styles.title} numberOfLines={1}>
-          {ui.title}
-        </Text>
-        <View style={styles.titleRight}>
-          {/*
-            Whose turn it is. Shown only once there is somebody to switch to,
-            so a single-child tablet is not asked to think about it.
-          */}
-          {profiles.profiles.length > 0 && (
-            <Pressable
-              style={styles.whoPill}
-              accessibilityRole="button"
-              accessibilityLabel={`Playing as ${playingAs?.name ?? 'nobody'}. Switch player`}
-              onPress={() => setPicking(true)}
-            >
-              <Text style={styles.whoAvatar}>{playingAs?.avatar ?? '🙂'}</Text>
-              <Text style={styles.whoName} numberOfLines={1}>
-                {playingAs?.name ?? 'Player'}
-              </Text>
-            </Pressable>
-          )}
+        {/* The whole player pill opens the chooser; editing lives inside it. */}
+        {profiles.profiles.length > 0 && (
+          <Pressable
+            style={styles.whoPill}
+            accessibilityRole="button"
+            accessibilityLabel={`Switch player. Playing as ${playingAs?.name ?? 'nobody'}`}
+            onPress={() => setPicking(true)}
+          >
+            <Text style={styles.whoAvatar}>{playingAs?.avatar ?? '🙂'}</Text>
+            <Text style={styles.whoName} numberOfLines={1}>{playingAs?.name ?? 'Player'}</Text>
+          </Pressable>
+        )}
+        <View style={styles.statusRow}>
           {/* Which grade this subject is on. Tapping it goes where it is set. */}
           <Pressable
             style={styles.gradePill}
@@ -239,8 +236,9 @@ export default function HomeScreen({
           >
             <Text style={styles.gradeText}>Grade {grade}</Text>
           </Pressable>
-          <View style={styles.coinPill}>
-            <Text style={styles.coinText}>🪙 {coins}</Text>
+          <View style={styles.coinPill} accessibilityLabel={`${coins} coins`}>
+            <CoinIcon size={20} />
+            <Text style={styles.coinText}>{coins}</Text>
           </View>
           {/* Quiet and out of the way: this page is for a grown-up. */}
           <Pressable
@@ -272,7 +270,10 @@ export default function HomeScreen({
         </Pressable>
 
         <View style={styles.levelMiddle}>
-          <Text style={styles.levelTitle}>Level {level}</Text>
+          <View style={styles.levelTitleRow}>
+            <Text style={styles.levelSubjectIcon} testID="subject-level-icon">{ui.icon}</Text>
+            <Text style={styles.levelTitle}>Level {level}</Text>
+          </View>
           <Text style={styles.levelMeta}>
             ★ {stars} of {stops.length * 3} · {ui.tail}
           </Text>
@@ -339,10 +340,18 @@ export default function HomeScreen({
           stops={windowOf(allStops as Lesson[], level)}
           allStops={allStops as Lesson[]}
           progress={progress}
-          meta={(lesson: Lesson) => [
-            lesson.focus.map((f: string) => TOPIC_LABEL[f] ?? f).join(' · '),
-            `${lessonLength(lesson)} questions · ${TIER_NAME[lesson.tier - 1]}`,
-          ]}
+          meta={(lesson: Lesson) =>
+            lesson.speed
+              ? // A Speed Match says what it is and what it costs you: the
+                // number of problems and the seconds each one gets. A tier
+                // would be the wrong thing to promise — the sums are easy and
+                // the clock is the difficulty.
+                ['quick maths · no paper', `${lessonLength(lesson)} in ${lesson.speed.seconds}s`]
+              : [
+                  lesson.focus.map((f: string) => TOPIC_LABEL[f] ?? f).join(' · '),
+                  `${lessonLength(lesson)} questions · ${TIER_NAME[lesson.tier - 1]}`,
+                ]
+          }
           onStart={onStartLesson}
           unlocks={unlocks}
           subject={subject}
@@ -449,7 +458,12 @@ export default function HomeScreen({
             </View>
               <View style={styles.historyRight}>
                 <Text style={styles.historyDate}>{new Date(r.date).toLocaleDateString()}</Text>
-                {r.coins !== undefined && <Text style={styles.historyCoins}>🪙 {r.coins}</Text>}
+                {r.coins !== undefined && (
+                  <View style={styles.historyCoinRow}>
+                    <CoinIcon size={14} />
+                    <Text style={styles.historyCoins}>{r.coins}</Text>
+                  </View>
+                )}
               </View>
             </View>
           ))
@@ -466,18 +480,20 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
     backgroundColor: colors.background,
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 12,
+    paddingTop: 12,
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  titleRight: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   settings: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.card,
@@ -485,19 +501,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   settingsIcon: { fontSize: 16 },
-  title: { flex: 1, fontSize: 30, fontWeight: '800', color: colors.text },
   // Reads as a label rather than a button, because the grade is a fact about
   // where the child is, not a control they should be fiddling with.
   whoPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    maxWidth: 130,
+    maxWidth: 150,
+    flexShrink: 1,
     borderWidth: 2,
     borderColor: colors.border,
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 3,
     backgroundColor: colors.card,
   },
   whoAvatar: { fontSize: 18 },
@@ -507,16 +523,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primary,
     borderRadius: 16,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 6,
   },
-  gradeText: { fontSize: 17, fontWeight: '800', color: colors.primary },
+  gradeText: { fontSize: 15, fontWeight: '800', color: colors.primary },
   coinPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: '#fff5d6',
     borderWidth: 2,
     borderColor: '#f5b700',
     borderRadius: 16,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 6,
   },
   coinText: { fontSize: 17, fontWeight: '800', color: '#a86b00' },
@@ -575,6 +594,8 @@ const styles = StyleSheet.create({
   levelStepText: { fontSize: 24, lineHeight: 28, fontWeight: '800', color: colors.primary },
   levelStepTextOff: { color: colors.textMuted },
   levelMiddle: { flex: 1, alignItems: 'center' },
+  levelTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  levelSubjectIcon: { fontSize: 19 },
   levelTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
   levelMeta: { fontSize: 13, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
   practiceToggle: { marginTop: 26, alignItems: 'center' },
@@ -629,5 +650,6 @@ const styles = StyleSheet.create({
   historyScore: { fontSize: 18, fontWeight: '800', color: colors.text },
   historyMeta: { fontSize: 13, color: colors.textMuted },
   historyDate: { fontSize: 13, color: colors.textMuted },
+  historyCoinRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   historyCoins: { fontSize: 13, fontWeight: '700', color: '#a86b00' },
 });

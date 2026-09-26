@@ -24,6 +24,7 @@ import { Grade, Tier } from '../contract';
 import { makeRng } from '../generators/rng';
 import { CATALOG, ceilingOf, skillsOf, skillsWithHeadroom, slotsFor } from './catalog';
 import { Skill, Slot } from './ramp';
+import { hasSpeedLesson, speedPlan, speedPositions } from './speed';
 
 export const LESSONS_PER_LEVEL = 10;
 
@@ -55,6 +56,12 @@ export interface ComposedLesson {
   slots: Slot[];
   /** Seeds the questions, so the same lesson deals the same problems. */
   seed: string;
+  /**
+   * Set only on a Speed Match lesson: the whole-lesson budget and the share
+   * of it each problem gets. Its presence is what tells the app to run a
+   * countdown and to leave the scratch paper in the drawer.
+   */
+  speed?: { seconds: number; perProblem: number };
 }
 
 /**
@@ -80,6 +87,7 @@ const SKILL_WORD: Partial<Record<Skill, string>> = {
   speed: 'Speed',
   time: 'Clocks',
   place: 'Place Value',
+  data: 'Charts & Data',
   draw: 'Cake Cutting',
   // The logic families, in the words the map already uses for them.
   series: 'Shape Patterns',
@@ -95,6 +103,11 @@ const SKILL_WORD: Partial<Record<Skill, string>> = {
   balance: 'Balance Scales',
   grid: 'Deduction',
   syllogism: 'Reasoning',
+  shapeRiddle: 'Shape Riddles',
+  heading: 'Which Way',
+  angleLogic: 'Angle Puzzles',
+  folding: 'Paper Folding',
+  netFold: 'Nets & Solids',
 };
 
 const SKILL_ICON: Partial<Record<Skill, string>> = {
@@ -110,6 +123,7 @@ const SKILL_ICON: Partial<Record<Skill, string>> = {
   speed: '🚄',
   time: '🕐',
   place: '🔟',
+  data: '📊',
   draw: '🎂',
   series: '🔷',
   oddShape: '⭐',
@@ -124,6 +138,11 @@ const SKILL_ICON: Partial<Record<Skill, string>> = {
   balance: '⚖️',
   grid: '🕵️',
   syllogism: '🧠',
+  shapeRiddle: '❓',
+  heading: '🧭',
+  angleLogic: '📐',
+  folding: '📄',
+  netFold: '🧊',
 };
 
 const titleFor = (skills: Skill[]): string =>
@@ -210,6 +229,28 @@ export function composeLevel(opts: {
 
   return Array.from({ length: LESSONS_PER_LEVEL }, (_, i) => {
     const index = (level - 1) * LESSONS_PER_LEVEL + i + 1;
+
+    // Two Speed Matches per composed math level. Taken first
+    // because it replaces the lesson outright rather than adjusting one: its
+    // problems come from a fixed easy band, not from the child's skills.
+    if (speedPositions(level).includes(i + 1) && hasSpeedLesson(subject, grade, level)) {
+      const plan = speedPlan(level, levelD, mastery, rng);
+      return {
+        id: `${subject}.g${grade}.L${level}.l${i + 1}`,
+        index,
+        level,
+        title: 'Speed Match',
+        icon: '⚡',
+        // Always shown as Easy: the arithmetic is, and saying otherwise would
+        // put a child off the one lesson meant to feel quick.
+        tier: 1 as Tier,
+        skills: ['addSub', 'mulDiv'] as Skill[],
+        slots: plan.slots,
+        seed: `${subject}.g${grade}.L${level}.l${i + 1}`,
+        speed: { seconds: plan.count * plan.perProblem, perProblem: plan.perProblem },
+      };
+    }
+
     const cake = subject === 'math' && isCakeLesson(index) && pool.includes('draw');
     const count = cake ? 5 : PROBLEMS_PER_LESSON;
 
@@ -262,7 +303,8 @@ export function questionsFor(lesson: ComposedLesson) {
   const rng = makeRng(lesson.seed);
   return lesson.slots.map((slot, i) => {
     const built = CATALOG[slot.factory].generate(slot.d, rng);
-    return { ...built, id: `${lesson.id}:${CATALOG[slot.factory].skill}#${i + 1}` };
+    const question = { ...built, id: `${lesson.id}:${CATALOG[slot.factory].skill}#${i + 1}` };
+    return lesson.speed ? { ...question, limitSeconds: lesson.speed.perProblem } : question;
   });
 }
 

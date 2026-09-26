@@ -20,16 +20,26 @@ services:
     restart: unless-stopped
     ports:
       # The app is built against http://<host>:8788.
-      - "8788:8787"
+      #
+      # The address is a variable so a public box can keep the container off
+      # its own front door: behind a proxy, `BIND_ADDR=127.0.0.1` means only
+      # HAProxy can reach it, and anything that does arrive has come through
+      # the proxy and carries its headers. Unset it and nothing changes for a
+      # machine on a home network, which is where this started.
+      - "${BIND_ADDR:-0.0.0.0}:8788:8787"
     env_file:
-      # The tutor's key and model tuning — see backend/.env.example. Optional
-      # because content still serves without it: the tutor route answers 503
+      # The tutor's key and model tuning — see backend/.env.example.
+      #
+      # Written in the plain form rather than `path:`/`required: false`,
+      # which needs Compose 2.24 and is not on every box this deploys to.
+      # The deploy script makes sure the file exists, empty if there is no
+      # key: content still serves without one — the tutor route answers 503
       # and the app hides its help button.
-      - path: backend/.env
-        required: false
+      - backend/.env
     environment:
       # Where the sync database lives inside the container; ./data on the
       # host, so `docker compose down` never takes anyone's progress with it.
       SYNC_DB_PATH: /app/backend/data/sync.db
+      UPDATES_DIR: /app/backend/data/ota
     volumes:
       - ./data:/app/backend/data

@@ -45,7 +45,7 @@ jest.mock('@expo/config-plugins', () => {
 const plugins = require('@expo/config-plugins');
 
 /** A bare app config, plus somewhere for each mod to write its results. */
-const baseConfig = () => ({ name: 'Boring Quest', slug: 'math-edu' });
+const baseConfig = () => ({ name: 'Have Fun Learning', slug: 'math-edu' });
 
 const androidManifest = () => ({
   manifest: { application: [{ $: { 'android:name': '.MainApplication' } }] },

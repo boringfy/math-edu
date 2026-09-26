@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PuzzleTile from '../components/PuzzleTile';
+import CoinIcon from '../components/CoinIcon';
 import { AdaptiveEvent } from '../lib/adaptive';
 import { formatElapsed } from '../lib/format';
 import { FAMILY_LABEL, TOPIC_LABEL } from '../lib/maps';
@@ -54,6 +55,7 @@ export default function ResultsScreen({
   const total = records.length;
   const correctCount = records.filter((r) => r.correct).length;
   const mistakes = records.filter((r) => !r.correct);
+  const speedRound = records.some((r) => r.question.limitSeconds !== undefined);
   const fixedCount = mistakes.filter((r) => r.fixed).length;
   const skipped = mistakes.filter((r) => r.skipped);
   const percent = Math.round((correctCount / total) * 100);
@@ -99,22 +101,31 @@ export default function ResultsScreen({
 
       {award.total > 0 && (
         <View style={styles.coinCard}>
-          <Text style={styles.coinHeadline}>🪙 +{award.total} coins</Text>
+          <View style={styles.coinHeadlineRow}>
+            <CoinIcon size={27} />
+            <Text style={styles.coinHeadline}>+{award.total} coins</Text>
+          </View>
           {coinLines.map((line) => (
             <View key={line.label} style={styles.coinLine}>
               <Text style={styles.coinLabel}>{line.label}</Text>
               <Text style={styles.coinValue}>+{line.value}</Text>
             </View>
           ))}
-          <Text style={styles.coinTotal}>Purse: 🪙 {coinTotal}</Text>
+          <View style={styles.coinTotalRow}>
+            <Text style={styles.coinTotal}>Purse:</Text>
+            <CoinIcon size={16} />
+            <Text style={styles.coinTotal}>{coinTotal}</Text>
+          </View>
         </View>
       )}
 
       {completedChallenges.map((c) => (
         <View key={c.id} style={[styles.banner, styles.bannerUp]}>
-          <Text style={styles.bannerUpText}>
-            🎉 Challenge complete — {c.icon} {c.title} (+{c.reward} coins)
-          </Text>
+          <View style={styles.challengeBannerRow}>
+            <Text style={styles.bannerUpText}>🎉 Challenge complete —</Text>
+            {c.icon === '🪙' ? <CoinIcon size={16} /> : <Text style={styles.bannerUpText}>{c.icon}</Text>}
+            <Text style={styles.bannerUpText}>{c.title} (+{c.reward} coins)</Text>
+          </View>
         </View>
       ))}
 
@@ -123,7 +134,7 @@ export default function ResultsScreen({
           <Text style={styles.bannerUpText}>Three stars — a perfect {noun}! 🌟</Text>
         </View>
       )}
-      {stars === 0 && !afterCorrection && (
+      {stars === 0 && !afterCorrection && !speedRound && (
         <View style={[styles.banner, styles.bannerDown]}>
           <Text style={styles.bannerDownText}>
             Fix your mistakes to earn a star and open the next {noun}. 💪
@@ -213,7 +224,7 @@ export default function ResultsScreen({
         );
       })}
 
-      {!afterCorrection && mistakes.length > 0 && (
+      {!afterCorrection && !speedRound && mistakes.length > 0 && (
         <Pressable style={styles.primaryButton} onPress={onFixMistakes}>
           <Text style={styles.primaryButtonText}>
             Fix your {mistakes.length} mistake{mistakes.length > 1 ? 's' : ''}
@@ -248,6 +259,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
+  coinHeadlineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   coinHeadline: { fontSize: 24, fontWeight: '800', color: '#a86b00', textAlign: 'center' },
   coinLine: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   coinLabel: { fontSize: 14, color: colors.text, flexShrink: 1 },
@@ -256,9 +268,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#a86b00',
-    textAlign: 'center',
     marginTop: 12,
   },
+  coinTotalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
   scoreCard: {
     backgroundColor: colors.card,
     borderRadius: 18,
@@ -278,6 +290,7 @@ const styles = StyleSheet.create({
   bannerDownText: { color: colors.warning, fontWeight: '600', fontSize: 15 },
   bannerUp: { backgroundColor: colors.correctBg },
   bannerUpText: { color: colors.correct, fontWeight: '600', fontSize: 15 },
+  challengeBannerRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
   item: {
     backgroundColor: colors.card,
     borderRadius: 12,

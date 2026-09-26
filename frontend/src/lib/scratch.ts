@@ -13,6 +13,37 @@ export interface Point {
 export type Stroke = Point[];
 
 /**
+ * The five inks the pad offers.
+ *
+ * Black first and by default, because that is what a pencil is and what most
+ * working gets done in; the other four are for when a child wants to mark
+ * something out from the rest — a second attempt, the answer, a bit they are
+ * unsure of. Deliberately few: a wide palette turns scrap paper into a
+ * drawing app, and every one of these has to stay legible on white.
+ */
+export const INK_COLORS = [
+  { name: 'Black', value: '#1f2437' },
+  { name: 'Blue', value: '#2563eb' },
+  { name: 'Red', value: '#dc2626' },
+  { name: 'Green', value: '#15803d' },
+  { name: 'Orange', value: '#ea580c' },
+] as const;
+
+export const DEFAULT_INK: string = INK_COLORS[0].value;
+
+/**
+ * A stroke and the ink it was drawn in.
+ *
+ * The colour belongs to the mark rather than to the pad, so changing pens
+ * never repaints what is already down — which is the whole point of being
+ * able to change pens.
+ */
+export interface Mark {
+  points: Stroke;
+  color: string;
+}
+
+/**
  * How far a pointer has to travel before another point is kept. A stylus
  * reports far more often than a line needs, and every extra point is one more
  * segment to redraw on the next move.
@@ -93,22 +124,24 @@ export function appendPoint(stroke: Stroke, point: Point): Stroke {
  * Returns the strokes unchanged when the eraser touched nothing, so that
  * dragging it across blank paper costs no redraw.
  */
-export function eraseAround(strokes: Stroke[], at: Point, radius = ERASER_RADIUS): Stroke[] {
-  const kept: Stroke[] = [];
+export function eraseAround(marks: Mark[], at: Point, radius = ERASER_RADIUS): Mark[] {
+  const kept: Mark[] = [];
 
-  for (const stroke of strokes) {
+  for (const mark of marks) {
     let run: Stroke = [];
-    for (const point of stroke) {
-      if (distance(point, at) <= radius) {
-        if (run.length >= 2) kept.push(run);
-        run = [];
-      } else {
-        run.push(point);
-      }
+    // Each surviving piece keeps the ink of the mark it was cut from, so
+    // rubbing through the middle of a red line leaves two red lines.
+    const flush = (minimum: number) => {
+      if (run.length >= minimum) kept.push({ points: run, color: mark.color });
+      run = [];
+    };
+    for (const point of mark.points) {
+      if (distance(point, at) <= radius) flush(2);
+      else run.push(point);
     }
-    if (run.length >= 2 || (run.length === 1 && stroke.length === 1)) kept.push(run);
+    flush(mark.points.length === 1 ? 1 : 2);
   }
 
-  const count = (list: Stroke[]) => list.reduce((total, stroke) => total + stroke.length, 0);
-  return count(kept) === count(strokes) ? strokes : kept;
+  const count = (list: Mark[]) => list.reduce((total, mark) => total + mark.points.length, 0);
+  return count(kept) === count(marks) ? marks : kept;
 }

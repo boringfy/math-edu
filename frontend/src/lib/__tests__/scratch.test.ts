@@ -1,6 +1,10 @@
 import {
+  DEFAULT_INK,
   ERASER_RADIUS,
+  INK_COLORS,
   MIN_SAMPLE_DISTANCE,
+  Mark,
+  Point,
   Stroke,
   appendPoint,
   eraseAround,
@@ -42,32 +46,65 @@ describe('appendPoint', () => {
   });
 });
 
+/** A mark in the default ink, for the tests that do not care about colour. */
+const mark = (points: Point[], color = DEFAULT_INK): Mark => ({ points, color });
+
 describe('eraseAround', () => {
   it('splits a stroke rubbed in the middle into the pieces either side', () => {
-    const erased = eraseAround([line(60)], { x: 30, y: 10 }, 5);
+    const erased = eraseAround([mark(line(60))], { x: 30, y: 10 }, 5);
     expect(erased).toHaveLength(2);
-    expect(erased[0].every((p) => p.x < 25)).toBe(true);
-    expect(erased[1].every((p) => p.x > 35)).toBe(true);
+    expect(erased[0].points.every((p) => p.x < 25)).toBe(true);
+    expect(erased[1].points.every((p) => p.x > 35)).toBe(true);
   });
 
   it('takes the whole stroke when the eraser covers it', () => {
-    expect(eraseAround([line(4)], { x: 2, y: 10 }, ERASER_RADIUS)).toEqual([]);
+    expect(eraseAround([mark(line(4))], { x: 2, y: 10 }, ERASER_RADIUS)).toEqual([]);
   });
 
   it('leaves the other strokes alone', () => {
-    const strokes = [line(4), [{ x: 200, y: 200 }]];
-    expect(eraseAround(strokes, { x: 2, y: 10 }, ERASER_RADIUS)).toEqual([strokes[1]]);
+    const marks = [mark(line(4)), mark([{ x: 200, y: 200 }])];
+    expect(eraseAround(marks, { x: 2, y: 10 }, ERASER_RADIUS)).toEqual([marks[1]]);
   });
 
   it('drops a lone leftover point but keeps a deliberate dot', () => {
     // Rubbing out all but the first point of a line leaves a speck, not a mark.
-    expect(eraseAround([line(20)], { x: 12, y: 10 }, 11)).toEqual([]);
-    expect(eraseAround([[{ x: 0, y: 0 }]], { x: 90, y: 90 })).toEqual([[{ x: 0, y: 0 }]]);
+    expect(eraseAround([mark(line(20))], { x: 12, y: 10 }, 11)).toEqual([]);
+    const dot = mark([{ x: 0, y: 0 }]);
+    expect(eraseAround([dot], { x: 90, y: 90 })).toEqual([dot]);
   });
 
-  it('returns the very same strokes when it touched nothing', () => {
-    const strokes = [line(5)];
-    expect(eraseAround(strokes, { x: 500, y: 500 })).toBe(strokes);
+  it('returns the very same marks when it touched nothing', () => {
+    const marks = [mark(line(5))];
+    expect(eraseAround(marks, { x: 500, y: 500 })).toBe(marks);
+  });
+
+  /** The colour belongs to the mark, so cutting one in half yields two of it. */
+  it('gives every surviving piece the ink it was drawn in', () => {
+    const red = INK_COLORS[2].value;
+    const erased = eraseAround([mark(line(60), red)], { x: 30, y: 10 }, 5);
+    expect(erased).toHaveLength(2);
+    expect(erased.every((m) => m.color === red)).toBe(true);
+  });
+
+  it('rubs out one colour without touching another', () => {
+    const blue = INK_COLORS[1].value;
+    const far = mark([{ x: 500, y: 500 }, { x: 505, y: 505 }], blue);
+    const kept = eraseAround([mark(line(4)), far], { x: 2, y: 10 }, ERASER_RADIUS);
+    expect(kept).toEqual([far]);
+  });
+});
+
+describe('the inks on offer', () => {
+  it('offers five, starting with black', () => {
+    expect(INK_COLORS).toHaveLength(5);
+    expect(INK_COLORS[0].name).toBe('Black');
+    expect(DEFAULT_INK).toBe(INK_COLORS[0].value);
+  });
+
+  it('gives each a distinct colour and a name to announce', () => {
+    expect(new Set(INK_COLORS.map((c) => c.value)).size).toBe(5);
+    expect(INK_COLORS.every((c) => /^#[0-9a-f]{6}$/i.test(c.value))).toBe(true);
+    expect(INK_COLORS.every((c) => c.name.length > 0)).toBe(true);
   });
 });
 

@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, AppState, StyleSheet, View } from 'react-native';
 // The app draws edge-to-edge on Android, so real insets are needed to keep
 // the number pad clear of the navigation bar.
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -26,10 +26,12 @@ import {
   LESSONS_PER_LEVEL,
   levelOf,
   masteryFor,
+  parseComposedId,
   stopsUpTo,
   strugglingSkills,
 } from './src/lib/endless';
-import { fetchPlan, loadPlans } from './src/lib/levelPlanFetch';
+import { fetchPlan, loadPlans, PREFETCH_LEVELS } from './src/lib/levelPlanFetch';
+import { plannedLevel } from './src/lib/levelPlans';
 import { promoteToEntry, shuffle } from './src/lib/grading';
 import { recentHistory } from './src/lib/history';
 import { starsFor } from './src/lib/mapProgress';
@@ -81,7 +83,11 @@ import {
   renameProfile,
   switchTo,
 } from './src/lib/profiles';
+import { appLocked, lockToApp, unlockFromApp } from './modules/app-lock';
+import { prepareSound, setSoundEnabled } from './src/lib/sfx';
 import { markDirty, pullAndMerge } from './src/lib/sync';
+import { flushUsage, loadUsageConsent, recordUsage, setUsageConsent } from './src/lib/usage';
+import { TipProvider } from './src/lib/tips';
 import {
   DEFAULT_PAID_SUBJECTS,
   DEFAULT_UNLOCK_COST,
@@ -192,6 +198,22 @@ export default function App() {
   /** Bumped when a planned level arrives, purely to redraw the map. */
   const [planTick, setPlanTick] = useState(0);
 
+  const applyMergedToState = (merged: Awaited<ReturnType<typeof pullAndMerge>>) => {
+    if (!merged) return;
+    setGrades(merged.grades);
+    setTiers(merged.tiers);
+    setCoins(merged.coins);
+    setProgress(merged.progress);
+    setHistory(merged.history);
+    setSettings(merged.settings);
+    setSoundEnabled(merged.settings.sounds);
+    if (merged.settings.kioskMode) lockToApp();
+    setAdaptive(merged.adaptive);
+    const day = dailyForDate(merged.daily, dayKey(new Date()));
+    setDaily(day);
+    void saveDaily(day);
+  };
+
   /**
    * Reads one child's world in. Called at launch and again on every switch,
    * so a swap of profile is a reload rather than a special case — which is
@@ -224,6 +246,10 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
+      // A tablet handed to a child is very often on silent, and a game whose
+      // feedback is silent for that reason looks broken rather than muted.
+      void prepareSound();
+
       // Before anything is read: a device that predates profiles gets its
       // first one here, carrying everything already on it across.
       const store = await migrateToProfiles();
@@ -231,32 +257,67 @@ export default function App() {
       setProfiles(store);
 
       // Device-wide, so it is read once and not again on a switch.
-      setSettings(await loadSettings());
+      const stored = await loadSettings();
+      setSettings(stored);
+      setSoundEnabled(stored.sounds);
+      /*
+        Pinning is applied from the stored settings, which is the path that
+        always runs.
+
+        It lived in the sync callback below until this was tested on a tablet
+        whose content server had moved: `pullAndMerge` answers null when it
+        cannot reach one, the callback returns early, and the lock silently
+        never engaged. The switch showed on, the tablet was not locked, and
+        nothing said so.
+      */
+      if (stored.kioskMode) lockToApp();
       await loadForActiveProfile();
+
+      const usageConsent = await loadUsageConsent();
+      if (usageConsent === null) {
+        Alert.alert(
+          'Help us improve learning?',
+          'Grown-ups: may we send app-open and completed-lesson events to Hashfront? Each includes a random app-install ID and app/device version, but no names, answers or scores. You can change this in Settings.',
+          [
+            { text: 'No thanks', onPress: () => void setUsageConsent(false).catch(() => undefined) },
+            {
+              text: 'Allow usage sharing',
+              onPress: () => {
+                void setUsageConsent(true)
+                  .then(() => recordUsage('app_opened'))
+                  .catch(() => undefined);
+              },
+            },
+          ],
+          { cancelable: false },
+        );
+      } else if (usageConsent) {
+        void recordUsage('app_opened');
+      }
 
       // Then, without holding the app up, fold in whatever the sync server
       // has: progress from another device lands as if it were always here.
-      void pullAndMerge().then((merged) => {
-        if (!merged) return;
-        setGrades(merged.grades);
-        setTiers(merged.tiers);
-        setCoins(merged.coins);
-        setProgress(merged.progress);
-        setHistory(merged.history);
-        setSettings(merged.settings);
-        setAdaptive(merged.adaptive);
-        const day = dailyForDate(merged.daily, dayKey(new Date()));
-        setDaily(day);
-        void saveDaily(day);
-      });
+      void pullAndMerge().then(applyMergedToState);
     })();
+  }, []);
+
+  // iCloud can change while this device is asleep. Fold it in whenever the
+  // app becomes active, without making launch or play wait on the cloud.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        void pullAndMerge().then(applyMergedToState);
+        void flushUsage();
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   const grade = grades[subject];
   const whoIsPlaying = activeProfile(profiles);
 
   /**
-   * Asks the server to plan the level being looked at, in the background.
+   * Keeps a rolling five-level plan cache filled in the background.
    *
    * Fire and forget by design: the map is already showing a level the app
    * composed, and a plan arriving simply replaces it with a better-named one.
@@ -276,19 +337,23 @@ export default function App() {
     if (level < firstComposed) return;
 
     const state = adaptive[adaptiveKey(subject, grade)];
-    void fetchPlan(
-      {
-        subject,
-        grade,
-        level,
-        firstComposedLevel: firstComposed,
-        mastery: masteryFor(state, grade, level, authored) as Record<string, number>,
-        struggling: strugglingSkills(state),
-      },
-      currentProfile(),
+    const requests = Array.from({ length: PREFETCH_LEVELS }, (_, offset) => ({
+      subject,
+      grade,
+      level: level + offset,
+      firstComposedLevel: firstComposed,
+      mastery: masteryFor(state, grade, level + offset, authored) as Record<string, number>,
+      struggling: strugglingSkills(state),
+    }));
+    void Promise.all(
+      requests.map((request, offset) =>
+        // Never swap the level already in progress. Future, unused plans can
+        // be replaced whenever recent answers change the learner model.
+        fetchPlan(request, currentProfile(), offset > 0),
+      ),
     ).then((arrived) => {
       // Nudges a redraw so the freshly planned level is the one on screen.
-      if (arrived) setPlanTick((n) => n + 1);
+      if (arrived.some(Boolean)) setPlanTick((n) => n + 1);
     });
   }, [subject, grade, progress, adaptive, library, profiles.activeId]);
 
@@ -459,6 +524,50 @@ export default function App() {
             set.tier,
           ),
     });
+  };
+
+  /**
+   * A composed level must be one of the five the server delivered. If the
+   * buffer has run dry, try once while the child is tapping; offline, explain
+   * clearly why the next level cannot open yet.
+   */
+  const withCachedLevel = async (
+    forSubject: 'math' | 'logic',
+    stop: Lesson | PuzzleSet,
+    start: () => void | Promise<void>,
+  ) => {
+    const parsed = parseComposedId(stop.id);
+    if (!parsed || plannedLevel(forSubject, stop.grade, parsed.level)) {
+      await start();
+      return;
+    }
+
+    const authored =
+      forSubject === 'math'
+        ? library.lessons(stop.grade).length
+        : library.puzzleSets(stop.grade).length;
+    const state = adaptive[adaptiveKey(forSubject, stop.grade)];
+    const arrived = await fetchPlan(
+      {
+        subject: forSubject,
+        grade: stop.grade,
+        level: parsed.level,
+        firstComposedLevel: Math.ceil(authored / LESSONS_PER_LEVEL) + 1,
+        mastery: masteryFor(state, stop.grade, parsed.level, authored) as Record<string, number>,
+        struggling: strugglingSkills(state),
+      },
+      currentProfile(),
+    );
+    if (arrived || plannedLevel(forSubject, stop.grade, parsed.level)) {
+      setPlanTick((n) => n + 1);
+      await start();
+      return;
+    }
+
+    Alert.alert(
+      'Internet connection needed',
+      'You finished the five levels saved for offline learning. Connect to the internet to prepare the next levels.',
+    );
   };
 
   const adaptiveRules = () => library.rules?.adaptive ?? DEFAULT_ADAPTIVE;
@@ -749,6 +858,7 @@ export default function App() {
     setSession(updated);
     setPhase('results');
     await persistResult(updated, newTier);
+    void recordUsage('lesson_completed', { subject: session.subject });
   };
 
   const onCorrectionDone = async (outcomes: CorrectionOutcome[]) => {
@@ -796,11 +906,13 @@ export default function App() {
   };
 
   return (
+    <TipProvider>
     <SafeAreaProvider>
       <SafeAreaView style={styles.root}>
         {phase === 'home' && (
           <View style={styles.home}>
             <HomeScreen
+              planRevision={planTick}
               subject={subject}
               library={library}
               history={history}
@@ -812,13 +924,18 @@ export default function App() {
               adaptive={adaptive}
               profiles={profiles}
             onSwitchProfile={(id) => void switchProfile(id)}
+            onRenameProfile={(id, name) => void renameKid(id, name)}
             onAddProfile={() => setPhase('settings')}
             unlocks={unlocks}
             unlockCost={unlockCost}
             paidSubjects={paidSubjects}
-            onStartLesson={(lesson) => void play('math', lesson, () => startLesson(lesson))}
+            onStartLesson={(lesson) =>
+              void withCachedLevel('math', lesson, () => play('math', lesson, () => startLesson(lesson)))
+            }
               onStartStory={(story) => void play('reading', story, () => startStory(story))}
-              onStartPuzzles={(set) => void play('logic', set, () => startPuzzles(set))}
+              onStartPuzzles={(set) =>
+                void withCachedLevel('logic', set, () => play('logic', set, () => startPuzzles(set)))
+              }
               onStartPractice={startPractice}
               onOpenSettings={() => setPhase('settings')}
             />
@@ -834,6 +951,14 @@ export default function App() {
             settings={settings}
             onChange={(next) => {
               setSettings(next);
+              setSoundEnabled(next.sounds);
+              // Takes effect immediately: a grown-up flipping this expects to
+              // hand the tablet over straight away, and turning it off
+              // expects to be able to leave.
+              if (next.kioskMode !== settings.kioskMode) {
+                if (next.kioskMode) lockToApp();
+                else unlockFromApp();
+              }
               void saveSettings(next);
               markDirty();
             }}
@@ -886,6 +1011,7 @@ export default function App() {
         <StatusBar style="dark" />
       </SafeAreaView>
     </SafeAreaProvider>
+    </TipProvider>
   );
 }
 

@@ -76,6 +76,7 @@ function asStop(composed: ComposedLesson, grade: Grade): Lesson {
     focus: composed.skills.filter((s) => s !== 'draw') as Lesson['focus'],
     questionCount: composed.slots.length - draws,
     drawCount: draws,
+    ...(composed.speed ? { speed: composed.speed } : {}),
   };
 }
 

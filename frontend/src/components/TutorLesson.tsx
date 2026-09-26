@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import CoinIcon from './CoinIcon';
 import { TOPIC_LOOKS, fetchLesson } from '../lib/tutor';
 import { speakStep, stopSpeaking } from '../lib/voice';
 import { colors } from '../theme';
@@ -104,7 +105,10 @@ export default function TutorLesson({ question, grade, onClose }: Props) {
           <View style={styles.header}>
             <TutorOwl bobbing={busy} />
             <View style={styles.headerText}>
-              <Text style={styles.title}>{look.icon} {look.title}</Text>
+              <View style={styles.titleRow}>
+                {look.icon === '🪙' ? <CoinIcon size={23} /> : <Text style={styles.titleIcon}>{look.icon}</Text>}
+                <Text style={styles.title}>{look.title}</Text>
+              </View>
               <Text style={styles.subtitle}>
                 {phase === 'thinking' && 'Hmm, let me think about this one'}
                 {phase === 'talking' && 'Listen with me…'}
@@ -277,6 +281,8 @@ const styles = StyleSheet.create({
   owl: { fontSize: 40 },
   headerText: { flex: 1 },
   title: { fontSize: 19, fontWeight: '800', color: colors.text },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  titleIcon: { fontSize: 19 },
   subtitle: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
   close: {
     width: 32,

@@ -142,3 +142,12 @@ describe('GET /healthz', () => {
     expect(body.packs).toBe(16);
   });
 });
+
+describe('App Store web pages', () => {
+  it.each(['/support', '/privacy'])('serves %s as readable HTML', async (path) => {
+    const response = await get(path);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/html');
+    expect(await response.text()).toContain('Have Fun Learning');
+  });
+});

@@ -24,6 +24,8 @@ export interface LevelPlan {
   theme: string;
   lessons: ComposedLesson[];
   source: 'ai' | 'local';
+  /** The learner state used to request this plan; absent on older caches. */
+  basis?: string;
 }
 
 export const planKey = (subject: string, grade: Grade, level: number): string =>
@@ -50,9 +52,9 @@ export function setPlan(key: string, plan: LevelPlan): boolean {
   return true;
 }
 
-/** Everything held, for persisting. Only the ones a model actually improved. */
+/** Everything the server delivered, for a bounded offline learning queue. */
 export const worthKeeping = (): Record<string, LevelPlan> =>
-  Object.fromEntries([...plans].filter(([, plan]) => plan.source === 'ai'));
+  Object.fromEntries(plans);
 
 /** Forgets everything, for a profile switch. */
 export const clearPlans = (): void => plans.clear();

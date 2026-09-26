@@ -16,6 +16,11 @@ import {
   oddNumberOut,
   oddWordOut,
   syllogism,
+  shapeRiddle,
+  heading,
+  angleLogic,
+  folding,
+  netFold,
 } from '../generators/logic/textPuzzles';
 
 export const FAMILY_LABEL: Record<PuzzleFamily, string> = {
@@ -32,6 +37,11 @@ export const FAMILY_LABEL: Record<PuzzleFamily, string> = {
   rotation: 'turning',
   mirror: 'mirrors',
   oddShape: 'shapes',
+  shapeRiddle: 'shape riddles',
+  heading: 'which way',
+  angleLogic: 'angles',
+  folding: 'folding',
+  netFold: 'nets',
 };
 
 export const GENERATORS: Record<PuzzleFamily, (tier: Tier, rng: Rng) => Question> = {
@@ -49,6 +59,18 @@ export const GENERATORS: Record<PuzzleFamily, (tier: Tier, rng: Rng) => Question
   rotation,
   mirror: mirrorImage,
   oddShape: shapeOddOneOut,
+  /*
+    The five shape-and-space families. They are listed here because the record
+    is exhaustive over `PuzzleFamily`, but deliberately left out of
+    `AVAILABLE` below — the authored sixty and the packs baked from them are
+    frozen, and adding a family to them would rewrite every logic pack. These
+    reach children through the composed levels instead.
+  */
+  shapeRiddle,
+  heading,
+  angleLogic,
+  folding: folding,
+  netFold,
 };
 
 /**
@@ -144,6 +166,11 @@ const SET_TITLES: Record<PuzzleFamily, string[]> = {
   rotation: ['Turn It Round', 'Which Way Round', 'Turning Shapes', 'Quarter Turns'],
   mirror: ['Mirror, Mirror', 'Reflections', 'Flip It Over', 'Mirror Match'],
   oddShape: ['Odd Shape Out', 'Spot the Odd One', 'Shape Sorting', 'One Is Wrong'],
+  shapeRiddle: ['What Am I?', 'Shape Riddles', 'Guess the Shape', 'Clue by Clue'],
+  heading: ['Which Way Now', 'Turn and Face', 'Compass Points', 'Follow the Turns'],
+  angleLogic: ['Angle Puzzles', 'Share the Angle', 'How Big Is It', 'Angles Together'],
+  folding: ['Fold and Punch', 'Paper Folding', 'Unfold It', 'How Many Holes'],
+  netFold: ['Fold It Up', 'Nets and Solids', 'What Does It Make', 'Flat to Solid'],
 };
 
 const SET_ICONS: Record<PuzzleFamily, string> = {
@@ -160,6 +187,11 @@ const SET_ICONS: Record<PuzzleFamily, string> = {
   rotation: '🔄',
   mirror: '🪞',
   oddShape: '⬛',
+  shapeRiddle: '❓',
+  heading: '🧭',
+  angleLogic: '📐',
+  folding: '📄',
+  netFold: '🧊',
 };
 
 const ROMAN = ['', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII'];

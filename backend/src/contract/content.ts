@@ -105,6 +105,15 @@ export interface Question {
   cakeTask?: CakeCutTask;
   /** Present on drawn logic puzzles; the choices are then A, B, C, D. */
   puzzle?: VisualPuzzle;
+  /**
+   * Seconds allowed for this one question, on a Speed Match lesson.
+   *
+   * Absent everywhere else, and absent from every baked pack — speed lessons
+   * are composed on the device, so no pack bytes change because this exists.
+   * When it is set the quiz counts down and moves on by itself, which is what
+   * makes the lesson a drill rather than a quiz with a stopwatch on it.
+   */
+  limitSeconds?: number;
 }
 
 /**
@@ -126,11 +135,18 @@ export type TopicKey =
   /** Clocks and elapsed time. */
   | 'time'
   /** Place value, comparing, skip counting, odd and even. */
-  | 'place';
+  | 'place'
+  /**
+   * Charts, tables, pictograms and the averages. Added after the rest: this
+   * was the one strand of the primary curriculum the catalog had nothing at
+   * all for. Not referenced by the frozen `lessonPools`, so no baked pack
+   * changes because it exists — it reaches children through composed levels.
+   */
+  | 'data';
 
 export const TOPIC_KEYS: TopicKey[] = [
   'addSub', 'mulDiv', 'fractions', 'decimals', 'order', 'word',
-  'geometry', 'measurement', 'money', 'speed', 'time', 'place',
+  'geometry', 'measurement', 'money', 'speed', 'time', 'place', 'data',
 ];
 
 /** The kinds of reasoning puzzle the logic map draws on. */
@@ -147,11 +163,21 @@ export type PuzzleFamily =
   | 'matrix'
   | 'rotation'
   | 'mirror'
-  | 'oddShape';
+  | 'oddShape'
+  // Reasoning about shape and space rather than about numbers or words.
+  // Added after the first thirteen, and deliberately not in `AVAILABLE`:
+  // they belong to the composed levels, so no baked pack changes because
+  // they exist.
+  | 'shapeRiddle'
+  | 'heading'
+  | 'angleLogic'
+  | 'folding'
+  | 'netFold';
 
 export const PUZZLE_FAMILIES: PuzzleFamily[] = [
   'sequence', 'letters', 'oddWord', 'oddNumber', 'analogy', 'syllogism',
   'balance', 'grid', 'series', 'matrix', 'rotation', 'mirror', 'oddShape',
+  'shapeRiddle', 'heading', 'angleLogic', 'folding', 'netFold',
 ];
 
 /**
@@ -179,6 +205,16 @@ export interface Lesson extends MapStop {
   questionCount: number;
   /** Cut-the-cake puzzles mixed in on top of the question count. */
   drawCount: number;
+  /**
+   * Set only on a Speed Match lesson: the whole-lesson budget in seconds and
+   * the share each problem gets. The map reads it to say "20 problems · 3s
+   * each" instead of a tier, and the quiz reads it to run a countdown and
+   * leave the scratch paper away.
+   *
+   * Never present on a baked lesson — speed lessons are composed on the
+   * device — so no pack bytes change because this field exists.
+   */
+  speed?: { seconds: number; perProblem: number };
 }
 
 /** A logic stop: which puzzle families it draws on, and how many. */

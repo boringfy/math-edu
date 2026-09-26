@@ -1,4 +1,4 @@
-import { ScrollView } from 'react-native';
+import { Linking, Platform, ScrollView } from 'react-native';
 import { act, create, ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import ChoiceButton from '../../components/ChoiceButton';
 import ComboBurst from '../../components/ComboBurst';
@@ -30,6 +30,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 /** The content the screens are rendered against: the bundled packs. */
 const LIB = seedLibrary();
+const mounted: ReactTestRenderer[] = [];
 
 /** Renders a tree and returns it, failing the test on any render error. */
 function render(element: React.ReactElement): ReactTestRenderer {
@@ -37,6 +38,7 @@ function render(element: React.ReactElement): ReactTestRenderer {
   act(() => {
     tree = create(element);
   });
+  mounted.push(tree);
   return tree;
 }
 
@@ -83,6 +85,7 @@ const homeProps = (subject: Subject) => ({
   adaptive: {},
   profiles: emptyProfiles(),
   onSwitchProfile: () => {},
+  onRenameProfile: () => {},
   onAddProfile: () => {},
   unlocks: emptyUnlocks(),
   unlockCost: 18,
@@ -115,7 +118,15 @@ const lessonMeta = (lesson: Lesson): [string, string] => [
 
 // The combo burst animates on timers; without this they outlive the test run.
 beforeEach(() => jest.useFakeTimers());
-afterEach(() => jest.useRealTimers());
+afterEach(async () => {
+  await act(async () => {
+    // Let mount-time storage/capability reads settle before tearing down.
+    await Promise.resolve();
+    await Promise.resolve();
+    mounted.splice(0).forEach((tree) => tree.unmount());
+  });
+  jest.useRealTimers();
+});
 
 describe('the map shows one level at a time', () => {
   const cleared = { stars: 1 as const, bestPercent: 60, clearedAt: '2026-08-01T00:00:00.000Z' };
@@ -149,7 +160,8 @@ describe('the map shows one level at a time', () => {
     expect(text).toContain('Level 7');
     // Lesson 61 has not been bought, so START carries its price.
     expect(text).toContain('START');
-    expect(squash(text)).toContain('🪙18');
+    expect(squash(text)).toContain('START18');
+    expect(tree.root.findAllByProps({ testID: 'gold-coin' }).length).toBeGreaterThan(0);
   });
 
   it('leaves reading where its author stopped', () => {
@@ -201,6 +213,12 @@ describe('two children on one tablet', () => {
     expect(text).toContain('Theo');
   });
 
+  it('keeps the subject icon by the level, clear of the player name', () => {
+    const tree = render(<HomeScreen {...homeProps('logic')} profiles={family()} />);
+    expect(tree.root.findByProps({ testID: 'subject-level-icon' }).props.children).toBe('🧩');
+    expect(textOf(tree)).toContain('Theo');
+  });
+
   /** A tablet with one child should not be asked to think about switching. */
   it('says nothing about players when there are none', () => {
     const text = textOf(render(<HomeScreen {...homeProps('math')} />));
@@ -210,7 +228,7 @@ describe('two children on one tablet', () => {
   it('opens the chooser and offers everyone', () => {
     const s = family();
     const tree = render(<HomeScreen {...homeProps('math')} profiles={s} />);
-    tap(tree, `Playing as Theo. Switch player`);
+    tap(tree, 'Switch player. Playing as Theo');
     const text = textOf(tree);
     expect(text).toContain("Who's playing?");
     expect(text).toContain('Mia');
@@ -223,7 +241,7 @@ describe('two children on one tablet', () => {
     const tree = render(
       <HomeScreen {...homeProps('math')} profiles={s} onSwitchProfile={(id) => switched.push(id)} />,
     );
-    tap(tree, 'Playing as Theo. Switch player');
+    tap(tree, 'Switch player. Playing as Theo');
     tap(tree, 'Switch to Mia');
     expect(switched).toEqual([s.profiles[0].id]);
   });
@@ -231,9 +249,48 @@ describe('two children on one tablet', () => {
   it('closes the chooser once someone is picked', () => {
     const s = family();
     const tree = render(<HomeScreen {...homeProps('math')} profiles={s} />);
-    tap(tree, 'Playing as Theo. Switch player');
+    tap(tree, 'Switch player. Playing as Theo');
     tap(tree, 'Switch to Mia');
     expect(textOf(tree)).not.toContain("Who's playing?");
+  });
+
+  it('keeps editing out of the home header and inside the player chooser', () => {
+    const s = family();
+    const renamed: [string, string][] = [];
+    const tree = render(
+      <HomeScreen {...homeProps('math')} profiles={s} onRenameProfile={(id, name) => renamed.push([id, name])} />,
+    );
+    expect(tree.root.findAll((n) => n.props.accessibilityLabel === "Edit Theo's name")).toHaveLength(0);
+    tap(tree, 'Switch player. Playing as Theo');
+    expect(tree.root.findAll((n) => n.props.accessibilityLabel === "Edit Mia's name")).toHaveLength(0);
+    tap(tree, "Edit Theo's name");
+    const input = tree.root.find((n) => n.props.accessibilityLabel === 'Player name');
+    expect(input.props.value).toBe('Theo');
+    act(() => input.props.onChangeText('Theodore'));
+    tap(tree, 'Save player name');
+    expect(renamed).toEqual([[s.activeId, 'Theodore']]);
+  });
+
+  it('opens the chooser when the home player name is tapped', () => {
+    const s = family();
+    const tree = render(<HomeScreen {...homeProps('math')} profiles={s} />);
+    tap(tree, 'Switch player. Playing as Theo');
+    expect(textOf(tree)).toContain("Who's playing?");
+    expect(tree.root.findAll((n) => n.props.accessibilityLabel === 'Player name')).toHaveLength(0);
+  });
+
+  it('does not save an empty name or a cancelled edit', () => {
+    const s = family();
+    const renamed: [string, string][] = [];
+    const tree = render(
+      <HomeScreen {...homeProps('math')} profiles={s} onRenameProfile={(id, name) => renamed.push([id, name])} />,
+    );
+    tap(tree, 'Switch player. Playing as Theo');
+    tap(tree, "Edit Theo's name");
+    act(() => tree.root.find((n) => n.props.accessibilityLabel === 'Player name').props.onChangeText(''));
+    expect(tree.root.find((n) => n.props.accessibilityLabel === 'Save player name').props.disabled).toBe(true);
+    tap(tree, 'Cancel name change');
+    expect(renamed).toEqual([]);
   });
 });
 
@@ -257,6 +314,42 @@ describe('managing the players', () => {
       .filter((l) => l.startsWith('Name for '));
     expect([...new Set(named)]).toEqual(['Name for Mia', 'Name for Theo', 'Name for a new player']);
     expect(textOf(tree)).toContain('playing');
+  });
+
+  it('saves a renamed player with the visible button or keyboard Done', () => {
+    const names: [string, string][] = [];
+    const profiles = family();
+    const tree = render(
+      <SettingsScreen
+        {...settingsProps()}
+        profiles={profiles}
+        onRenameProfile={(id, name) => names.push([id, name])}
+      />,
+    );
+    const nameInput = (name: string) =>
+      tree.root.find((n) => n.props.accessibilityLabel === `Name for ${name}`);
+
+    act(() => nameInput('Mia').props.onChangeText('Mia Rose'));
+    tap(tree, "Save Mia's name");
+    expect(names).toEqual([[profiles.profiles[0].id, 'Mia Rose']]);
+
+    act(() => nameInput('Theo').props.onChangeText(' Theodore '));
+    act(() => nameInput('Theo').props.onSubmitEditing());
+    expect(names).toEqual([
+      [profiles.profiles[0].id, 'Mia Rose'],
+      [profiles.profiles[1].id, 'Theodore'],
+    ]);
+  });
+
+  it('does not save a blank player name', () => {
+    const names: string[] = [];
+    const tree = render(
+      <SettingsScreen {...settingsProps()} profiles={family()} onRenameProfile={(_, name) => names.push(name)} />,
+    );
+    act(() => tree.root.find((n) => n.props.accessibilityLabel === 'Name for Mia').props.onChangeText('   '));
+    expect(tree.root.find((n) => n.props.accessibilityLabel === "Save Mia's name").props.disabled).toBe(true);
+    act(() => tree.root.find((n) => n.props.accessibilityLabel === 'Name for Mia').props.onSubmitEditing());
+    expect(names).toEqual([]);
   });
 
   /**
@@ -310,7 +403,8 @@ describe('lessons have to be bought', () => {
     const tree = render(<HomeScreen {...homeProps('math')} progress={{ 'g1-l1': cleared }} />);
     expect(priced(tree)).toEqual(['Play Taking Away for 18 coins']);
     expect(textOf(tree)).toContain('START');
-    expect(squash(textOf(tree))).toContain('🪙18');
+    expect(squash(textOf(tree))).toContain('START18');
+    expect(tree.root.findAllByProps({ testID: 'gold-coin' }).length).toBeGreaterThan(0);
   });
 
   /** Pressing it once pays and opens; there is no separate buy step. */
@@ -350,7 +444,8 @@ describe('lessons have to be bought', () => {
     // Greyed out with the price still legible, so there is something to aim
     // at rather than another closed door.
     expect(priced(tree)).toEqual(['Taking Away, needs 18 coins']);
-    expect(squash(textOf(tree))).toContain('🪙18');
+    expect(squash(textOf(tree))).toContain('START18');
+    expect(tree.root.findAllByProps({ testID: 'gold-coin' }).length).toBeGreaterThan(0);
   });
 
   it('will not start a lesson the child cannot afford', () => {
@@ -453,7 +548,7 @@ describe('HomeScreen', () => {
 
   it('shows the story map and no free practice on the reading tab', () => {
     const text = textOf(render(<HomeScreen {...homeProps('reading')} />));
-    expect(text).toContain('📖 Boring Quest');
+    expect(text).toContain('📖');
     expect(text).toContain(LIB.stories(1)[0].title);
     expect(text).not.toContain('Free practice');
     // The purse is one purse, shared by both subjects.
@@ -520,7 +615,7 @@ describe('HomeScreen', () => {
 
   it('shows the puzzle map and free practice on the logic tab', () => {
     const text = textOf(render(<HomeScreen {...homeProps('logic')} />));
-    expect(text).toContain('🧩 Boring Quest');
+    expect(text).toContain('🧩');
     expect(text).toContain(LIB.puzzleSets(1)[0].title);
     expect(text).toContain('puzzles get trickier as you go');
     expect(text).toContain('Free practice');
@@ -776,7 +871,7 @@ describe('QuizScreen', () => {
       />,
     );
 
-    // A pattern is spotted, not worked out: no scrap paper on this tab.
+    // Paper is available here but folded away — the clues need the room.
     expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
 
     for (const question of questions) {
@@ -812,6 +907,46 @@ describe('QuizScreen', () => {
 
     press(tree, 'Scratch paper');
     expect(tree.root.findAllByType(ScratchPad)).toHaveLength(1);
+  });
+
+  it('keeps the paper folded away on a logic round until it is asked for', () => {
+    const questions = LIB.puzzleQuestions(LIB.puzzleSets(1)[0], {}, Math.random).questions;
+    const tree = render(
+      <QuizScreen grade={1} scratchPaper penOnly={false} subject="logic" questions={questions} onComplete={() => {}} onQuit={() => {}} />,
+    );
+
+    // Out of the way, so a puzzle's clues have the screen to themselves.
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+
+    // But the pencil is there, which is the whole difference from reading.
+    press(tree, 'Scratch paper');
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(1);
+
+    press(tree, 'Scratch paper');
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+  });
+
+  it('offers no pencil on a reading round', () => {
+    const story = LIB.stories(1)[0];
+    const tree = render(
+      <QuizScreen
+        grade={1}
+        scratchPaper
+        penOnly={false}
+        subject="reading"
+        passage={passageOf(story)}
+        questions={storyQuestions(story, shuffle)}
+        onComplete={() => {}}
+        onQuit={() => {}}
+      />,
+    );
+
+    expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+    expect(
+      tree.root.findAll(
+        (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === 'Scratch paper',
+      ),
+    ).toHaveLength(0);
   });
 
   it('offers no paper at all when it is switched off in settings', () => {
@@ -872,6 +1007,22 @@ describe('QuizScreen', () => {
 describe('CorrectionScreen', () => {
   const missed = () => tappableQuestions(LIB.lessons(1)[0]).slice(0, 2);
 
+  const choose = (tree: ReactTestRenderer, answer: string) =>
+    act(() => {
+      tree.root.findAllByType(ChoiceButton).find((n) => n.props.label === answer)!.props.onPress();
+    });
+
+  const wrongFor = (question: ReturnType<typeof missed>[number]) =>
+    question.choices.find((choice) => choice !== question.correctAnswer)!;
+
+  const advance = (tree: ReactTestRenderer, label: string) =>
+    act(() => {
+      tree.root.findAll((n) =>
+        typeof n.props.onPress === 'function' &&
+        n.findAll((child) => child.children.includes(label)).length > 0,
+      )[0].props.onPress();
+    });
+
   const correction = (props: Partial<React.ComponentProps<typeof CorrectionScreen>> = {}) =>
     render(
       <CorrectionScreen
@@ -902,6 +1053,52 @@ describe('CorrectionScreen', () => {
     expect(correction({ subject: 'reading' }).root.findAllByType(ScratchPad)).toHaveLength(0);
     expect(correction({ scratchPaper: false }).root.findAllByType(ScratchPad)).toHaveLength(0);
   });
+
+  it('records a question fixed on the first try and advances to the next mistake', () => {
+    const questions = missed();
+    const onDone = jest.fn();
+    const tree = correction({ questions, onDone });
+    choose(tree, questions[0].correctAnswer);
+    expect(textOf(tree)).toContain('Correct!');
+    advance(tree, 'Next mistake');
+    expect(textOf(tree)).toContain('Mistake 2 of 2');
+    choose(tree, questions[1].correctAnswer);
+    advance(tree, 'See results');
+    expect(onDone).toHaveBeenCalledWith(questions.map((question) => ({
+      questionId: question.id, attempts: 1, fixed: true, skipped: false,
+    })));
+  });
+
+  it('offers another try after a miss, then records a successful second attempt', () => {
+    const questions = missed().slice(0, 1);
+    const onDone = jest.fn();
+    const tree = correction({ questions, onDone });
+    choose(tree, wrongFor(questions[0]));
+    expect(textOf(tree)).toContain('Not quite! Hint:');
+    expect(onDone).not.toHaveBeenCalled();
+    advance(tree, 'Try again');
+    choose(tree, questions[0].correctAnswer);
+    advance(tree, 'See results');
+    expect(onDone).toHaveBeenCalledWith([{
+      questionId: questions[0].id, attempts: 2, fixed: true, skipped: false,
+    }]);
+  });
+
+  it('stops after three wrong tries and reports the question as skipped', () => {
+    const questions = missed().slice(0, 1);
+    const onDone = jest.fn();
+    const tree = correction({ questions, onDone });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      choose(tree, wrongFor(questions[0]));
+      if (attempt < 2) advance(tree, 'Try again');
+    }
+    expect(textOf(tree)).toContain("Let's skip this one for now");
+    expect(textOf(tree)).toContain(questions[0].correctAnswer);
+    advance(tree, 'See results');
+    expect(onDone).toHaveBeenCalledWith([{
+      questionId: questions[0].id, attempts: 3, fixed: false, skipped: true,
+    }]);
+  });
 });
 
 /** Everything SettingsScreen needs, with the grades a fresh install has. */
@@ -924,8 +1121,16 @@ describe('SettingsScreen', () => {
       (n) => typeof n.type !== 'string' && n.props.accessibilityLabel === label,
     );
 
-  it('starts with scratch paper on and the pen required', () => {
-    expect(DEFAULT_SETTINGS).toEqual({ scratchPaper: true, penOnly: true });
+  it('starts with scratch paper and finger drawing on, plus sound on', () => {
+    expect(DEFAULT_SETTINGS).toEqual({
+      scratchPaper: true,
+      penOnly: false,
+      sounds: true,
+      kioskMode: false,
+      reminderEnabled: false,
+      reminderHour: 17,
+      reminderMinute: 0,
+    });
   });
 
   it('saves each switch as it is flipped', () => {
@@ -935,21 +1140,26 @@ describe('SettingsScreen', () => {
     );
 
     act(() => {
-      toggle(tree, 'Pen only').props.onValueChange(false);
+      toggle(tree, Platform.OS === 'ios' ? 'Pencil mode' : 'Stylus mode').props.onValueChange(true);
     });
-    expect(saved).toEqual({ scratchPaper: true, penOnly: false });
+    expect(saved).toEqual({ ...DEFAULT_SETTINGS, penOnly: true });
 
     act(() => {
       toggle(tree, 'Scratch paper').props.onValueChange(false);
     });
     expect(saved.scratchPaper).toBe(false);
+
+    act(() => {
+      toggle(tree, 'Answer sounds').props.onValueChange(false);
+    });
+    expect(saved.sounds).toBe(false);
   });
 
   it('greys out the pen switch when there is no paper to draw on', () => {
     const tree = render(
-      <SettingsScreen {...settingsProps()} settings={{ scratchPaper: false, penOnly: true }} />,
+      <SettingsScreen {...settingsProps()} settings={{ ...DEFAULT_SETTINGS, scratchPaper: false }} />,
     );
-    expect(toggle(tree, 'Pen only').props.disabled).toBe(true);
+    expect(toggle(tree, Platform.OS === 'ios' ? 'Pencil mode' : 'Stylus mode').props.disabled).toBe(true);
     expect(toggle(tree, 'Scratch paper').props.disabled).toBeUndefined();
   });
 
@@ -960,6 +1170,19 @@ describe('SettingsScreen', () => {
     );
     press(tree, 'Back');
     expect(back).toBe(1);
+  });
+
+  it('opens app-specific privacy and terms pages on hashfront.com', async () => {
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const tree = render(<SettingsScreen {...settingsProps()} />);
+    try {
+      press(tree, 'Privacy Policy');
+      press(tree, 'Terms of Service');
+      expect(open).toHaveBeenNthCalledWith(1, 'https://hashfront.com/math-edu/privacy');
+      expect(open).toHaveBeenNthCalledWith(2, 'https://hashfront.com/math-edu/terms');
+    } finally {
+      open.mockRestore();
+    }
   });
 });
 
@@ -1004,6 +1227,32 @@ describe('ResultsScreen', () => {
     expect(text).toContain('First time cleared');
     expect(text).toContain('perfect lesson!');
     expect(text).toContain('500');
+  });
+
+  it('does not offer mistake correction after a timed Speed Match', () => {
+    const question = {
+      ...tappableQuestions(LIB.lessons(1)[0])[0],
+      limitSeconds: 5,
+    };
+    const text = textOf(render(
+      <ResultsScreen
+        records={[{ question, chosen: null, correct: false }]}
+        elapsedMs={5_000}
+        tierChange={null}
+        adaptiveEvents={[]}
+        afterCorrection={false}
+        subject="math"
+        stop={null}
+        stars={0}
+        bestCombo={0}
+        award={lessonAward({ correctCount: 0, total: 1, bestCombo: 0, firstClear: false })}
+        completedChallenges={[]}
+        coinTotal={0}
+        onFixMistakes={() => {}}
+        onHome={() => {}}
+      />,
+    ));
+    expect(text).not.toContain('Fix your');
   });
 });
 
@@ -1169,4 +1418,3 @@ describe('the grade picker in settings', () => {
     expect(changes).toEqual([['logic', 4]]);
   });
 });
-

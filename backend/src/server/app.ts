@@ -24,9 +24,11 @@ import { logger } from 'hono/logger';
 
 import type { ExplainRequest, Grade, Manifest } from '../contract';
 import { DIST_DIR } from '../bake/config';
+import { feedback } from './feedback';
 import { sync } from './sync';
 import { ComposeRequest, asComposeRequest, planLevel } from './levels';
 import { TutorError, explain, tutorProviders } from './tutor';
+import { appUpdates } from './appUpdates';
 
 /**
  * The manifest is read from disk per request rather than cached in memory,
@@ -58,6 +60,26 @@ app.use('*', logger());
 // Packs are verbose JSON that gzips about 16:1, so this is the difference
 // between a 2MB download and a 90KB one.
 app.use('*', compress());
+
+const page = (title: string, body: string) => `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} — Have Fun Learning</title><style>body{font:17px/1.55 system-ui,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;color:#182033}h1,h2{line-height:1.2}a{color:#315ee8}</style></head>
+<body><h1>${title}</h1>${body}</body></html>`;
+
+app.get('/support', (c) => c.html(page('Support', `
+<p>Have Fun Learning provides math, logic and reading practice for grades 1–5.</p>
+<h2>Get help</h2><p>Email <a href="mailto:support@hashfront.com">support@hashfront.com</a>. Include the device type and what you were doing when the problem occurred. Do not include a child’s full name.</p>
+<h2>Common questions</h2><p>The app works offline. Reading aloud and daily reminders are optional and can be disabled in Settings. Progress syncs through the family’s iCloud account on Apple devices.</p>`)));
+
+app.get('/privacy', (c) => c.html(page('Privacy Policy', `
+<p><strong>Last updated September 26, 2026.</strong></p>
+<p>Have Fun Learning has no ads, analytics SDKs or third-party advertising trackers. We do not sell personal information.</p>
+<h2>Progress</h2><p>On iPhone and iPad, learning progress is stored in the user’s private iCloud key-value store so it can sync across devices signed into the same iCloud account. On other platforms, a pseudonymous identifier may be used to back up progress to our service. Progress includes lessons completed, stars, coins, settings and local player profiles.</p>
+<h2>Reading aloud</h2><p>Microphone and speech recognition access is optional. Recognition is requested on-device; the app does not save recordings or send audio to us.</p>
+<h2>Feedback</h2><p>If an adult sends feedback, we receive the message, an app-generated identifier, basic app/device details and the network address needed for security and rate limiting.</p>
+<h2>Notifications</h2><p>Daily learning reminders are optional local notifications scheduled by the device. We do not use them to track activity.</p>
+<h2>Optional usage counts</h2><p>On first launch, a grown-up can choose whether to share usage counts with Hashfront. If allowed, the app sends app-open and completed-lesson events, the subject of a completed lesson, app and operating-system versions, platform, and a random app-install identifier to hashfront.com. It does not send names, answers or scores. The app stores unsent events locally while offline and retries later. Usage sharing can be turned off in Settings; that removes the local tracking identifier and any unsent events. Hashfront stores these usage events to understand which parts of the app are used. No usage event is sent before permission is given.</p>
+<h2>Contact</h2><p>Privacy questions: <a href="mailto:privacy@hashfront.com">privacy@hashfront.com</a>.</p>`)));
 
 app.get('/healthz', (c) => {
   const loaded = loadManifest();
@@ -194,6 +216,11 @@ app.post('/v1/levels', async (c) => {
 });
 
 app.route('/', sync);
+
+// Suggestions and bug reports — see server/feedback.ts. Shares the sync
+// store, so it shares the 503 when SYNC_DB_PATH is unset.
+app.route('/', feedback);
+app.route('/', appUpdates);
 
 app.notFound((c) => c.json({ error: 'not found' }, 404));
 

@@ -2,7 +2,7 @@
   "name": "math-edu",
   "version": "1.0.0",
   "private": true,
-  "description": "Boring Quest — an Expo app for grades 1-5, and the backend that serves its content",
+  "description": "Have Fun Learning — an Expo app for grades 1-5, and the backend that serves its content",
   "workspaces": [
     "frontend",
     "backend"

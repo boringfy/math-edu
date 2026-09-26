@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
+import CoinIcon from './CoinIcon';
 import { currentStop, isUnlocked, starsOn } from '../lib/mapProgress';
 import { UnlockMap, isPlayable, stopState } from '../lib/unlocks';
 import { colors } from '../theme';
@@ -143,9 +144,13 @@ export default function MapTrail<T extends MapStop>({
                   sale && affordable && styles.nodeForSale,
                 ]}
               >
-                <Text style={[styles.icon, !unlocked && !sale && styles.lockedText]}>
-                  {unlocked || sale ? stop.icon : '🔒'}
-                </Text>
+                {(unlocked || sale) && stop.icon === '🪙' ? (
+                  <CoinIcon size={32} />
+                ) : (
+                  <Text style={[styles.icon, !unlocked && !sale && styles.lockedText]}>
+                    {unlocked || sale ? stop.icon : '🔒'}
+                  </Text>
+                )}
                 <View style={styles.numberBadge}>
                   <Text style={styles.numberBadgeText}>{stop.index}</Text>
                 </View>
@@ -184,9 +189,12 @@ export default function MapTrail<T extends MapStop>({
                       START
                     </Text>
                   </View>
-                  <Text style={[styles.priceTag, !affordable && styles.priceTagShort]}>
-                    🪙 {unlockCost}
-                  </Text>
+                  <View style={styles.priceRow}>
+                    <CoinIcon size={15} />
+                    <Text style={[styles.priceTag, !affordable && styles.priceTagShort]}>
+                      {unlockCost}
+                    </Text>
+                  </View>
                 </View>
               ) : isCurrent ? (
                 <View style={styles.startPill}>
@@ -259,6 +267,7 @@ const styles = StyleSheet.create({
   },
   startPillText: { color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 1 },
   startRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   startPillShort: { backgroundColor: '#eef0f6' },
   startPillTextShort: { color: colors.textMuted },
   priceTag: { fontSize: 13, fontWeight: '800', color: '#8a6d00' },

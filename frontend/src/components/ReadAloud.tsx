@@ -129,7 +129,7 @@ export default function ReadAloud({ passage, onScore }: Props) {
 
     if (!(await requestMicrophone())) {
       setPhase('idle');
-      setNotice('Boring Quest needs the microphone to hear you read.');
+      setNotice('Have Fun Learning needs the microphone to hear you read.');
       return;
     }
 

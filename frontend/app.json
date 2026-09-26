@@ -1,23 +1,43 @@
 {
   "expo": {
-    "name": "Boring Quest",
+    "name": "Have Fun Learning",
     "slug": "math-edu",
-    "scheme": "boringquest",
+    "scheme": "havefunlearning",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://math-edu.hashfront.com/v1/app-updates/manifest",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      },
+      "codeSigningCertificate": "./updates/certificate.pem",
+      "codeSigningMetadata": {
+        "keyid": "main",
+        "alg": "rsa-v1_5-sha256"
+      }
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.boringfy.mathedu"
+      "appleTeamId": "FNK34ANN2H",
+      "bundleIdentifier": "com.hashfront.mathedu",
+      "buildNumber": "1",
+      "entitlements": {
+        "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)com.hashfront.mathedu"
+      }
     },
     "android": {
-      "package": "com.boringfy.mathedu",
+      "package": "com.hashfront.mathedu",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#16C9EC",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -25,8 +45,8 @@
       [
         "expo-speech-recognition",
         {
-          "microphonePermission": "Boring Quest listens while you read a story out loud, so it can light up the words it hears. Everything stays on this device.",
-          "speechRecognitionPermission": "Boring Quest checks which words you read out loud, entirely on this device.",
+          "microphonePermission": "Have Fun Learning listens while you read a story out loud, so it can light up the words it hears.",
+          "speechRecognitionPermission": "Have Fun Learning checks which words you read out loud during reading practice.",
           "androidSpeechServicePackages": [
             "com.google.android.tts",
             "com.google.android.as",
@@ -35,7 +55,9 @@
         }
       ],
       "./plugins/withPointerEvents",
-      "./plugins/withContentCleartext"
+      "./plugins/withContentCleartext",
+      "expo-iap",
+      "expo-audio"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

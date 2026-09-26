@@ -64,6 +64,134 @@ exports[`what each difficulty asks for > analogy 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > angleAroundPoint 1`] = `
+{
+  "dRange": [
+    12,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > angleLogic 1`] = `
+{
+  "dRange": [
+    12,
+    26,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "(outside) {"tier":1}",
+    "d08": "(outside) {"tier":1}",
+    "d09": "(outside) {"tier":1}",
+    "d10": "(outside) {"tier":1}",
+    "d11": "(outside) {"tier":1}",
+    "d12": "{"tier":1}",
+    "d13": "{"tier":1}",
+    "d14": "{"tier":1}",
+    "d15": "{"tier":2}",
+    "d16": "{"tier":2}",
+    "d17": "{"tier":2}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "angleLogic",
+}
+`;
+
+exports[`what each difficulty asks for > areaOfRectangle 1`] = `
+{
+  "dRange": [
+    7,
+    14,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":6}",
+    "d02": "(outside) {"maxSide":6}",
+    "d03": "(outside) {"maxSide":6}",
+    "d04": "(outside) {"maxSide":6}",
+    "d05": "(outside) {"maxSide":6}",
+    "d06": "(outside) {"maxSide":6}",
+    "d07": "{"maxSide":6}",
+    "d08": "{"maxSide":6}",
+    "d09": "{"maxSide":12}",
+    "d10": "{"maxSide":12}",
+    "d11": "{"maxSide":20}",
+    "d12": "{"maxSide":20}",
+    "d13": "{"maxSide":20}",
+    "d14": "{"maxSide":40}",
+    "d15": "(outside) {"maxSide":40}",
+    "d16": "(outside) {"maxSide":40}",
+    "d17": "(outside) {"maxSide":40}",
+    "d18": "(outside) {"maxSide":40}",
+    "d19": "(outside) {"maxSide":40}",
+    "d20": "(outside) {"maxSide":40}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > averageOfSet 1`] = `
+{
+  "dRange": [
+    11,
+    19,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxValue":12}",
+    "d02": "(outside) {"maxValue":12}",
+    "d03": "(outside) {"maxValue":12}",
+    "d04": "(outside) {"maxValue":12}",
+    "d05": "(outside) {"maxValue":12}",
+    "d06": "(outside) {"maxValue":12}",
+    "d07": "(outside) {"maxValue":12}",
+    "d08": "(outside) {"maxValue":12}",
+    "d09": "(outside) {"maxValue":12}",
+    "d10": "(outside) {"maxValue":12}",
+    "d11": "{"maxValue":12}",
+    "d12": "{"maxValue":12}",
+    "d13": "{"maxValue":12}",
+    "d14": "{"maxValue":30}",
+    "d15": "{"maxValue":30}",
+    "d16": "{"maxValue":30}",
+    "d17": "{"maxValue":30}",
+    "d18": "{"maxValue":30}",
+    "d19": "{"maxValue":80}",
+    "d20": "(outside) {"maxValue":80}",
+  },
+  "skill": "data",
+}
+`;
+
 exports[`what each difficulty asks for > averageProblem 1`] = `
 {
   "dRange": [
@@ -256,6 +384,166 @@ exports[`what each difficulty asks for > changeProblem 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > chartDifference 1`] = `
+{
+  "dRange": [
+    5,
+    16,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxValue":8}",
+    "d02": "(outside) {"maxValue":8}",
+    "d03": "(outside) {"maxValue":8}",
+    "d04": "(outside) {"maxValue":8}",
+    "d05": "{"maxValue":8}",
+    "d06": "{"maxValue":8}",
+    "d07": "{"maxValue":15}",
+    "d08": "{"maxValue":15}",
+    "d09": "{"maxValue":15}",
+    "d10": "{"maxValue":15}",
+    "d11": "{"maxValue":40}",
+    "d12": "{"maxValue":40}",
+    "d13": "{"maxValue":40}",
+    "d14": "{"maxValue":40}",
+    "d15": "{"maxValue":40}",
+    "d16": "{"maxValue":90}",
+    "d17": "(outside) {"maxValue":90}",
+    "d18": "(outside) {"maxValue":90}",
+    "d19": "(outside) {"maxValue":90}",
+    "d20": "(outside) {"maxValue":90}",
+  },
+  "skill": "data",
+}
+`;
+
+exports[`what each difficulty asks for > chartReadOff 1`] = `
+{
+  "dRange": [
+    3,
+    10,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxValue":9}",
+    "d02": "(outside) {"maxValue":9}",
+    "d03": "{"maxValue":9}",
+    "d04": "{"maxValue":9}",
+    "d05": "{"maxValue":9}",
+    "d06": "{"maxValue":20}",
+    "d07": "{"maxValue":20}",
+    "d08": "{"maxValue":20}",
+    "d09": "{"maxValue":20}",
+    "d10": "{"maxValue":50}",
+    "d11": "(outside) {"maxValue":50}",
+    "d12": "(outside) {"maxValue":50}",
+    "d13": "(outside) {"maxValue":50}",
+    "d14": "(outside) {"maxValue":50}",
+    "d15": "(outside) {"maxValue":50}",
+    "d16": "(outside) {"maxValue":50}",
+    "d17": "(outside) {"maxValue":50}",
+    "d18": "(outside) {"maxValue":50}",
+    "d19": "(outside) {"maxValue":50}",
+    "d20": "(outside) {"maxValue":50}",
+  },
+  "skill": "data",
+}
+`;
+
+exports[`what each difficulty asks for > chartTotal 1`] = `
+{
+  "dRange": [
+    4,
+    14,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxValue":6}",
+    "d02": "(outside) {"maxValue":6}",
+    "d03": "(outside) {"maxValue":6}",
+    "d04": "{"maxValue":6}",
+    "d05": "{"maxValue":6}",
+    "d06": "{"maxValue":12}",
+    "d07": "{"maxValue":12}",
+    "d08": "{"maxValue":12}",
+    "d09": "{"maxValue":25}",
+    "d10": "{"maxValue":25}",
+    "d11": "{"maxValue":25}",
+    "d12": "{"maxValue":25}",
+    "d13": "{"maxValue":25}",
+    "d14": "{"maxValue":60}",
+    "d15": "(outside) {"maxValue":60}",
+    "d16": "(outside) {"maxValue":60}",
+    "d17": "(outside) {"maxValue":60}",
+    "d18": "(outside) {"maxValue":60}",
+    "d19": "(outside) {"maxValue":60}",
+    "d20": "(outside) {"maxValue":60}",
+  },
+  "skill": "data",
+}
+`;
+
+exports[`what each difficulty asks for > circleArea 1`] = `
+{
+  "dRange": [
+    18,
+    25,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > circleCircumference 1`] = `
+{
+  "dRange": [
+    16,
+    23,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > circleDiameter 1`] = `
 {
   "dRange": [
@@ -352,6 +640,70 @@ exports[`what each difficulty asks for > coinsProblem 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > compareDecimals 1`] = `
+{
+  "dRange": [
+    11,
+    20,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "—",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "decimals",
+}
+`;
+
+exports[`what each difficulty asks for > compoundArea 1`] = `
+{
+  "dRange": [
+    14,
+    21,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":8}",
+    "d02": "(outside) {"maxSide":8}",
+    "d03": "(outside) {"maxSide":8}",
+    "d04": "(outside) {"maxSide":8}",
+    "d05": "(outside) {"maxSide":8}",
+    "d06": "(outside) {"maxSide":8}",
+    "d07": "(outside) {"maxSide":8}",
+    "d08": "(outside) {"maxSide":8}",
+    "d09": "(outside) {"maxSide":8}",
+    "d10": "(outside) {"maxSide":8}",
+    "d11": "(outside) {"maxSide":8}",
+    "d12": "(outside) {"maxSide":8}",
+    "d13": "(outside) {"maxSide":8}",
+    "d14": "{"maxSide":8}",
+    "d15": "{"maxSide":8}",
+    "d16": "{"maxSide":8}",
+    "d17": "{"maxSide":15}",
+    "d18": "{"maxSide":15}",
+    "d19": "{"maxSide":15}",
+    "d20": "{"maxSide":15}",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > containerTotal 1`] = `
 {
   "dRange": [
@@ -416,6 +768,38 @@ exports[`what each difficulty asks for > cornersOfShape 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > cubeSurfaceArea 1`] = `
+{
+  "dRange": [
+    15,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxEdge":8}",
+    "d02": "(outside) {"maxEdge":8}",
+    "d03": "(outside) {"maxEdge":8}",
+    "d04": "(outside) {"maxEdge":8}",
+    "d05": "(outside) {"maxEdge":8}",
+    "d06": "(outside) {"maxEdge":8}",
+    "d07": "(outside) {"maxEdge":8}",
+    "d08": "(outside) {"maxEdge":8}",
+    "d09": "(outside) {"maxEdge":8}",
+    "d10": "(outside) {"maxEdge":8}",
+    "d11": "(outside) {"maxEdge":8}",
+    "d12": "(outside) {"maxEdge":8}",
+    "d13": "(outside) {"maxEdge":8}",
+    "d14": "(outside) {"maxEdge":8}",
+    "d15": "{"maxEdge":8}",
+    "d16": "{"maxEdge":8}",
+    "d17": "{"maxEdge":8}",
+    "d18": "{"maxEdge":15}",
+    "d19": "{"maxEdge":15}",
+    "d20": "{"maxEdge":15}",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > cuboidVolume 1`] = `
 {
   "dRange": [
@@ -475,6 +859,38 @@ exports[`what each difficulty asks for > decimalAddSub 1`] = `
     "d18": "{"decimals":3}",
     "d19": "{"decimals":3}",
     "d20": "{"decimals":3}",
+  },
+  "skill": "decimals",
+}
+`;
+
+exports[`what each difficulty asks for > decimalDivision 1`] = `
+{
+  "dRange": [
+    15,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxWhole":5}",
+    "d02": "(outside) {"maxWhole":5}",
+    "d03": "(outside) {"maxWhole":5}",
+    "d04": "(outside) {"maxWhole":5}",
+    "d05": "(outside) {"maxWhole":5}",
+    "d06": "(outside) {"maxWhole":5}",
+    "d07": "(outside) {"maxWhole":5}",
+    "d08": "(outside) {"maxWhole":5}",
+    "d09": "(outside) {"maxWhole":5}",
+    "d10": "(outside) {"maxWhole":5}",
+    "d11": "(outside) {"maxWhole":5}",
+    "d12": "(outside) {"maxWhole":5}",
+    "d13": "(outside) {"maxWhole":5}",
+    "d14": "(outside) {"maxWhole":5}",
+    "d15": "{"maxWhole":5}",
+    "d16": "{"maxWhole":5}",
+    "d17": "{"maxWhole":5}",
+    "d18": "{"maxWhole":12}",
+    "d19": "{"maxWhole":12}",
+    "d20": "{"maxWhole":12}",
   },
   "skill": "decimals",
 }
@@ -768,6 +1184,38 @@ exports[`what each difficulty asks for > expandedForm 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > facesEdgesVertices 1`] = `
+{
+  "dRange": [
+    4,
+    11,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "—",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "—",
+    "d11": "—",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > fewestCoins 1`] = `
 {
   "dRange": [
@@ -864,6 +1312,38 @@ exports[`what each difficulty asks for > fractionOfSetProblem 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > fractionToDecimal 1`] = `
+{
+  "dRange": [
+    12,
+    20,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "decimals",
+}
+`;
+
 exports[`what each difficulty asks for > gaveSomeAwayStory 1`] = `
 {
   "dRange": [
@@ -925,6 +1405,38 @@ exports[`what each difficulty asks for > greatestOrSmallest 1`] = `
     "d20": "(outside) —",
   },
   "skill": "place",
+}
+`;
+
+exports[`what each difficulty asks for > heading 1`] = `
+{
+  "dRange": [
+    5,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "{"tier":1}",
+    "d06": "{"tier":1}",
+    "d07": "{"tier":1}",
+    "d08": "{"tier":2}",
+    "d09": "{"tier":2}",
+    "d10": "{"tier":2}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "heading",
 }
 `;
 
@@ -1088,6 +1600,38 @@ exports[`what each difficulty asks for > howManyMoreNeeded 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > howManyPacks 1`] = `
+{
+  "dRange": [
+    11,
+    19,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxTotal":3}",
+    "d02": "(outside) {"maxTotal":3}",
+    "d03": "(outside) {"maxTotal":3}",
+    "d04": "(outside) {"maxTotal":3}",
+    "d05": "(outside) {"maxTotal":3}",
+    "d06": "(outside) {"maxTotal":3}",
+    "d07": "(outside) {"maxTotal":3}",
+    "d08": "(outside) {"maxTotal":3}",
+    "d09": "(outside) {"maxTotal":3}",
+    "d10": "(outside) {"maxTotal":3}",
+    "d11": "{"maxTotal":3}",
+    "d12": "{"maxTotal":3}",
+    "d13": "{"maxTotal":3}",
+    "d14": "{"maxTotal":6}",
+    "d15": "{"maxTotal":6}",
+    "d16": "{"maxTotal":6}",
+    "d17": "{"maxTotal":6}",
+    "d18": "{"maxTotal":6}",
+    "d19": "{"maxTotal":12}",
+    "d20": "(outside) {"maxTotal":12}",
+  },
+  "skill": "measurement",
+}
+`;
+
 exports[`what each difficulty asks for > joinStory 1`] = `
 {
   "dRange": [
@@ -1117,6 +1661,38 @@ exports[`what each difficulty asks for > joinStory 1`] = `
     "d20": "(outside) {"maxTotal":999}",
   },
   "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > kilogramsToGrams 1`] = `
+{
+  "dRange": [
+    6,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxKilos":5}",
+    "d02": "(outside) {"maxKilos":5}",
+    "d03": "(outside) {"maxKilos":5}",
+    "d04": "(outside) {"maxKilos":5}",
+    "d05": "(outside) {"maxKilos":5}",
+    "d06": "{"maxKilos":5}",
+    "d07": "{"maxKilos":5}",
+    "d08": "{"maxKilos":12}",
+    "d09": "{"maxKilos":12}",
+    "d10": "{"maxKilos":12}",
+    "d11": "{"maxKilos":12}",
+    "d12": "{"maxKilos":12}",
+    "d13": "{"maxKilos":40}",
+    "d14": "(outside) {"maxKilos":40}",
+    "d15": "(outside) {"maxKilos":40}",
+    "d16": "(outside) {"maxKilos":40}",
+    "d17": "(outside) {"maxKilos":40}",
+    "d18": "(outside) {"maxKilos":40}",
+    "d19": "(outside) {"maxKilos":40}",
+    "d20": "(outside) {"maxKilos":40}",
+  },
+  "skill": "measurement",
 }
 `;
 
@@ -1280,6 +1856,38 @@ exports[`what each difficulty asks for > letterSequence 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > linesOfSymmetry 1`] = `
+{
+  "dRange": [
+    3,
+    9,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "—",
+    "d04": "—",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "—",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > liquidLeft 1`] = `
 {
   "dRange": [
@@ -1373,6 +1981,38 @@ exports[`what each difficulty asks for > logicGrid 1`] = `
     "d20": "{"tier":3}",
   },
   "skill": "grid",
+}
+`;
+
+exports[`what each difficulty asks for > massDifference 1`] = `
+{
+  "dRange": [
+    7,
+    15,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxGrams":400}",
+    "d02": "(outside) {"maxGrams":400}",
+    "d03": "(outside) {"maxGrams":400}",
+    "d04": "(outside) {"maxGrams":400}",
+    "d05": "(outside) {"maxGrams":400}",
+    "d06": "(outside) {"maxGrams":400}",
+    "d07": "{"maxGrams":400}",
+    "d08": "{"maxGrams":400}",
+    "d09": "{"maxGrams":400}",
+    "d10": "{"maxGrams":900}",
+    "d11": "{"maxGrams":900}",
+    "d12": "{"maxGrams":900}",
+    "d13": "{"maxGrams":900}",
+    "d14": "{"maxGrams":900}",
+    "d15": "{"maxGrams":2500}",
+    "d16": "(outside) {"maxGrams":2500}",
+    "d17": "(outside) {"maxGrams":2500}",
+    "d18": "(outside) {"maxGrams":2500}",
+    "d19": "(outside) {"maxGrams":2500}",
+    "d20": "(outside) {"maxGrams":2500}",
+  },
+  "skill": "measurement",
 }
 `;
 
@@ -1632,6 +2272,38 @@ exports[`what each difficulty asks for > missingFactor 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > missingSideFromPerimeter 1`] = `
+{
+  "dRange": [
+    9,
+    15,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":8}",
+    "d02": "(outside) {"maxSide":8}",
+    "d03": "(outside) {"maxSide":8}",
+    "d04": "(outside) {"maxSide":8}",
+    "d05": "(outside) {"maxSide":8}",
+    "d06": "(outside) {"maxSide":8}",
+    "d07": "(outside) {"maxSide":8}",
+    "d08": "(outside) {"maxSide":8}",
+    "d09": "{"maxSide":8}",
+    "d10": "{"maxSide":8}",
+    "d11": "{"maxSide":15}",
+    "d12": "{"maxSide":15}",
+    "d13": "{"maxSide":15}",
+    "d14": "{"maxSide":15}",
+    "d15": "{"maxSide":30}",
+    "d16": "(outside) {"maxSide":30}",
+    "d17": "(outside) {"maxSide":30}",
+    "d18": "(outside) {"maxSide":30}",
+    "d19": "(outside) {"maxSide":30}",
+    "d20": "(outside) {"maxSide":30}",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > missingSubtractionPart 1`] = `
 {
   "dRange": [
@@ -1691,6 +2363,38 @@ exports[`what each difficulty asks for > mixedLengthTotal 1`] = `
     "d18": "(outside) —",
     "d19": "(outside) —",
     "d20": "(outside) —",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > mixedMassTotal 1`] = `
+{
+  "dRange": [
+    10,
+    18,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxGrams":400}",
+    "d02": "(outside) {"maxGrams":400}",
+    "d03": "(outside) {"maxGrams":400}",
+    "d04": "(outside) {"maxGrams":400}",
+    "d05": "(outside) {"maxGrams":400}",
+    "d06": "(outside) {"maxGrams":400}",
+    "d07": "(outside) {"maxGrams":400}",
+    "d08": "(outside) {"maxGrams":400}",
+    "d09": "(outside) {"maxGrams":400}",
+    "d10": "{"maxGrams":400}",
+    "d11": "{"maxGrams":400}",
+    "d12": "{"maxGrams":400}",
+    "d13": "{"maxGrams":900}",
+    "d14": "{"maxGrams":900}",
+    "d15": "{"maxGrams":900}",
+    "d16": "{"maxGrams":900}",
+    "d17": "{"maxGrams":900}",
+    "d18": "{"maxGrams":990}",
+    "d19": "(outside) {"maxGrams":990}",
+    "d20": "(outside) {"maxGrams":990}",
   },
   "skill": "measurement",
 }
@@ -1760,6 +2464,38 @@ exports[`what each difficulty asks for > moneyLeftOver 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > movePoint 1`] = `
+{
+  "dRange": [
+    9,
+    17,
+  ],
+  "settings": {
+    "d01": "(outside) {"max":8}",
+    "d02": "(outside) {"max":8}",
+    "d03": "(outside) {"max":8}",
+    "d04": "(outside) {"max":8}",
+    "d05": "(outside) {"max":8}",
+    "d06": "(outside) {"max":8}",
+    "d07": "(outside) {"max":8}",
+    "d08": "(outside) {"max":8}",
+    "d09": "{"max":8}",
+    "d10": "{"max":8}",
+    "d11": "{"max":8}",
+    "d12": "{"max":15}",
+    "d13": "{"max":15}",
+    "d14": "{"max":15}",
+    "d15": "{"max":15}",
+    "d16": "{"max":15}",
+    "d17": "{"max":30}",
+    "d18": "(outside) {"max":30}",
+    "d19": "(outside) {"max":30}",
+    "d20": "(outside) {"max":30}",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > multiplication 1`] = `
 {
   "dRange": [
@@ -1789,6 +2525,70 @@ exports[`what each difficulty asks for > multiplication 1`] = `
     "d20": "{"a":[111,9999],"b":[2,12]}",
   },
   "skill": "mulDiv",
+}
+`;
+
+exports[`what each difficulty asks for > namePoint 1`] = `
+{
+  "dRange": [
+    7,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"max":6}",
+    "d02": "(outside) {"max":6}",
+    "d03": "(outside) {"max":6}",
+    "d04": "(outside) {"max":6}",
+    "d05": "(outside) {"max":6}",
+    "d06": "(outside) {"max":6}",
+    "d07": "{"max":6}",
+    "d08": "{"max":6}",
+    "d09": "{"max":10}",
+    "d10": "{"max":10}",
+    "d11": "{"max":10}",
+    "d12": "{"max":10}",
+    "d13": "{"max":20}",
+    "d14": "(outside) {"max":20}",
+    "d15": "(outside) {"max":20}",
+    "d16": "(outside) {"max":20}",
+    "d17": "(outside) {"max":20}",
+    "d18": "(outside) {"max":20}",
+    "d19": "(outside) {"max":20}",
+    "d20": "(outside) {"max":20}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > netFold 1`] = `
+{
+  "dRange": [
+    10,
+    25,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "(outside) {"tier":1}",
+    "d08": "(outside) {"tier":1}",
+    "d09": "(outside) {"tier":1}",
+    "d10": "{"tier":1}",
+    "d11": "{"tier":1}",
+    "d12": "{"tier":1}",
+    "d13": "{"tier":2}",
+    "d14": "{"tier":2}",
+    "d15": "{"tier":2}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "netFold",
 }
 `;
 
@@ -1888,6 +2688,38 @@ exports[`what each difficulty asks for > oddWordOut 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > orderDecimals 1`] = `
+{
+  "dRange": [
+    13,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "decimals",
+}
+`;
+
 exports[`what each difficulty asks for > orderOfOperations 1`] = `
 {
   "dRange": [
@@ -1952,6 +2784,38 @@ exports[`what each difficulty asks for > packsProblem 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > paperFolding 1`] = `
+{
+  "dRange": [
+    8,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "(outside) {"tier":1}",
+    "d05": "(outside) {"tier":1}",
+    "d06": "(outside) {"tier":1}",
+    "d07": "(outside) {"tier":1}",
+    "d08": "{"tier":1}",
+    "d09": "{"tier":1}",
+    "d10": "{"tier":1}",
+    "d11": "{"tier":2}",
+    "d12": "{"tier":2}",
+    "d13": "{"tier":2}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "folding",
+}
+`;
+
 exports[`what each difficulty asks for > percentProblem 1`] = `
 {
   "dRange": [
@@ -1981,6 +2845,70 @@ exports[`what each difficulty asks for > percentProblem 1`] = `
     "d20": "—",
   },
   "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > perimeterOfRectangle 1`] = `
+{
+  "dRange": [
+    5,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":6}",
+    "d02": "(outside) {"maxSide":6}",
+    "d03": "(outside) {"maxSide":6}",
+    "d04": "(outside) {"maxSide":6}",
+    "d05": "{"maxSide":6}",
+    "d06": "{"maxSide":12}",
+    "d07": "{"maxSide":12}",
+    "d08": "{"maxSide":20}",
+    "d09": "{"maxSide":20}",
+    "d10": "{"maxSide":20}",
+    "d11": "{"maxSide":20}",
+    "d12": "{"maxSide":50}",
+    "d13": "(outside) {"maxSide":50}",
+    "d14": "(outside) {"maxSide":50}",
+    "d15": "(outside) {"maxSide":50}",
+    "d16": "(outside) {"maxSide":50}",
+    "d17": "(outside) {"maxSide":50}",
+    "d18": "(outside) {"maxSide":50}",
+    "d19": "(outside) {"maxSide":50}",
+    "d20": "(outside) {"maxSide":50}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > pictogram 1`] = `
+{
+  "dRange": [
+    6,
+    13,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSymbols":4}",
+    "d02": "(outside) {"maxSymbols":4}",
+    "d03": "(outside) {"maxSymbols":4}",
+    "d04": "(outside) {"maxSymbols":4}",
+    "d05": "(outside) {"maxSymbols":4}",
+    "d06": "{"maxSymbols":4}",
+    "d07": "{"maxSymbols":4}",
+    "d08": "{"maxSymbols":4}",
+    "d09": "{"maxSymbols":7}",
+    "d10": "{"maxSymbols":7}",
+    "d11": "{"maxSymbols":7}",
+    "d12": "{"maxSymbols":7}",
+    "d13": "{"maxSymbols":12}",
+    "d14": "(outside) {"maxSymbols":12}",
+    "d15": "(outside) {"maxSymbols":12}",
+    "d16": "(outside) {"maxSymbols":12}",
+    "d17": "(outside) {"maxSymbols":12}",
+    "d18": "(outside) {"maxSymbols":12}",
+    "d19": "(outside) {"maxSymbols":12}",
+    "d20": "(outside) {"maxSymbols":12}",
+  },
+  "skill": "data",
 }
 `;
 
@@ -2112,6 +3040,38 @@ exports[`what each difficulty asks for > rectangleArea 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > rectangleArea 2`] = `
+{
+  "dRange": [
+    7,
+    14,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":6}",
+    "d02": "(outside) {"maxSide":6}",
+    "d03": "(outside) {"maxSide":6}",
+    "d04": "(outside) {"maxSide":6}",
+    "d05": "(outside) {"maxSide":6}",
+    "d06": "(outside) {"maxSide":6}",
+    "d07": "{"maxSide":6}",
+    "d08": "{"maxSide":6}",
+    "d09": "{"maxSide":12}",
+    "d10": "{"maxSide":12}",
+    "d11": "{"maxSide":20}",
+    "d12": "{"maxSide":20}",
+    "d13": "{"maxSide":20}",
+    "d14": "{"maxSide":40}",
+    "d15": "(outside) {"maxSide":40}",
+    "d16": "(outside) {"maxSide":40}",
+    "d17": "(outside) {"maxSide":40}",
+    "d18": "(outside) {"maxSide":40}",
+    "d19": "(outside) {"maxSide":40}",
+    "d20": "(outside) {"maxSide":40}",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > rectanglePerimeter 1`] = `
 {
   "dRange": [
@@ -2141,6 +3101,70 @@ exports[`what each difficulty asks for > rectanglePerimeter 1`] = `
     "d20": "(outside) {"maxSide":40}",
   },
   "skill": "word",
+}
+`;
+
+exports[`what each difficulty asks for > rectanglePerimeter 2`] = `
+{
+  "dRange": [
+    5,
+    12,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxSide":6}",
+    "d02": "(outside) {"maxSide":6}",
+    "d03": "(outside) {"maxSide":6}",
+    "d04": "(outside) {"maxSide":6}",
+    "d05": "{"maxSide":6}",
+    "d06": "{"maxSide":12}",
+    "d07": "{"maxSide":12}",
+    "d08": "{"maxSide":20}",
+    "d09": "{"maxSide":20}",
+    "d10": "{"maxSide":20}",
+    "d11": "{"maxSide":20}",
+    "d12": "{"maxSide":50}",
+    "d13": "(outside) {"maxSide":50}",
+    "d14": "(outside) {"maxSide":50}",
+    "d15": "(outside) {"maxSide":50}",
+    "d16": "(outside) {"maxSide":50}",
+    "d17": "(outside) {"maxSide":50}",
+    "d18": "(outside) {"maxSide":50}",
+    "d19": "(outside) {"maxSide":50}",
+    "d20": "(outside) {"maxSide":50}",
+  },
+  "skill": "geometry",
+}
+`;
+
+exports[`what each difficulty asks for > reflectPoint 1`] = `
+{
+  "dRange": [
+    15,
+    24,
+  ],
+  "settings": {
+    "d01": "(outside) {"max":8}",
+    "d02": "(outside) {"max":8}",
+    "d03": "(outside) {"max":8}",
+    "d04": "(outside) {"max":8}",
+    "d05": "(outside) {"max":8}",
+    "d06": "(outside) {"max":8}",
+    "d07": "(outside) {"max":8}",
+    "d08": "(outside) {"max":8}",
+    "d09": "(outside) {"max":8}",
+    "d10": "(outside) {"max":8}",
+    "d11": "(outside) {"max":8}",
+    "d12": "(outside) {"max":8}",
+    "d13": "(outside) {"max":8}",
+    "d14": "(outside) {"max":8}",
+    "d15": "{"max":8}",
+    "d16": "{"max":8}",
+    "d17": "{"max":8}",
+    "d18": "{"max":8}",
+    "d19": "{"max":15}",
+    "d20": "{"max":15}",
+  },
+  "skill": "geometry",
 }
 `;
 
@@ -2176,6 +3200,38 @@ exports[`what each difficulty asks for > repeatedAddition 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > rightAnglesInShape 1`] = `
+{
+  "dRange": [
+    3,
+    8,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "—",
+    "d04": "—",
+    "d05": "—",
+    "d06": "—",
+    "d07": "—",
+    "d08": "—",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > rotation 1`] = `
 {
   "dRange": [
@@ -2205,6 +3261,38 @@ exports[`what each difficulty asks for > rotation 1`] = `
     "d20": "{"tier":3}",
   },
   "skill": "rotation",
+}
+`;
+
+exports[`what each difficulty asks for > roundDecimal 1`] = `
+{
+  "dRange": [
+    12,
+    21,
+  ],
+  "settings": {
+    "d01": "(outside) —",
+    "d02": "(outside) —",
+    "d03": "(outside) —",
+    "d04": "(outside) —",
+    "d05": "(outside) —",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "—",
+    "d13": "—",
+    "d14": "—",
+    "d15": "—",
+    "d16": "—",
+    "d17": "—",
+    "d18": "—",
+    "d19": "—",
+    "d20": "—",
+  },
+  "skill": "decimals",
 }
 `;
 
@@ -2240,6 +3328,38 @@ exports[`what each difficulty asks for > roundToTen 1`] = `
 }
 `;
 
+exports[`what each difficulty asks for > shapeFromSides 1`] = `
+{
+  "dRange": [
+    1,
+    5,
+  ],
+  "settings": {
+    "d01": "—",
+    "d02": "—",
+    "d03": "—",
+    "d04": "—",
+    "d05": "—",
+    "d06": "(outside) —",
+    "d07": "(outside) —",
+    "d08": "(outside) —",
+    "d09": "(outside) —",
+    "d10": "(outside) —",
+    "d11": "(outside) —",
+    "d12": "(outside) —",
+    "d13": "(outside) —",
+    "d14": "(outside) —",
+    "d15": "(outside) —",
+    "d16": "(outside) —",
+    "d17": "(outside) —",
+    "d18": "(outside) —",
+    "d19": "(outside) —",
+    "d20": "(outside) —",
+  },
+  "skill": "geometry",
+}
+`;
+
 exports[`what each difficulty asks for > shapeOddOneOut 1`] = `
 {
   "dRange": [
@@ -2269,6 +3389,38 @@ exports[`what each difficulty asks for > shapeOddOneOut 1`] = `
     "d20": "{"tier":3}",
   },
   "skill": "oddShape",
+}
+`;
+
+exports[`what each difficulty asks for > shapeRiddle 1`] = `
+{
+  "dRange": [
+    4,
+    22,
+  ],
+  "settings": {
+    "d01": "(outside) {"tier":1}",
+    "d02": "(outside) {"tier":1}",
+    "d03": "(outside) {"tier":1}",
+    "d04": "{"tier":1}",
+    "d05": "{"tier":1}",
+    "d06": "{"tier":1}",
+    "d07": "{"tier":2}",
+    "d08": "{"tier":2}",
+    "d09": "{"tier":2}",
+    "d10": "{"tier":3}",
+    "d11": "{"tier":3}",
+    "d12": "{"tier":3}",
+    "d13": "{"tier":3}",
+    "d14": "{"tier":3}",
+    "d15": "{"tier":3}",
+    "d16": "{"tier":3}",
+    "d17": "{"tier":3}",
+    "d18": "{"tier":3}",
+    "d19": "{"tier":3}",
+    "d20": "{"tier":3}",
+  },
+  "skill": "shapeRiddle",
 }
 `;
 
@@ -2779,6 +3931,38 @@ exports[`what each difficulty asks for > totalLength 1`] = `
     "d18": "(outside) {"maxPieces":8}",
     "d19": "(outside) {"maxPieces":8}",
     "d20": "(outside) {"maxPieces":8}",
+  },
+  "skill": "measurement",
+}
+`;
+
+exports[`what each difficulty asks for > totalMass 1`] = `
+{
+  "dRange": [
+    5,
+    11,
+  ],
+  "settings": {
+    "d01": "(outside) {"maxGrams":90}",
+    "d02": "(outside) {"maxGrams":90}",
+    "d03": "(outside) {"maxGrams":90}",
+    "d04": "(outside) {"maxGrams":90}",
+    "d05": "{"maxGrams":90}",
+    "d06": "{"maxGrams":90}",
+    "d07": "{"maxGrams":400}",
+    "d08": "{"maxGrams":400}",
+    "d09": "{"maxGrams":400}",
+    "d10": "{"maxGrams":400}",
+    "d11": "{"maxGrams":900}",
+    "d12": "(outside) {"maxGrams":900}",
+    "d13": "(outside) {"maxGrams":900}",
+    "d14": "(outside) {"maxGrams":900}",
+    "d15": "(outside) {"maxGrams":900}",
+    "d16": "(outside) {"maxGrams":900}",
+    "d17": "(outside) {"maxGrams":900}",
+    "d18": "(outside) {"maxGrams":900}",
+    "d19": "(outside) {"maxGrams":900}",
+    "d20": "(outside) {"maxGrams":900}",
   },
   "skill": "measurement",
 }

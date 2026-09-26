@@ -40,24 +40,24 @@
     "bakedAt": "2026-09-01T21:37:05.990Z"
   },
   "reading.g1": {
-    "source": "6c67f6dbb57c",
-    "bakedAt": "2026-09-01T21:37:05.990Z"
+    "source": "1389dab8aaa3",
+    "bakedAt": "2026-09-05T16:30:32.965Z"
   },
   "reading.g2": {
     "source": "530de0283d64",
     "bakedAt": "2026-09-01T21:37:05.990Z"
   },
   "reading.g3": {
-    "source": "3071cd546c79",
-    "bakedAt": "2026-09-01T21:37:05.990Z"
+    "source": "852713d9136c",
+    "bakedAt": "2026-09-03T03:11:04.832Z"
   },
   "reading.g4": {
-    "source": "036051a45855",
-    "bakedAt": "2026-09-01T21:37:05.990Z"
+    "source": "9be2b4a3f401",
+    "bakedAt": "2026-09-05T16:30:32.965Z"
   },
   "reading.g5": {
-    "source": "e20a48eee726",
-    "bakedAt": "2026-09-01T21:37:05.990Z"
+    "source": "510ac396b82a",
+    "bakedAt": "2026-09-05T16:31:14.162Z"
   },
   "rules": {
     "source": "7882c4ea1ff8",

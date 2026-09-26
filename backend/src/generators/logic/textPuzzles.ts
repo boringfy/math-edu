@@ -1,5 +1,5 @@
 import { Question, Tier } from '../../contract';
-import { Rng, makeQuestion } from '../generator';
+import { Rng, makeQuestion, numPool } from '../generator';
 
 /**
  * The written half of the logic map: puzzles whose whole content is a
@@ -430,6 +430,228 @@ export function logicGrid(tier: Tier, rng: Rng): Question {
     owner,
     names.filter((n) => n !== owner),
     `Cross off every ${set.noun} the clues rule out and only one name is left beside the ${items[asked]}.`,
+    null,
+  );
+}
+
+/* ------------------------------------------- geometry as reasoning -- */
+
+/*
+  Five families that think about shape and space rather than about numbers or
+  words. They are text rather than drawn on purpose: the drawn families
+  already cover "look at this and spot the pattern", and what was missing was
+  reasoning *about* shape — deducing one from its properties, tracking a turn,
+  folding something in your head.
+*/
+
+interface ShapeFacts {
+  name: string;
+  sides: number;
+  equalSides: boolean;
+  rightAngles: number;
+  parallelPairs: number;
+}
+
+const RIDDLE_SHAPES: ShapeFacts[] = [
+  { name: 'square', sides: 4, equalSides: true, rightAngles: 4, parallelPairs: 2 },
+  { name: 'rectangle', sides: 4, equalSides: false, rightAngles: 4, parallelPairs: 2 },
+  { name: 'rhombus', sides: 4, equalSides: true, rightAngles: 0, parallelPairs: 2 },
+  { name: 'trapezium', sides: 4, equalSides: false, rightAngles: 0, parallelPairs: 1 },
+  { name: 'equilateral triangle', sides: 3, equalSides: true, rightAngles: 0, parallelPairs: 0 },
+  { name: 'right-angled triangle', sides: 3, equalSides: false, rightAngles: 1, parallelPairs: 0 },
+  { name: 'regular pentagon', sides: 5, equalSides: true, rightAngles: 0, parallelPairs: 0 },
+  { name: 'regular hexagon', sides: 6, equalSides: true, rightAngles: 0, parallelPairs: 3 },
+];
+
+/**
+ * "I have four equal sides and no right angles. What am I?"
+ *
+ * Deduction rather than recall: every clue on its own fits several shapes,
+ * and only together do they pick one out. The hardest tier withholds the side
+ * count, which is the clue that would otherwise give it away immediately.
+ */
+export function shapeRiddle(tier: Tier, rng: Rng): Question {
+  const shape = rng.pick(RIDDLE_SHAPES);
+  const clues: string[] = [];
+
+  if (tier < 3) clues.push(`I have ${shape.sides} straight sides.`);
+  clues.push(shape.equalSides ? 'All my sides are the same length.' : 'My sides are not all the same length.');
+  clues.push(
+    shape.rightAngles === 0
+      ? 'I have no right angles.'
+      : `I have ${shape.rightAngles} right angle${shape.rightAngles === 1 ? '' : 's'}.`,
+  );
+  if (tier === 3) {
+    clues.push(
+      shape.parallelPairs === 0
+        ? 'None of my sides are parallel.'
+        : `I have ${shape.parallelPairs} pair${shape.parallelPairs === 1 ? '' : 's'} of parallel sides.`,
+    );
+  }
+
+  // The distractors are shapes that satisfy some of the clues but not all,
+  // so guessing from one line is not enough.
+  const others = RIDDLE_SHAPES.filter((s) => s.name !== shape.name);
+  const near = others
+    .map((s) => ({
+      s,
+      score:
+        (s.sides === shape.sides ? 1 : 0) +
+        (s.equalSides === shape.equalSides ? 1 : 0) +
+        (s.rightAngles === shape.rightAngles ? 1 : 0),
+    }))
+    .sort((x, y) => y.score - x.score)
+    .slice(0, 3)
+    .map((x) => x.s.name);
+
+  return makeQuestion(
+    rng,
+    `${clues.join('\n')}\n\nWhat am I?`,
+    shape.name,
+    near,
+    `Only ${shape.name} fits every clue at once.`,
+    null,
+  );
+}
+
+const COMPASS = ['north', 'east', 'south', 'west'];
+
+/**
+ * Turning on the spot and keeping track of which way you face.
+ *
+ * The one spatial family that needs no picture at all, and the one most like
+ * something a child actually does — following directions.
+ */
+export function heading(tier: Tier, rng: Rng): Question {
+  const start = rng.randInt(0, 3);
+  const turns = tier === 1 ? 2 : tier === 2 ? 3 : 4;
+
+  const described: string[] = [];
+  let facing = start;
+  for (let i = 0; i < turns; i++) {
+    // A half turn only from tier 2 up: three kinds of turn is enough to
+    // track at the age tier 1 is set for.
+    const kind = tier === 1 ? rng.pick(['right', 'left']) : rng.pick(['right', 'left', 'about']);
+    if (kind === 'right') {
+      facing = (facing + 1) % 4;
+      described.push('turn right');
+    } else if (kind === 'left') {
+      facing = (facing + 3) % 4;
+      described.push('turn left');
+    } else {
+      facing = (facing + 2) % 4;
+      described.push('turn all the way around to face the other way');
+    }
+  }
+
+  return makeQuestion(
+    rng,
+    `You are facing ${COMPASS[start]}.\nYou ${described.join(', then ')}.\n\nWhich way are you facing now?`,
+    COMPASS[facing],
+    COMPASS.filter((c) => c !== COMPASS[facing]),
+    `Starting at ${COMPASS[start]} and following each turn in order leaves you facing ${COMPASS[facing]}.`,
+    null,
+  );
+}
+
+/**
+ * An angle described by its relationship to another rather than given.
+ *
+ * The step from "the angles make 180, so subtract" to "one is twice the
+ * other, so share 180 in the ratio 1:2" is the first genuinely algebraic
+ * thing in the geometry a primary child meets.
+ */
+export function angleLogic(tier: Tier, rng: Rng): Question {
+  const total = tier === 1 ? 90 : rng.pick([180, 360]);
+  const totalWord = total === 90 ? 'a right angle' : total === 180 ? 'a straight line' : 'a full turn';
+
+  if (tier === 1) {
+    const a = rng.randInt(20, 70);
+    const b = total - a;
+    return makeQuestion(
+      rng,
+      `Two angles together make ${totalWord}.\nOne of them is ${a}°.\n\nHow big is the other?`,
+      `${b}°`,
+      [`${a}°`, `${total + a}°`, `${180 - a}°`].filter((x) => x !== `${b}°`).slice(0, 3),
+      `${total} − ${a} = ${b}°`,
+      null,
+    );
+  }
+
+  // "One is N times the other" — the parts have to be shared, not subtracted.
+  const times = tier === 2 ? 2 : rng.pick([3, 4, 5]);
+  const small = total / (times + 1);
+  const big = total - small;
+  return makeQuestion(
+    rng,
+    `Two angles together make ${totalWord}.\nOne is ${times} times the size of the other.\n\nHow big is the smaller one?`,
+    `${small}°`,
+    [`${big}°`, `${total / 2}°`, `${total / times}°`].filter((x) => x !== `${small}°`).slice(0, 3),
+    `The two share ${total}° in ${times + 1} equal parts: ${total} ÷ ${times + 1} = ${small}°.`,
+    null,
+  );
+}
+
+/**
+ * Folding paper, punching a hole, and counting the holes when it opens.
+ *
+ * Every fold doubles the holes, which is a rule a child can find rather than
+ * be told — and the reason this is a logic puzzle rather than a sum.
+ */
+export function folding(tier: Tier, rng: Rng): Question {
+  const folds = tier === 1 ? rng.randInt(1, 2) : tier === 2 ? rng.randInt(2, 3) : rng.randInt(3, 4);
+  const holes = tier === 3 ? rng.randInt(1, 2) : 1;
+  const total = holes * 2 ** folds;
+  const holeWord = holes === 1 ? 'one hole' : `${holes} holes`;
+
+  return makeQuestion(
+    rng,
+    `A square of paper is folded in half ${folds} time${folds === 1 ? '' : 's'}.\nYou punch ${holeWord} through all the layers, then unfold it.\n\nHow many holes are in the paper?`,
+    String(total),
+    // The layer count with the holes forgotten, one fold too many, and one
+    // fold too few. Never zero — "no holes at all" is not a mistake anybody
+    // makes, and it wastes one of the four choices.
+    numPool(total, [2 ** folds, total * 2, Math.max(2, total / 2)]),
+    `Each fold doubles the layers, so ${folds} fold${folds === 1 ? '' : 's'} makes ${2 ** folds} layers: ${holes} × ${2 ** folds} = ${total}.`,
+    'integer',
+  );
+}
+
+const NETS = [
+  { solid: 'cube', faces: '6 squares' },
+  { solid: 'square-based pyramid', faces: '1 square and 4 triangles' },
+  { solid: 'triangular prism', faces: '2 triangles and 3 rectangles' },
+  { solid: 'cuboid', faces: '6 rectangles' },
+  { solid: 'tetrahedron', faces: '4 triangles' },
+];
+
+/**
+ * A net described by the flat shapes it is made of, folded in the head.
+ *
+ * Asked the other way round at tier 3, which is harder: going from the solid
+ * to its net means picturing it come apart rather than come together.
+ */
+export function netFold(tier: Tier, rng: Rng): Question {
+  const net = rng.pick(NETS);
+  const others = NETS.filter((n) => n.solid !== net.solid);
+
+  if (tier === 3) {
+    return makeQuestion(
+      rng,
+      `You cut open ${net.solid === 'cube' ? 'a cube' : `a ${net.solid}`} and lay it out flat.\n\nWhich set of flat shapes do you get?`,
+      net.faces,
+      others.slice(0, 3).map((n) => n.faces),
+      `${net.solid === 'cube' ? 'A cube' : `A ${net.solid}`} is made of ${net.faces}.`,
+      null,
+    );
+  }
+
+  return makeQuestion(
+    rng,
+    `A flat net is made of ${net.faces}.\nIt is folded up along every edge.\n\nWhat solid does it make?`,
+    net.solid,
+    others.slice(0, 3).map((n) => n.solid),
+    `${net.faces} folds up into ${net.solid === 'cube' ? 'a cube' : `a ${net.solid}`}.`,
     null,
   );
 }

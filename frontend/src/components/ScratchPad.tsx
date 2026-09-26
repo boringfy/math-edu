@@ -13,6 +13,9 @@ import {
   eraseAround,
   eraserButtonHeld,
   Point,
+  DEFAULT_INK,
+  INK_COLORS,
+  Mark,
   Stroke,
   strokePath,
 } from '../lib/scratch';
@@ -45,7 +48,9 @@ interface Props {
  * a size, so a short sum on a tall tablet gets most of the screen to work on.
  */
 export default function ScratchPad({ penOnly }: Props) {
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [strokes, setStrokes] = useState<Mark[]>([]);
+  /** The pen in hand. Black to start: scrap paper is pencil work by default. */
+  const [ink, setInk] = useState<string>(DEFAULT_INK);
   const [erasing, setErasing] = useState(false);
   /**
    * The pen's side button, held down right now. Kept apart from the eraser
@@ -112,7 +117,9 @@ export default function ScratchPad({ penOnly }: Props) {
     const stroke = drawing.current;
     drawing.current = [];
     setLive([]);
-    if (stroke.length > 0) setStrokes((current) => [...current, stroke]);
+    // The colour is captured here, at the moment the stroke is filed, so a
+    // child who changes pen mid-round never repaints what is already down.
+    if (stroke.length > 0) setStrokes((current) => [...current, { points: stroke, color: ink }]);
   };
 
   const turnAway = () => {
@@ -179,7 +186,7 @@ export default function ScratchPad({ penOnly }: Props) {
     commit();
   };
 
-  const marks = live.length > 0 ? [...strokes, live] : strokes;
+  const marks: Mark[] = live.length > 0 ? [...strokes, { points: live, color: ink }] : strokes;
   // What the pad is doing right now, which the button can override.
   const rubbingOutNow = erasing || buttonHeld;
 
@@ -197,11 +204,11 @@ export default function ScratchPad({ penOnly }: Props) {
       >
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <Svg width="100%" height="100%">
-            {marks.map((stroke, i) => (
+            {marks.map((mark, i) => (
               <Path
                 key={i}
-                d={strokePath(stroke)}
-                stroke={colors.text}
+                d={strokePath(mark.points)}
+                stroke={mark.color}
                 strokeWidth={INK_WIDTH}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -228,6 +235,28 @@ export default function ScratchPad({ penOnly }: Props) {
       </View>
 
       <View style={styles.tools}>
+        {/*
+          Picking a colour also puts the eraser away: a child who reaches for
+          the red pen means to write with it, and having to notice they were
+          still rubbing out is a trap rather than a feature.
+        */}
+        {INK_COLORS.map(({ name, value }) => (
+          <Pressable
+            key={value}
+            style={[
+              styles.swatch,
+              { backgroundColor: value },
+              ink === value && !rubbingOutNow && styles.swatchOn,
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: ink === value && !rubbingOutNow }}
+            accessibilityLabel={`${name} pen`}
+            onPress={() => {
+              setInk(value);
+              setErasing(false);
+            }}
+          />
+        ))}
         <Pressable
           style={[styles.tool, rubbingOutNow && styles.toolOn]}
           accessibilityRole="button"
@@ -258,6 +287,16 @@ export default function ScratchPad({ penOnly }: Props) {
 const styles = StyleSheet.create({
   // flex, not a height: the blank space above the question is the paper.
   wrapper: { flex: 1, minHeight: MIN_HEIGHT, width: '100%', marginTop: 14, marginBottom: 4 },
+  swatch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  // A white ring inside the border, so the chosen pen reads clearly even
+  // against its own colour.
+  swatchOn: { borderColor: '#ffffff', transform: [{ scale: 1.18 }] },
   paper: {
     flex: 1,
     backgroundColor: colors.card,

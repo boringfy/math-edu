@@ -115,6 +115,22 @@ export const oddNumberOut = puzzle('oddNumberOut', 'oddNumber', [3, 5], 7, 24, t
 export const logicGrid = puzzle('logicGrid', 'grid', [4, 5], 10, 26, text.logicGrid);
 export const syllogism = puzzle('syllogism', 'syllogism', [5, 5], 13, 26, text.syllogism);
 
+// ------------------------------------------------- shape and space, reasoned
+
+/*
+  These think about shape rather than about numbers or words, and they are
+  written rather than drawn on purpose: the drawn families already cover
+  "look at this and spot the pattern", and what the map had none of was
+  reasoning *about* shape — deducing one from its properties, tracking a
+  turn, folding something in your head.
+*/
+
+export const shapeRiddle = puzzle('shapeRiddle', 'shapeRiddle', [2, 4], 4, 22, text.shapeRiddle);
+export const heading = puzzle('heading', 'heading', [2, 4], 5, 22, text.heading);
+export const paperFolding = puzzle('paperFolding', 'folding', [3, 5], 8, 24, text.folding);
+export const netFold = puzzle('netFold', 'netFold', [4, 5], 10, 25, text.netFold);
+export const angleLogic = puzzle('angleLogic', 'angleLogic', [4, 5], 12, 26, text.angleLogic);
+
 export const LOGIC = [
   shapeSeries,
   shapeOddOneOut,
@@ -129,4 +145,9 @@ export const LOGIC = [
   oddNumberOut,
   logicGrid,
   syllogism,
+  shapeRiddle,
+  heading,
+  paperFolding,
+  netFold,
+  angleLogic,
 ];
