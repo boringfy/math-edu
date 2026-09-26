@@ -1,0 +1,8 @@
+[Unit]
+Description=Deploy math-edu main branch when it changes
+
+[Service]
+Type=oneshot
+WorkingDirectory=/fiopower/math-edu
+ExecStart=/fiopower/math-edu/deploy/auto-deploy.sh
+TimeoutStartSec=20min

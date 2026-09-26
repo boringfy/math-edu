@@ -1,0 +1,10 @@
+[Unit]
+Description=Check math-edu main for deployment every five minutes
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+Unit=math-edu-deploy.service
+
+[Install]
+WantedBy=timers.target

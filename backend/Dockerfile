@@ -18,6 +18,8 @@ RUN npm run bake --workspace @math-edu/backend
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+ARG GIT_COMMIT=unknown
+LABEL org.opencontainers.image.revision=$GIT_COMMIT
 
 COPY package.json package-lock.json ./
 COPY backend/package.json backend/
