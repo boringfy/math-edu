@@ -19,6 +19,7 @@ import {
   Stroke,
   strokePath,
 } from '../lib/scratch';
+import { observePencilSqueeze } from '../../modules/pencil-squeeze';
 import { colors } from '../theme';
 
 const INK_WIDTH = 3;
@@ -36,6 +37,8 @@ interface Props {
    * ordinary touch — without this it scrawls across their working.
    */
   penOnly: boolean;
+  /** Keep the containing lesson from scrolling while a hand or pen is on the paper. */
+  onTouchingChange?: (touching: boolean) => void;
 }
 
 /**
@@ -47,7 +50,7 @@ interface Props {
  * It stretches into whatever the question leaves empty rather than asking for
  * a size, so a short sum on a tall tablet gets most of the screen to work on.
  */
-export default function ScratchPad({ penOnly }: Props) {
+export default function ScratchPad({ penOnly, onTouchingChange }: Props) {
   const [strokes, setStrokes] = useState<Mark[]>([]);
   /** The pen in hand. Black to start: scrap paper is pencil work by default. */
   const [ink, setInk] = useState<string>(DEFAULT_INK);
@@ -58,6 +61,7 @@ export default function ScratchPad({ penOnly }: Props) {
    * chosen, rather than to writing regardless.
    */
   const [buttonHeld, setButtonHeld] = useState(false);
+  const [squeezing, setSqueezing] = useState(false);
   /** The stroke under the pointer right now, still being drawn. */
   const [live, setLive] = useState<Stroke>([]);
   /** Up briefly after a finger or a palm was turned away. */
@@ -69,14 +73,30 @@ export default function ScratchPad({ penOnly }: Props) {
   const drawing = useRef<Stroke>([]);
   /** Whether the marks being made right now are rubbing out or writing. */
   const rubbingOut = useRef(false);
+  const squeezeHeld = useRef(false);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touching = useRef(new Set<number>());
+  const touchChange = useRef(onTouchingChange);
+  touchChange.current = onTouchingChange;
 
   useEffect(
     () => () => {
       if (hintTimer.current) clearTimeout(hintTimer.current);
+      touchChange.current?.(false);
     },
     [],
   );
+
+  useEffect(() => {
+    const remove = observePencilSqueeze((held) => {
+      squeezeHeld.current = held;
+      setSqueezing(held);
+    });
+    return () => {
+      remove();
+      squeezeHeld.current = false;
+    };
+  }, []);
 
   /**
    * Claims the touch, so that drawing inside the pad never turns into a
@@ -90,6 +110,7 @@ export default function ScratchPad({ penOnly }: Props) {
       onStartShouldSetPanResponderCapture: () => true,
       onMoveShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
     }),
   ).current;
 
@@ -110,7 +131,8 @@ export default function ScratchPad({ penOnly }: Props) {
    * returns to what the child picked.
    */
   const shouldRubOut = (event: PointerEvent): boolean =>
-    erasing || eraserButtonHeld(event.nativeEvent.buttons);
+    erasing || eraserButtonHeld(event.nativeEvent.buttons) ||
+    (event.nativeEvent.pointerType === 'pen' && squeezeHeld.current);
 
   /** Files the stroke in progress away with the rest of the marks. */
   const commit = () => {
@@ -129,6 +151,8 @@ export default function ScratchPad({ penOnly }: Props) {
   };
 
   const onPointerDown = (event: PointerEvent) => {
+    if (touching.current.size === 0) touchChange.current?.(true);
+    touching.current.add(event.nativeEvent.pointerId);
     if (!welcome(event)) {
       turnAway();
       return;
@@ -179,6 +203,9 @@ export default function ScratchPad({ penOnly }: Props) {
   };
 
   const onPointerUp = (event: PointerEvent) => {
+    if (touching.current.delete(event.nativeEvent.pointerId) && touching.current.size === 0) {
+      touchChange.current?.(false);
+    }
     if (active.current !== event.nativeEvent.pointerId) return;
     active.current = null;
     rubbingOut.current = false;
@@ -188,7 +215,7 @@ export default function ScratchPad({ penOnly }: Props) {
 
   const marks: Mark[] = live.length > 0 ? [...strokes, { points: live, color: ink }] : strokes;
   // What the pad is doing right now, which the button can override.
-  const rubbingOutNow = erasing || buttonHeld;
+  const rubbingOutNow = erasing || buttonHeld || squeezing;
 
   return (
     <View style={styles.wrapper}>
@@ -222,7 +249,7 @@ export default function ScratchPad({ penOnly }: Props) {
             Scratch paper — {penOnly ? 'work it out with the pen' : 'work it out here'}
           </Text>
         )}
-        {buttonHeld && (
+        {(buttonHeld || squeezing) && (
           <Text style={styles.rubbingOut} pointerEvents="none">
             🧽 Rubbing out
           </Text>

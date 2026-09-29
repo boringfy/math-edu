@@ -24,6 +24,14 @@ import { updaterConfig } from '../content';
 import { checkForUpdate } from '../content/updater';
 import { ERASER_BUTTONS } from '../lib/scratch';
 
+let mockSqueezeListener: ((held: boolean) => void) | null = null;
+jest.mock('../../modules/pencil-squeeze', () => ({
+  observePencilSqueeze: (listener: (held: boolean) => void) => {
+    mockSqueezeListener = listener;
+    return () => { mockSqueezeListener = null; };
+  },
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
@@ -120,7 +128,8 @@ const pad = (penOnly: boolean): ReactTestRenderer => {
  * driven by pointer events, which Android only sends at all because
  * `plugins/withPointerEvents.js` turns them on, and whose `buttons` field
  * carries Android's MotionEvent constants rather than the web's. iOS sends
- * them natively and an Apple Pencil has no side button to report.
+ * them natively. Apple Pencil Pro squeeze is a separate UIKit event, not a
+ * pointer button bit, so only the iOS run tests that path.
  */
 describe(`${OS}: the scratch paper`, () => {
   afterEach(() => {
@@ -170,6 +179,55 @@ describe(`${OS}: the scratch paper`, () => {
       const tree = pad(true);
       draw(tree, [[10, 10], [40, 40], [70, 70]], 'pen', 0);
       expect(paths(tree).length).toBeGreaterThan(0);
+    });
+
+    it('erases only while Pencil Pro squeeze is held, then returns to drawing', () => {
+      const tree = pad(true);
+      draw(tree, [[10, 10], [40, 40]], 'pen');
+      expect(paths(tree)).toHaveLength(1);
+
+      act(() => mockSqueezeListener?.(true));
+      draw(tree, [[10, 10], [40, 40]], 'pen');
+      expect(paths(tree)).toHaveLength(0);
+
+      act(() => mockSqueezeListener?.(false));
+      draw(tree, [[10, 10], [40, 40]], 'pen');
+      expect(paths(tree)).toHaveLength(1);
+    });
+
+    it('switches to erasing and back in the middle of a Pencil stroke', () => {
+      const tree = pad(true);
+      draw(tree, [[200, 200], [240, 240]], 'pen');
+      const id = (pointer += 1);
+      act(() => {
+        const view = paper(tree);
+        view.props.onPointerDown(event(10, 10, 'pen', id));
+        view.props.onPointerMove(event(30, 30, 'pen', id));
+        mockSqueezeListener?.(true);
+        view.props.onPointerMove(event(200, 200, 'pen', id));
+        mockSqueezeListener?.(false);
+        view.props.onPointerMove(event(50, 50, 'pen', id));
+        view.props.onPointerUp(event(50, 50, 'pen', id));
+      });
+      const marks = paths(tree).map((path) => path.props.d as string);
+      expect(marks).toHaveLength(2);
+      expect(marks.some((path) => path.includes('10 10'))).toBe(true);
+      expect(marks.some((path) => path.includes('50 50'))).toBe(true);
+      expect(marks.some((path) => path.includes('240 240'))).toBe(false);
+    });
+
+    it('keeps finger writing and the manually selected eraser independent of squeeze', () => {
+      const tree = pad(false);
+      draw(tree, [[10, 10], [40, 40]], 'touch');
+      act(() => mockSqueezeListener?.(true));
+      draw(tree, [[60, 60], [90, 90]], 'touch');
+      expect(paths(tree)).toHaveLength(2);
+      act(() => mockSqueezeListener?.(false));
+
+      const eraser = tree.root.find((node) => node.props.accessibilityLabel === 'Eraser');
+      act(() => eraser.props.onPress());
+      draw(tree, [[10, 10], [40, 40]], 'pen');
+      expect(paths(tree)).toHaveLength(1);
     });
   }
 });

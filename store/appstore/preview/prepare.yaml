@@ -1,0 +1,5 @@
+appId: com.hashfront.mathedu
+---
+- tapOn: "No thanks"
+- assertVisible: "Level 1"
+- assertVisible: ".*Math"

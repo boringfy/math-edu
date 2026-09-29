@@ -1,0 +1,25 @@
+appId: com.hashfront.mathedu
+---
+- assertVisible: "Level 1"
+- tapOn: ".*Math"
+- assertVisible: "Play Adding to 10"
+- startRecording: app-tour
+- tapOn: "Play Adding to 10"
+- assertVisible: "Quit quiz"
+- tapOn: "Quit quiz"
+- assertVisible: "Give up this round?"
+- tapOn: "Give up"
+- assertVisible: "Level 1"
+- tapOn: ".*Reading"
+- assertVisible: "Play The Lost Mitten"
+- tapOn: "Play The Lost Mitten"
+- assertVisible: ".*I've read it.*"
+- tapOn: ".*I've read it.*"
+- assertVisible: "Question 1 of 3"
+- tapOn: "Quit quiz"
+- tapOn: "Give up"
+- tapOn: ".*Logic"
+- assertVisible: "Play Pattern Party"
+- tapOn: "Play Pattern Party"
+- assertVisible: "Quit quiz"
+- stopRecording

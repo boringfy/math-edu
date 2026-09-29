@@ -71,6 +71,7 @@ interface Props {
   /** The content for this launch; maps are drawn from its catalogs. */
   library: Library;
   history: QuizResult[];
+  today: string;
   grade: Grade;
   tiers: Record<Grade, Tier>;
   coins: number;
@@ -107,6 +108,7 @@ export default function HomeScreen({
   subject,
   library,
   history,
+  today,
   grade,
   tiers,
   coins,
@@ -144,7 +146,7 @@ export default function HomeScreen({
   const mine = history.filter((r) => r.subject === subject);
   // History spans all three tabs. Count from it so an app update can recover
   // everything already finished today instead of starting the badge at zero.
-  const totalToday = history.filter((result) => dayKey(new Date(result.date)) === daily.date).length;
+  const totalToday = history.filter((result) => dayKey(new Date(result.date)) === today).length;
   const stopNoun = subject === 'reading' ? 'Story' : subject === 'logic' ? 'Puzzle' : 'Lesson';
   const [showHistory, setShowHistory] = useState(false);
 

@@ -44,6 +44,7 @@ backend/.env
 /frontend/coverage/
 /frontend/modules/**/build/
 /frontend/modules/**/.gradle/
+.preview-build/
 
 # baked content — regenerate with `npm run bake`
 backend/dist/

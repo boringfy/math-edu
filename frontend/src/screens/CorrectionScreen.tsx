@@ -71,6 +71,7 @@ export default function CorrectionScreen({
   // helps most, so the paper starts open and can be put away by the pencil.
   const scratchable = scratchPaper && (subject === 'math' || subject === 'logic');
   const [scratching, setScratching] = useState(true);
+  const [touchingPaper, setTouchingPaper] = useState(false);
   // The AI tutor. A mistake being corrected is exactly the child it is for.
   const tutorable = subject === 'math' && tutorAvailable();
   const [helping, setHelping] = useState(false);
@@ -134,7 +135,11 @@ export default function CorrectionScreen({
   const nextLabel = index + 1 < questions.length ? 'Next mistake' : 'See results';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      scrollEnabled={!touchingPaper}
+    >
       <View style={styles.headerRow}>
         <Text style={styles.header}>Fix your mistakes</Text>
         {scratchable && (
@@ -157,7 +162,9 @@ export default function CorrectionScreen({
       {passage && <View style={styles.passage}><StoryPassage passage={passage} /></View>}
 
       {/* Keyed by mistake: a fresh sheet each time, last one's working gone. */}
-      {scratchable && scratching && <ScratchPad key={index} penOnly={penOnly} />}
+      {scratchable && scratching && (
+        <ScratchPad key={index} penOnly={penOnly} onTouchingChange={setTouchingPaper} />
+      )}
 
       <View style={styles.promptCard}>
         <Text

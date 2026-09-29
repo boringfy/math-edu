@@ -81,10 +81,10 @@ const textOf = (tree: ReactTestRenderer): string => {
   return walk(tree.toJSON());
 };
 
-const render = (penOnly: boolean): ReactTestRenderer => {
+const render = (penOnly: boolean, onTouchingChange?: (touching: boolean) => void): ReactTestRenderer => {
   let tree!: ReactTestRenderer;
   act(() => {
-    tree = create(<ScratchPad penOnly={penOnly} />);
+    tree = create(<ScratchPad penOnly={penOnly} onTouchingChange={onTouchingChange} />);
   });
   return tree;
 };
@@ -100,6 +100,33 @@ afterEach(() => {
 });
 
 describe('ScratchPad', () => {
+  it('locks the parent scroll until every pen or finger leaves the paper', () => {
+    const onTouchingChange = jest.fn();
+    const tree = render(true, onTouchingChange);
+
+    act(() => {
+      const view = paper(tree);
+      view.props.onPointerDown(event(10, 10, 'pen', 1));
+      view.props.onPointerDown(event(20, 20, 'touch', 2)); // a resting palm
+      view.props.onPointerUp(event(20, 20, 'touch', 2));
+    });
+    expect(onTouchingChange.mock.calls).toEqual([[true]]);
+
+    act(() => paper(tree).props.onPointerUp(event(30, 30, 'pen', 1)));
+    expect(onTouchingChange.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('releases the scroll lock when a pointer is cancelled', () => {
+    const onTouchingChange = jest.fn();
+    const tree = render(false, onTouchingChange);
+    act(() => {
+      const view = paper(tree);
+      view.props.onPointerDown(event(10, 10, 'touch', 3));
+      view.props.onPointerCancel(event(20, 20, 'touch', 3));
+    });
+    expect(onTouchingChange.mock.calls).toEqual([[true], [false]]);
+  });
+
   it('stretches into the space it is given rather than asking for a height', () => {
     const style = StyleSheet.flatten(render(true).root.findAllByType(View)[0].props.style);
     expect(style.flex).toBe(1);

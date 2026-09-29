@@ -602,4 +602,19 @@ describe('playing a lesson end to end', () => {
     expect(stored.progress).toEqual({});
     expect(stored.claimed).toEqual([]);
   });
+
+  it('rolls the day over at local midnight without restarting the app', async () => {
+    jest.setSystemTime(new Date(2026, 7, 2, 23, 59, 59));
+    const tree = await launch();
+    expect(tree.root.findAllByProps({ today: '2026-08-02' })).not.toHaveLength(0);
+
+    await act(async () => {
+      jest.advanceTimersByTime(2_000);
+      await Promise.resolve();
+    });
+
+    expect(tree.root.findAllByProps({ today: '2026-08-03' })).not.toHaveLength(0);
+    const stored = JSON.parse((await AsyncStorage.getItem(await kidKey('daily'))) ?? '{}');
+    expect(stored.date).toBe('2026-08-03');
+  });
 });

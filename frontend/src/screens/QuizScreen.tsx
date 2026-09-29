@@ -127,6 +127,7 @@ export default function QuizScreen({
     off is the way through. Reading gets none at all.
   */
   const [scratching, setScratching] = useState(subject === 'math');
+  const [touchingPaper, setTouchingPaper] = useState(false);
   // The AI tutor, teaching maths only for now: the per-topic lessons are
   // written for sums, and a reading answer is in the story, not a method.
   const tutorable = subject === 'math' && tutorAvailable();
@@ -300,11 +301,21 @@ export default function QuizScreen({
         />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        scrollEnabled={!touchingPaper}
+      >
         {passage && <StoryPassage passage={passage} />}
 
         {/* Keyed by question: a fresh sheet each time, last one's working gone. */}
-        {scratchable && scratching && <ScratchPad key={`scratch-${index}`} penOnly={penOnly} />}
+        {scratchable && scratching && (
+          <ScratchPad
+            key={`scratch-${index}`}
+            penOnly={penOnly}
+            onTouchingChange={setTouchingPaper}
+          />
+        )}
 
         {question.limitSeconds !== undefined && (
           /*

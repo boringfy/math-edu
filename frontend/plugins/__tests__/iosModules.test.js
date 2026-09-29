@@ -1,7 +1,7 @@
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 
-it('resolves both local iOS modules into CocoaPods and the Swift module provider', () => {
+it('resolves local iOS modules into CocoaPods and the Swift module provider', () => {
   const root = path.resolve(__dirname, '../..');
   const cli = require.resolve('expo-modules-autolinking/bin/expo-modules-autolinking');
   const resolved = JSON.parse(execFileSync(process.execPath, [
@@ -10,6 +10,7 @@ it('resolves both local iOS modules into CocoaPods and the Swift module provider
   for (const [packageName, className] of [
     ['daily-reminder', 'DailyReminderModule'],
     ['icloud-store', 'ICloudStoreModule'],
+    ['pencil-squeeze', 'PencilSqueezeModule'],
   ]) {
     const module = resolved.modules.find((m) => m.packageName === packageName);
     expect(module).toBeDefined();

@@ -76,6 +76,7 @@ const homeProps = (subject: Subject) => ({
   subject,
   library: LIB,
   history: [],
+  today: '2026-08-02',
   grade: 1 as const,
   onGradeChange: () => {},
   tiers: { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 } as const,
@@ -526,6 +527,25 @@ describe('HomeScreen', () => {
       .toContain('0/3 done · 3 total today');
   });
 
+  it('counts the current day after midnight even while challenge state is still yesterday', () => {
+    const base = {
+      grade: 1 as const, tier: 2 as const, total: 5, correctCount: 4,
+      fixedCount: 0, skippedCount: 0, elapsedMs: 30_000, subject: 'math' as const,
+    };
+    const history = [
+      ...Array.from({ length: 14 }, (_, i) => ({
+        ...base, id: `yesterday-${i}`, date: '2026-08-02T12:00:00.000Z',
+      })),
+      ...Array.from({ length: 10 }, (_, i) => ({
+        ...base, id: `today-${i}`, date: '2026-08-03T12:00:00.000Z',
+      })),
+    ];
+
+    expect(textOf(render(
+      <HomeScreen {...homeProps('math')} today="2026-08-03" history={history} />,
+    ))).toContain('10 total today');
+  });
+
   it('opens the map at the stop the child is on, not back at the top', () => {
     const cleared = { stars: 3 as const, bestPercent: 100, clearedAt: '2026-08-01T00:00:00.000Z' };
     const progress: ProgressMap = { 'g1-l1': cleared, 'g1-l2': cleared, 'g1-l3': cleared };
@@ -909,6 +929,18 @@ describe('QuizScreen', () => {
     expect(tree.root.findAllByType(ScratchPad)).toHaveLength(1);
   });
 
+  it('stops quiz scrolling only while the scratch paper is being touched', () => {
+    const tree = render(
+      <QuizScreen grade={1} scratchPaper penOnly={false} subject="math" questions={tappableQuestions(LIB.lessons(1)[0])} onComplete={() => {}} onQuit={() => {}} />,
+    );
+    const scroll = () => tree.root.findAllByType(ScrollView)[0];
+    expect(scroll().props.scrollEnabled).toBe(true);
+    act(() => tree.root.findByType(ScratchPad).props.onTouchingChange(true));
+    expect(scroll().props.scrollEnabled).toBe(false);
+    act(() => tree.root.findByType(ScratchPad).props.onTouchingChange(false));
+    expect(scroll().props.scrollEnabled).toBe(true);
+  });
+
   it('keeps the paper folded away on a logic round until it is asked for', () => {
     const questions = LIB.puzzleQuestions(LIB.puzzleSets(1)[0], {}, Math.random).questions;
     const tree = render(
@@ -1043,6 +1075,16 @@ describe('CorrectionScreen', () => {
 
     press(tree, 'Scratch paper');
     expect(tree.root.findAllByType(ScratchPad)).toHaveLength(0);
+  });
+
+  it('stops correction scrolling only while the scratch paper is being touched', () => {
+    const tree = correction();
+    const scroll = () => tree.root.findByType(ScrollView);
+    expect(scroll().props.scrollEnabled).toBe(true);
+    act(() => tree.root.findByType(ScratchPad).props.onTouchingChange(true));
+    expect(scroll().props.scrollEnabled).toBe(false);
+    act(() => tree.root.findByType(ScratchPad).props.onTouchingChange(false));
+    expect(scroll().props.scrollEnabled).toBe(true);
   });
 
   it('brings scratch paper to a second go at a logic puzzle', () => {

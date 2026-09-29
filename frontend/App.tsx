@@ -184,6 +184,7 @@ export default function App() {
   const [coins, setCoins] = useState(0);
   const [progress, setProgress] = useState<Record<Subject, ProgressMap>>(noProgress);
   const [daily, setDaily] = useState<DailyState>(() => freshDaily(dayKey(new Date())));
+  const [today, setToday] = useState(() => dayKey(new Date()));
   const [session, setSession] = useState<Session | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   // Content for this launch. Fixed until the app is restarted — an update
@@ -304,14 +305,39 @@ export default function App() {
   // iCloud can change while this device is asleep. Fold it in whenever the
   // app becomes active, without making launch or play wait on the cloud.
   useEffect(() => {
+    let midnightTimer: ReturnType<typeof setTimeout>;
+    const scheduleMidnight = () => {
+      const nextMidnight = new Date();
+      nextMidnight.setHours(24, 0, 0, 0);
+      midnightTimer = setTimeout(() => {
+        setToday(dayKey(new Date()));
+        scheduleMidnight();
+      }, Math.max(1, nextMidnight.getTime() - Date.now()));
+    };
+    scheduleMidnight();
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
+        setToday(dayKey(new Date()));
+        clearTimeout(midnightTimer);
+        scheduleMidnight();
         void pullAndMerge().then(applyMergedToState);
         void flushUsage();
       }
     });
-    return () => subscription.remove();
+    return () => {
+      clearTimeout(midnightTimer);
+      subscription.remove();
+    };
   }, []);
+
+  // Challenge progress and its persisted date must follow the same local day
+  // as the history badge, even if the app stays open through midnight.
+  useEffect(() => {
+    if (daily.date === today) return;
+    const next = freshDaily(today);
+    setDaily(next);
+    void saveDaily(next);
+  }, [today, daily.date]);
 
   const grade = grades[subject];
   const whoIsPlaying = activeProfile(profiles);
@@ -752,7 +778,9 @@ export default function App() {
     earned: CoinAward,
     metrics: Parameters<typeof applyMetrics>[1],
   ): Promise<CoinAward & { completed: ChallengeDef[] }> => {
-    const update = applyMetrics(daily, { ...metrics, coinsEarned: earned.total });
+    const date = dayKey(new Date());
+    setToday(date);
+    const update = applyMetrics(dailyForDate(daily, date), { ...metrics, coinsEarned: earned.total });
     setDaily(update.state);
     await saveDaily(update.state);
 
@@ -916,6 +944,7 @@ export default function App() {
               subject={subject}
               library={library}
               history={history}
+              today={today}
               grade={grade}
               tiers={tiers}
               coins={coins}
