@@ -285,16 +285,26 @@ export async function applyProfile(data: ProfileData): Promise<void> {
   await saveGrades(data.grades);
   for (const grade of GRADES) await saveTier(grade, data.tiers[grade]);
   await saveCoins(data.coins);
+  const progress = hydrateProgress(data);
   for (const subject of SUBJECTS) {
     // The digits go back to being ordinary stops before anything else sees
     // them, so only this file ever knows the packed shape exists.
-    await saveProgressMap(subject, unpackProgress(data.progress[subject], data.packed, subject));
+    await saveProgressMap(subject, progress[subject]);
   }
   await saveHistoryList(data.history);
   if (data.daily) await saveDaily(data.daily);
   await saveSettings(data.settings);
   await saveAdaptive(data.adaptive);
   await saveUnlocks(data.unlocks ?? emptyUnlocks());
+}
+
+/** Expand the wire-format map before showing it in the UI. */
+export function hydrateProgress(data: ProfileData): Record<Subject, ProgressMap> {
+  return {
+    math: unpackProgress(data.progress.math, data.packed, 'math'),
+    reading: unpackProgress(data.progress.reading, data.packed, 'reading'),
+    logic: unpackProgress(data.progress.logic, data.packed, 'logic'),
+  };
 }
 
 /* ----------------------------------------------------------------- merge -- */
@@ -356,15 +366,25 @@ export function mergeProfiles(
         ? newer.daily
         : local.data.daily;
 
+  // The endless half of each map travels in `packed`, not `progress`.
+  // Merge it alongside the authored stops before packing again; otherwise
+  // applying a sync silently erases every composed lesson on this device.
+  const progress = {} as Record<Subject, ProgressMap>;
+  const packed: PackedProgress = {};
+  for (const subject of SUBJECTS) {
+    const mine = unpackProgress(local.data.progress[subject], local.data.packed, subject);
+    const theirs = unpackProgress(remote.data.progress[subject], remote.data.packed, subject);
+    const split = packProgress(mergeMaps(mine, theirs));
+    progress[subject] = split.progress;
+    Object.assign(packed, split.packed);
+  }
+
   return {
     grades: newer.grades,
     tiers: newer.tiers,
     coins: Math.max(local.data.coins, remote.data.coins),
-    progress: {
-      math: mergeMaps(local.data.progress.math, remote.data.progress.math),
-      reading: mergeMaps(local.data.progress.reading, remote.data.progress.reading),
-      logic: mergeMaps(local.data.progress.logic, remote.data.progress.logic),
-    },
+    progress,
+    packed,
     history: recentHistory(
       history,
       new Date(Date.parse(local.updatedAt) >= Date.parse(remote.updatedAt) ? local.updatedAt : remote.updatedAt),

@@ -544,6 +544,12 @@ describe('HomeScreen', () => {
     expect(textOf(render(
       <HomeScreen {...homeProps('math')} today="2026-08-03" history={history} />,
     ))).toContain('10 total today');
+    expect(textOf(render(
+      <HomeScreen {...homeProps('math')} today="2026-08-03" history={[
+        ...history,
+        { ...base, id: 'today-10', date: '2026-08-03T18:00:00.000Z' },
+      ]} />,
+    ))).toContain('11 total today');
   });
 
   it('opens the map at the stop the child is on, not back at the top', () => {

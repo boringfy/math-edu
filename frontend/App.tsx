@@ -35,6 +35,7 @@ import { plannedLevel } from './src/lib/levelPlans';
 import { promoteToEntry, shuffle } from './src/lib/grading';
 import { recentHistory } from './src/lib/history';
 import { starsFor } from './src/lib/mapProgress';
+import { recoverMapProgress } from './src/lib/progressRecovery';
 import {
   applyMetrics,
   ChallengeDef,
@@ -65,6 +66,7 @@ import {
   saveDaily,
   saveGrades,
   saveProgress,
+  saveProgressMap,
   saveResult,
   saveSettings,
   saveProfiles,
@@ -85,7 +87,7 @@ import {
 } from './src/lib/profiles';
 import { appLocked, lockToApp, unlockFromApp } from './modules/app-lock';
 import { prepareSound, setSoundEnabled } from './src/lib/sfx';
-import { markDirty, pullAndMerge } from './src/lib/sync';
+import { hydrateProgress, markDirty, pullAndMerge } from './src/lib/sync';
 import { flushUsage, loadUsageConsent, recordUsage, setUsageConsent } from './src/lib/usage';
 import { TipProvider } from './src/lib/tips';
 import {
@@ -204,7 +206,7 @@ export default function App() {
     setGrades(merged.grades);
     setTiers(merged.tiers);
     setCoins(merged.coins);
-    setProgress(merged.progress);
+    setProgress(hydrateProgress(merged));
     setHistory(merged.history);
     setSettings(merged.settings);
     setSoundEnabled(merged.settings.sounds);
@@ -225,7 +227,8 @@ export default function App() {
     // Plans belong to the child they were planned for: they follow that
     // child's mastery, so one child's level must not be shown to another.
     await loadPlans(currentProfile());
-    setHistory(await loadHistory());
+    const loadedHistory = await loadHistory();
+    setHistory(loadedHistory);
     setAdaptive(await loadAdaptive());
     setUnlocks(await loadUnlocks());
     const loaded = await Promise.all(GRADES.map((g) => loadTier(g)));
@@ -233,11 +236,26 @@ export default function App() {
     setCoins(await loadCoins());
     setCursors(library.pruneCursors(await loadCursors()));
     setGrades(await loadGrades());
-    setProgress({
+    const loadedProgress: Record<Subject, ProgressMap> = {
       math: await loadProgress('math'),
       reading: await loadProgress('reading'),
       logic: await loadProgress('logic'),
-    });
+    };
+    for (const candidate of ['math', 'reading', 'logic'] as const) {
+      let map = loadedProgress[candidate];
+      for (const candidateGrade of GRADES) {
+        const authored = candidate === 'math' ? library.lessons(candidateGrade)
+          : candidate === 'reading' ? library.stories(candidateGrade)
+            : library.puzzleSets(candidateGrade);
+        map = recoverMapProgress(candidate, candidateGrade, authored, map, loadedHistory);
+      }
+      if (map !== loadedProgress[candidate]) {
+        loadedProgress[candidate] = map;
+        await saveProgressMap(candidate, map);
+        markDirty();
+      }
+    }
+    setProgress(loadedProgress);
     // Challenges roll over on the local date, so a stored day that isn't
     // today is replaced rather than resumed.
     const today = dailyForDate(await loadDaily(), dayKey(new Date()));

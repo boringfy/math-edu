@@ -13,6 +13,8 @@ describe('self-hosted updates for both store binaries', () => {
     expect(config.ios.bundleIdentifier).toBe('com.hashfront.mathedu');
     expect(config.ios.appleTeamId).toBe('FNK34ANN2H');
     expect(config.android.package).toBe('com.hashfront.mathedu');
+    expect(config.android.versionCode).toBe(2);
+    expect(config.android.runtimeVersion).toBe('1.0.1');
   });
 
   it('bundles a public signing certificate, never a private key', () => {

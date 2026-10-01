@@ -2,11 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { emptyUnlocks } from '../unlocks';
 import { DEFAULT_SETTINGS, QuizResult } from '../../types';
 import { AdaptiveState } from '../adaptive';
+import { unpackProgress } from '../progressCodec';
 import {
   DeviceData,
   ProfileData,
   applyProfile,
   asDevice,
+  hydrateProgress,
   mergeDevices,
   mergeProfiles,
   snapshotProfile,
@@ -57,6 +59,17 @@ const at = (updatedAt: string, d: ProfileData) => ({ updatedAt, data: d });
 const atDevice = (updatedAt: string, d: DeviceData) => ({ updatedAt, data: d });
 
 describe('mergeProfiles', () => {
+  it('keeps composed lessons from both sides, including the stronger star rating', () => {
+    const local = data({ packed: { 'math.g2': { '19': '3100000000' } } });
+    const remote = data({ packed: { 'math.g2': { '19': '1200000000' } } });
+    const merged = mergeProfiles(at('2026-09-30', local), at('2026-09-29', remote));
+    expect(merged.packed?.['math.g2']['19']).toBe('3200000000');
+    const restored = unpackProgress(merged.progress.math, merged.packed, 'math');
+    expect(restored['math.g2.L19.l1'].stars).toBe(3);
+    expect(restored['math.g2.L19.l2'].stars).toBe(2);
+    expect(hydrateProgress(merged).math['math.g2.L19.l2'].stars).toBe(2);
+  });
+
   it('never loses anything a child earned', () => {
     const local = data({
       coins: 80,

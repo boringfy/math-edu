@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+// Expo SDK 57's Pika compiler transforms reified module function types.
+apply plugin: 'expo-module-gradle-plugin'
 
 group = 'expo.modules.applock'
 version = '1.0.0'
@@ -10,6 +12,7 @@ android {
 
   defaultConfig {
     minSdk rootProject.ext.minSdkVersion
+    versionName '1.0.0'
   }
 
   kotlinOptions { jvmTarget = '17' }
